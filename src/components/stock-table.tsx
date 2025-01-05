@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { type Stock } from "@/lib/api"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface StockTableProps {
   onStockSelect?: (symbol: string | null) => void
@@ -38,6 +39,7 @@ function generatePageNumbers(currentPage: number, totalPages: number) {
 
 export function StockTable({ onStockSelect, selectedStock, stocks }: StockTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
+  const router = useRouter()
 
   if (!stocks?.length) {
     return (
@@ -51,6 +53,10 @@ export function StockTable({ onStockSelect, selectedStock, stocks }: StockTableP
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
   const currentStocks = stocks.slice(startIndex, endIndex)
+
+  const handleDoubleClick = (symbol: string) => {
+    router.push(`/stock/${symbol}`)
+  }
 
   return (
     <div>
@@ -76,6 +82,7 @@ export function StockTable({ onStockSelect, selectedStock, stocks }: StockTableP
                   selectedStock === stock.symbol ? 'bg-gray-50 dark:bg-[#1A1A1A]' : ''
                 }`}
                 onClick={() => onStockSelect?.(selectedStock === stock.symbol ? null : stock.symbol)}
+                onDoubleClick={() => handleDoubleClick(stock.symbol)}
               >
                 <td className="py-4 text-sm font-medium text-gray-900 dark:text-white">{stock.company_name}</td>
                 <td className="py-4 text-right text-sm text-gray-600 dark:text-gray-300">{stock.cmp}</td>

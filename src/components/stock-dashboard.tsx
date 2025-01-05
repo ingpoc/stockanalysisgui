@@ -6,6 +6,7 @@ import { StockTable } from "@/components/stock-table"
 import { refreshStockAnalysis, fetchMarketData, getQuarters, type MarketOverview } from "@/lib/api"
 import { RefreshCw } from "lucide-react"
 import { toast } from "sonner"
+import { SearchBar } from "@/components/search-bar"
 
 type StockCategory = "top-performers" | "worst-performers" | "latest-results" | "all-stocks"
 
@@ -174,6 +175,11 @@ export function StockDashboard() {
 
   return (
     <div className="p-4 md:p-6 2xl:p-10">
+      {/* Search Bar */}
+      <div className="mb-6">
+        <SearchBar currentQuarter={selectedQuarter} />
+      </div>
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 mb-6">
         <StatsCard

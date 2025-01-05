@@ -21,6 +21,60 @@ export interface MarketOverview {
   all_stocks: Stock[]
 }
 
+export interface FinancialMetric {
+  market_cap: string
+  face_value: string
+  book_value: string
+  dividend_yield: string
+  ttm_eps: string
+  ttm_pe: string
+  pb_ratio: string
+  sector_pe: string
+  piotroski_score: string
+  revenue_growth_3yr_cagr: string
+  net_profit_growth_3yr_cagr: string
+  operating_profit_growth_3yr_cagr: string
+  strengths: string
+  weaknesses: string
+  technicals_trend: string
+  fundamental_insights: string
+  fundamental_insights_description: string
+  revenue: string
+  gross_profit: string
+  net_profit: string
+  net_profit_growth: string
+  result_date: string
+  gross_profit_growth: string
+  revenue_growth: string
+  quarter: string
+  report_type: string
+  cmp: string
+  estimates: string
+}
+
+export interface FormattedMetrics {
+  company_name: string
+  symbol: string
+  cmp: string
+  net_profit_growth: string
+  strengths: string
+  weaknesses: string
+  piotroski_score: string
+  estimates: string
+  result_date: string
+  recommendation: string
+}
+
+export interface StockDetailsResponse {
+  stock: {
+    company_name: string
+    symbol: string
+    financial_metrics: FinancialMetric[]
+    timestamp: string
+  }
+  formatted_metrics: FormattedMetrics
+}
+
 export async function fetchMarketData(quarter?: string): Promise<MarketOverview> {
   try {
     const url = new URL(`${API_BASE_URL}/market-data`)
@@ -52,14 +106,23 @@ export async function refreshStockAnalysis(symbol: string): Promise<void> {
   }
 }
 
-export async function getStockDetails(symbol: string): Promise<Stock> {
+export async function getStockDetails(symbol: string): Promise<StockDetailsResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/stock/${symbol}`)
+    const url = `${API_BASE_URL}/stock/${symbol}`
+    console.log('Fetching from URL:', url)
+    const response = await fetch(url)
+    
     if (!response.ok) {
+      console.error('API Error:', {
+        status: response.status,
+        statusText: response.statusText
+      })
       throw new Error('Failed to fetch stock details')
     }
+    
     const data = await response.json()
-    return data.stock
+    console.log('API Success:', data)
+    return data
   } catch (error) {
     console.error('Error fetching stock details:', error)
     throw error
@@ -73,4 +136,22 @@ export async function getQuarters(signal?: AbortSignal): Promise<string[]> {
   }
   const data = await response.json()
   return data.quarters || []
+}
+
+export async function searchStocks(query: string, quarter?: string): Promise<Stock[]> {
+  try {
+    // Get all stocks from market data for the current quarter
+    const data = await fetchMarketData(quarter)
+    const allStocks = data?.all_stocks || []
+    
+    // Filter stocks based on query (case-insensitive)
+    const searchQuery = query.toLowerCase()
+    return allStocks.filter(stock => 
+      (stock.company_name?.toLowerCase().includes(searchQuery) || 
+       stock.symbol?.toLowerCase().includes(searchQuery)) ?? false
+    )
+  } catch (error) {
+    console.error('Error searching stocks:', error)
+    return [] // Return empty array instead of throwing
+  }
 } 
