@@ -1,99 +1,45 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { fetchMarketData, type Stock, type MarketOverview } from "@/lib/api"
+import { useState } from "react"
+import { type Stock } from "@/lib/api"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface StockTableProps {
   onStockSelect?: (symbol: string | null) => void
   selectedStock?: string | null
+  stocks: Stock[]
 }
 
 const ITEMS_PER_PAGE = 10
 
 function generatePageNumbers(currentPage: number, totalPages: number) {
-  const delta = 2;
-  const range = [];
-  const rangeWithDots = [];
-  let l;
-
-  range.push(1);
-
-  for (let i = currentPage - delta; i <= currentPage + delta; i++) {
-    if (i < totalPages && i > 1) {
-      range.push(i);
-    }
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
   }
 
-  range.push(totalPages);
-
-  for (let i of range) {
-    if (l) {
-      if (i - l === 2) {
-        rangeWithDots.push(l + 1);
-      } else if (i - l !== 1) {
-        rangeWithDots.push('...');
-      }
-    }
-    rangeWithDots.push(i);
-    l = i;
+  if (currentPage <= 4) {
+    return [1, 2, 3, 4, 5, '...', totalPages]
   }
 
-  return rangeWithDots;
+  if (currentPage >= totalPages - 3) {
+    return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages]
+  }
+
+  return [
+    1,
+    '...',
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    '...',
+    totalPages
+  ]
 }
 
-export function StockTable({ onStockSelect, selectedStock }: StockTableProps) {
-  const [marketData, setMarketData] = useState<MarketOverview | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export function StockTable({ onStockSelect, selectedStock, stocks }: StockTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
 
-  useEffect(() => {
-    async function loadMarketData() {
-      try {
-        const data = await fetchMarketData()
-        setMarketData(data)
-        setError(null)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch market data')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadMarketData()
-  }, [])
-
-  if (error) {
-    return (
-      <div className="rounded-md bg-red-50 dark:bg-red-900/10 p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-            <div className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-100 dark:bg-[#222222] rounded mb-4"></div>
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-12 bg-gray-50 dark:bg-[#222222]/50 rounded mb-2"></div>
-        ))}
-      </div>
-    )
-  }
-
-  if (!marketData?.all_stocks?.length) {
+  if (!stocks?.length) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-500 dark:text-gray-400">No data available</p>
@@ -101,10 +47,10 @@ export function StockTable({ onStockSelect, selectedStock }: StockTableProps) {
     )
   }
 
-  const totalPages = Math.ceil(marketData.all_stocks.length / ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(stocks.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentStocks = marketData.all_stocks.slice(startIndex, endIndex)
+  const currentStocks = stocks.slice(startIndex, endIndex)
 
   return (
     <div>
@@ -165,8 +111,8 @@ export function StockTable({ onStockSelect, selectedStock }: StockTableProps) {
       <div className="flex items-center justify-between px-2 py-4 border-t border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Showing {startIndex + 1} to {Math.min(endIndex, marketData.all_stocks.length)} of{' '}
-            {marketData.all_stocks.length} entries
+            Showing {startIndex + 1} to {Math.min(endIndex, stocks.length)} of{' '}
+            {stocks.length} entries
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -178,23 +124,27 @@ export function StockTable({ onStockSelect, selectedStock }: StockTableProps) {
             <ChevronLeft className="w-4 h-4" />
           </button>
           
-          {generatePageNumbers(currentPage, totalPages).map((pageNum, idx) => (
-            pageNum === '...' ? (
-              <span key={`dot-${idx}`} className="px-2 text-gray-500 dark:text-gray-400">...</span>
-            ) : (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(Number(pageNum))}
-                className={`min-w-[28px] h-7 text-xs rounded ${
-                  currentPage === pageNum
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1A1A1A]'
-                }`}
-              >
-                {pageNum}
-              </button>
-            )
-          ))}
+          <div className="flex items-center">
+            {generatePageNumbers(currentPage, totalPages).map((pageNum, idx) => (
+              typeof pageNum === 'string' ? (
+                <span key={`ellipsis-${idx}`} className="px-2 text-gray-500 dark:text-gray-400">
+                  {pageNum}
+                </span>
+              ) : (
+                <button
+                  key={`page-${pageNum}`}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`min-w-[28px] h-7 text-xs rounded ${
+                    currentPage === pageNum
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#1A1A1A]'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            ))}
+          </div>
 
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}

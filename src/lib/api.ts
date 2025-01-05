@@ -67,15 +67,10 @@ export async function getStockDetails(symbol: string): Promise<Stock> {
 }
 
 export async function getQuarters(): Promise<string[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/quarters`)
-    if (!response.ok) {
-      throw new Error('Failed to fetch quarters')
-    }
-    const data = await response.json()
-    return data.quarters
-  } catch (error) {
-    console.error('Error fetching quarters:', error)
-    throw error
+  const response = await fetch(`${API_BASE_URL}/quarters`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch quarters')
   }
+  const data = await response.json()
+  return data.quarters || []
 } 
