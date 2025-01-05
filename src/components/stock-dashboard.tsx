@@ -58,20 +58,18 @@ export function StockDashboard() {
 
   // Load quarters only once on component mount
   useEffect(() => {
-    let mounted = true
+    const abortController = new AbortController()
 
     async function loadQuarters() {
       try {
-        const data = await getQuarters()
-        if (mounted) {
+        const data = await getQuarters(abortController.signal)
+        if (data.length > 0) {
           setQuarters(data)
-          if (data.length > 0) {
-            setSelectedQuarter(data[0])
-          }
+          setSelectedQuarter(data[0])
         }
       } catch (error) {
-        console.error('Failed to fetch quarters:', error)
-        if (mounted) {
+        if (!abortController.signal.aborted) {
+          console.error('Failed to fetch quarters:', error)
           toast.error('Failed to fetch quarters. Please try again later.')
         }
       }
@@ -80,9 +78,9 @@ export function StockDashboard() {
     loadQuarters()
 
     return () => {
-      mounted = false
+      abortController.abort()
     }
-  }, [])
+  }, []) // Empty dependency array means this runs once on mount
 
   // Load market data when quarter changes
   useEffect(() => {
