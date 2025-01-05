@@ -82,6 +82,13 @@ export default function StockDetailsPage() {
   const { stock, formatted_metrics } = stockDetails
   const metrics = stock.financial_metrics[0] || {}
 
+  const formatNetProfitGrowth = (value: string) => {
+    // Remove any extra % signs and commas, then parse the number
+    const cleanValue = value.replace(/%%$/, '%').replace(/,/g, '')
+    const numValue = parseFloat(cleanValue)
+    return `${numValue}%`
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-3">
@@ -107,11 +114,8 @@ export default function StockDetailsPage() {
             <dl className="grid grid-cols-2 gap-4">
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">CMP</dt>
-                <dd className="mt-1 text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <dd className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
                   ₹{formatted_metrics.cmp}
-                  {formatted_metrics.net_profit_growth && (
-                    <GrowthIndicator value={formatted_metrics.net_profit_growth} />
-                  )}
                 </dd>
               </div>
               <div>
@@ -136,13 +140,13 @@ export default function StockDetailsPage() {
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Strengths</dt>
                 <dd className="mt-1 text-base font-medium text-green-600 dark:text-green-400 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
-                  {metrics.strengths || 'N/A'}
+                  {formatted_metrics.strengths || 'N/A'}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Weaknesses</dt>
                 <dd className="mt-1 text-base font-medium text-red-600 dark:text-red-400 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
-                  {metrics.weaknesses || 'N/A'}
+                  {formatted_metrics.weaknesses || 'N/A'}
                 </dd>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -154,8 +158,16 @@ export default function StockDetailsPage() {
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Fundamentals</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">
-                    {metrics.fundamental_insights || 'N/A'}
+                  <dd className="mt-1">
+                    <span className={`text-base font-medium ${
+                      formatted_metrics.recommendation === 'Strong Performer' ? 'text-yellow-600 dark:text-yellow-500' :
+                      formatted_metrics.recommendation === 'Mid-range performer' ? 'text-blue-600 dark:text-blue-500' :
+                      formatted_metrics.recommendation === 'Slowing down stock' ? 'text-orange-600 dark:text-orange-500' :
+                      formatted_metrics.recommendation === 'Weak Stock' ? 'text-red-600 dark:text-red-500' :
+                      'text-gray-600 dark:text-gray-400'
+                    }`}>
+                      {formatted_metrics.recommendation || 'N/A'}
+                    </span>
                   </dd>
                 </div>
               </div>
@@ -210,11 +222,15 @@ export default function StockDetailsPage() {
                 <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.net_profit || 'N/A'} Cr</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue Growth</dt>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit Growth</dt>
                 <dd className="mt-1">
-                  {metrics.revenue_growth_3yr_cagr ? (
-                    <GrowthIndicator value={metrics.revenue_growth_3yr_cagr} />
-                  ) : 'N/A'}
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
+                    parseFloat(formatted_metrics.net_profit_growth.replace(/%/g, '')) >= 0 
+                      ? 'text-green-600 bg-green-50 dark:bg-green-900/20' 
+                      : 'text-red-600 bg-red-50 dark:bg-red-900/20'
+                  }`}>
+                    {formatNetProfitGrowth(formatted_metrics.net_profit_growth)}
+                  </span>
                 </dd>
               </div>
             </dl>
