@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, TrendingDown, TrendingUp, Info } from 'lucide-react'
 import { toast } from 'sonner'
-import { getAnalysisContent, refreshAnalysis, type AIAnalysis } from '@/lib/api'
+import { getAnalysisContent, refreshAnalysis, getStockAnalysisHistory, type AIAnalysis } from '@/lib/api'
 
 interface AIInsightsProps {
   symbol: string
@@ -19,12 +19,25 @@ export function AIInsights({ symbol }: AIInsightsProps) {
   const [error, setError] = useState<string | null>(null)
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null)
 
-  const fetchLatestAnalysis = useCallback(async () => {
+  const fetchLatestAnalysis = useCallback(async (forceRefresh = false) => {
     try {
+      if (forceRefresh) {
+        const refreshResult = await refreshAnalysis(symbol)
+        await new Promise(resolve => setTimeout(resolve, 500))
+        return await getAnalysisContent(refreshResult.id)
+      }
+
+      // Try to get existing analysis first
+      const history = await getStockAnalysisHistory(symbol)
+      if (history.analyses.length > 0) {
+        const latestAnalysis = history.analyses[0]
+        return await getAnalysisContent(latestAnalysis.id)
+      }
+
+      // If no analysis exists, generate a new one
       const refreshResult = await refreshAnalysis(symbol)
       await new Promise(resolve => setTimeout(resolve, 500))
-      const analysisContent = await getAnalysisContent(refreshResult.id)
-      return analysisContent
+      return await getAnalysisContent(refreshResult.id)
     } catch (err) {
       console.error('Error fetching analysis:', err)
       throw new Error(err instanceof Error ? err.message : 'Failed to fetch analysis')
@@ -41,7 +54,7 @@ export function AIInsights({ symbol }: AIInsightsProps) {
       setLoading(true)
       setError(null)
       try {
-        const newAnalysis = await fetchLatestAnalysis()
+        const newAnalysis = await fetchLatestAnalysis(false)
         if (mounted) {
           setAnalysis(newAnalysis)
         }
@@ -77,7 +90,7 @@ export function AIInsights({ symbol }: AIInsightsProps) {
     try {
       await toast.promise(
         async () => {
-          const newAnalysis = await fetchLatestAnalysis()
+          const newAnalysis = await fetchLatestAnalysis(true)
           setAnalysis(newAnalysis)
         },
         {
@@ -147,10 +160,25 @@ export function AIInsights({ symbol }: AIInsightsProps) {
             <SentimentIcon className={`h-5 w-5 ${sentimentColor}`} />
             <CardTitle>AI Insights</CardTitle>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-muted-foreground">
+              <span className="font-medium">Last updated:</span>{' '}
+              {new Date(analysis.timestamp).toLocaleDateString(undefined, {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}{' '}
+              {new Date(analysis.timestamp).toLocaleTimeString(undefined, {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              })}
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
         <CardDescription>
           Analysis confidence: {(analysis.sentiment.score * 100).toFixed(1)}% - {analysis.sentiment.label}
