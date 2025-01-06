@@ -154,4 +154,12 @@ export async function searchStocks(query: string, quarter?: string): Promise<Sto
     console.error('Error searching stocks:', error)
     return [] // Return empty array instead of throwing
   }
+}
+
+export async function fetchStockChart(symbol: string, interval: string = "1y"): Promise<any[]> {
+  const response = await fetch(`${API_BASE_URL}/stock/${symbol}/chart?interval=${interval}`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch chart data')
+  }
+  return response.json()
 } 
