@@ -93,7 +93,7 @@ export default function StockDetailsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-3">
         {/* Header */}
-        <div className="mb-4">
+        <div className="mb-6">
           <Link href="/">
             <Button variant="ghost" className="mb-2 hover:bg-gray-100 dark:hover:bg-gray-800">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -107,7 +107,7 @@ export default function StockDetailsPage() {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Basic Information */}
           <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Basic Information</h2>
@@ -157,27 +157,44 @@ export default function StockDetailsPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Fundamentals</dt>
-                  <dd className="mt-1">
-                    <span className={`text-base font-medium ${
-                      formatted_metrics.recommendation === 'Strong Performer' ? 'text-yellow-600 dark:text-yellow-500' :
-                      formatted_metrics.recommendation === 'Mid-range performer' ? 'text-blue-600 dark:text-blue-500' :
-                      formatted_metrics.recommendation === 'Slowing down stock' ? 'text-orange-600 dark:text-orange-500' :
-                      formatted_metrics.recommendation === 'Weak Stock' ? 'text-red-600 dark:text-red-500' :
-                      'text-gray-600 dark:text-gray-400'
-                    }`}>
-                      {formatted_metrics.recommendation || 'N/A'}
-                    </span>
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Piotroski Score</dt>
+                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">
+                    {metrics.piotroski_score || 'N/A'}
                   </dd>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Growth Metrics */}
+          <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Growth Metrics</h2>
+            <dl className="grid grid-cols-1 gap-4">
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue Growth (3Y CAGR)</dt>
+                <dd className="mt-1">
+                  <GrowthIndicator value={metrics.revenue_growth_3yr_cagr || '0%'} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit Growth (3Y CAGR)</dt>
+                <dd className="mt-1">
+                  <GrowthIndicator value={metrics.net_profit_growth_3yr_cagr || '0%'} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Operating Profit Growth (3Y CAGR)</dt>
+                <dd className="mt-1">
+                  <GrowthIndicator value={metrics.operating_profit_growth_3yr_cagr || '0%'} />
+                </dd>
+              </div>
+            </dl>
+          </div>
+
           {/* Valuation Metrics */}
           <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Valuation Metrics</h2>
-            <dl className="grid grid-cols-3 gap-4">
+            <dl className="grid grid-cols-2 gap-4">
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Market Cap</dt>
                 <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.market_cap || 'N/A'} Cr</dd>
@@ -214,8 +231,20 @@ export default function StockDetailsPage() {
                 <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.revenue || 'N/A'} Cr</dd>
               </div>
               <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue Growth</dt>
+                <dd className="mt-1">
+                  <GrowthIndicator value={metrics.revenue_growth || '0%'} />
+                </dd>
+              </div>
+              <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Gross Profit</dt>
                 <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.gross_profit || 'N/A'} Cr</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Gross Profit Growth</dt>
+                <dd className="mt-1">
+                  <GrowthIndicator value={metrics.gross_profit_growth || '0%'} />
+                </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit</dt>
@@ -224,20 +253,14 @@ export default function StockDetailsPage() {
               <div>
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit Growth</dt>
                 <dd className="mt-1">
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
-                    parseFloat(formatted_metrics.net_profit_growth.replace(/%/g, '')) >= 0 
-                      ? 'text-green-600 bg-green-50 dark:bg-green-900/20' 
-                      : 'text-red-600 bg-red-50 dark:bg-red-900/20'
-                  }`}>
-                    {formatNetProfitGrowth(formatted_metrics.net_profit_growth)}
-                  </span>
+                  <GrowthIndicator value={formatted_metrics.net_profit_growth} />
                 </dd>
               </div>
             </dl>
           </div>
 
           {/* Recommendation Card */}
-          <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700 lg:col-span-2">
+          <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700 lg:col-span-3">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Recommendation</h2>
             <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
               <div className="flex items-start gap-4">
