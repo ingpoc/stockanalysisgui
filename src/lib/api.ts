@@ -75,6 +75,31 @@ export interface StockDetailsResponse {
   formatted_metrics: FormattedMetrics
 }
 
+export interface AnalysisSentiment {
+  score: number
+  label: string
+}
+
+export interface AIAnalysis {
+  id: string
+  company_name: string
+  symbol: string
+  analysis: string
+  recommendation: string
+  sentiment: AnalysisSentiment
+  technical_indicators: Record<string, any>
+  fundamental_analysis: Record<string, any>
+  timestamp: string
+}
+
+export interface AIAnalysisHistory {
+  analyses: {
+    id: string
+    timestamp: string
+    label: string
+  }[]
+}
+
 export async function fetchMarketData(quarter?: string): Promise<MarketOverview> {
   try {
     const url = new URL(`${API_BASE_URL}/market-data`)
@@ -161,5 +186,55 @@ export async function fetchStockChart(symbol: string, interval: string = "1y"): 
   if (!response.ok) {
     throw new Error('Failed to fetch chart data')
   }
+  return response.json()
+}
+
+export async function getStockAnalysisHistory(symbol: string): Promise<AIAnalysisHistory> {
+  const response = await fetch(`${API_BASE_URL}/stock/${symbol}/analysis-history`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch analysis history')
+  }
+  return response.json()
+}
+
+export async function getAnalysisContent(analysisId: string, retryCount = 3, retryDelay = 1000): Promise<AIAnalysis> {
+  let lastError;
+  
+  for (let i = 0; i < retryCount; i++) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/analysis/${analysisId}`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch analysis content: ${response.statusText}`)
+      }
+      return response.json()
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error)
+      lastError = error
+      if (i < retryCount - 1) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay))
+      }
+    }
+  }
+  throw lastError || new Error('Failed to fetch analysis content after retries')
+}
+
+export async function refreshAnalysis(symbol: string): Promise<{
+  id: string
+  content: string
+  timestamp: string
+  recommendation: string
+}> {
+  const response = await fetch(`${API_BASE_URL}/stock/${symbol}/refresh-analysis`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Failed to refresh analysis: ${errorText}`)
+  }
+  
   return response.json()
 } 

@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { PageContainer } from "@/components/layout/page-container"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StockChart } from "@/components/stock-chart"
+import { AIInsights } from "@/components/ai-insights"
 
 function GrowthIndicator({ value }: { value: string }) {
   // Remove any commas and extra % signs, then parse the number
@@ -311,11 +312,9 @@ export default function StockDetailsPage() {
             <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm border border-gray-100 dark:border-gray-700">
               <div className="mb-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI-Powered Analysis</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Advanced AI insights coming soon</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Advanced AI insights and sentiment analysis</p>
               </div>
-              <div className="flex items-center justify-center h-[400px] text-gray-500 dark:text-gray-400">
-                Coming Soon
-              </div>
+              <AIInsights symbol={symbol as string} />
             </div>
           </TabsContent>
         </Tabs>
