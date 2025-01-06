@@ -12,16 +12,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StockChart } from "@/components/stock-chart"
 
 function GrowthIndicator({ value }: { value: string }) {
-  const numValue = Number(value?.replace('%', ''))
+  // Remove any commas and extra % signs, then parse the number
+  const cleanValue = value?.replace(/,/g, '').replace(/%%$/, '%')
+  const numValue = parseFloat(cleanValue)
   const isPositive = numValue >= 0
   const Icon = isPositive ? TrendingUp : TrendingDown
   
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
-      isPositive ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-red-600 bg-red-50 dark:bg-red-900/20'
+      isPositive 
+        ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' 
+        : 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400'
     }`}>
       <Icon className="w-3 h-3" />
-      {value}
+      {cleanValue}
     </span>
   )
 }
