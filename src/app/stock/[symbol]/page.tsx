@@ -7,6 +7,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { toast } from "sonner"
+import { PageContainer } from "@/components/layout/page-container"
 
 function GrowthIndicator({ value }: { value: string }) {
   const numValue = Number(value?.replace('%', ''))
@@ -91,7 +92,7 @@ export default function StockDetailsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 py-3">
+      <PageContainer>
         {/* Header */}
         <div className="mb-6">
           <Link href="/">
@@ -279,7 +280,7 @@ export default function StockDetailsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </div>
   )
 } 

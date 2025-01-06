@@ -158,7 +158,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Type to search stocks..."
-                  className="pl-10 pr-4 py-2 w-96 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
+                  className="pl-10 pr-4 py-2 w-[32rem] rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                 />
                 {loading && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -168,7 +168,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
                 {/* Search Results Dropdown */}
                 {isOpen && results.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-80 w-96 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-[#1A1A1A]">
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-80 w-[32rem] overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-[#1A1A1A]">
                     {results.map((stock) => (
                       <button
                         key={`${stock.symbol}-${stock.company_name}`}
