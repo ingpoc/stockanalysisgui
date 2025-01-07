@@ -187,37 +187,121 @@ export function AIInsights({ symbol }: AIInsightsProps) {
       <CardContent>
         <div className="space-y-6">
           {/* Main Analysis */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Analysis</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-              {analysis.analysis}
-            </p>
-          </div>
-
-          {/* Technical Indicators */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Technical Indicators</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {Object.entries(analysis.technical_indicators).map(([key, value]) => (
-                <div key={key} className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">{key}</dt>
-                  <dd className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{value}</dd>
+          <div className="space-y-4">
+            {typeof analysis.analysis === 'string' ? (
+              // Old format
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Analysis</h3>
+                <div className="prose prose-sm max-w-none text-gray-600 dark:text-gray-300">
+                  {analysis.analysis.split('**').map((section, index) => {
+                    if (index % 2 === 1) { // Section title
+                      return <h4 key={index} className="font-medium mt-4 mb-2">{section.trim()}</h4>;
+                    } else { // Section content
+                      return <p key={index} className="mb-4">{section.trim()}</p>;
+                    }
+                  })}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            ) : (
+              // New format
+              <>
+                {/* Sentiment Summary */}
+                {analysis.analysis.sentiment_summary && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Market Sentiment</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {analysis.analysis.sentiment_summary}
+                    </p>
+                  </div>
+                )}
 
-          {/* Fundamental Analysis */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Fundamental Analysis</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {Object.entries(analysis.fundamental_analysis).map(([key, value]) => (
-                <div key={key} className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">{key}</dt>
-                  <dd className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">{value}</dd>
-                </div>
-              ))}
-            </div>
+                {/* Key Factors */}
+                {analysis.analysis.key_factors.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Key Market Factors</h3>
+                    <ul className="list-disc pl-5 space-y-2">
+                      {analysis.analysis.key_factors.map((factor, index) => (
+                        <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                          {factor.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* News Impact */}
+                {analysis.analysis.news_impact.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Latest News Impact</h3>
+                    <ul className="list-disc pl-5 space-y-2">
+                      {analysis.analysis.news_impact.map((news, index) => (
+                        <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                          {news.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Risks and Opportunities */}
+                {analysis.analysis.risks_opportunities && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Hidden Risks & Opportunities</h3>
+                    {analysis.analysis.risks_opportunities.risks.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-md font-medium mb-2 text-red-600 dark:text-red-400">Risks</h4>
+                        <ul className="list-disc pl-5 space-y-2">
+                          {analysis.analysis.risks_opportunities.risks.map((risk, index) => (
+                            <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                              {risk.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {analysis.analysis.risks_opportunities.opportunities.length > 0 && (
+                      <div>
+                        <h4 className="text-md font-medium mb-2 text-green-600 dark:text-green-400">Opportunities</h4>
+                        <ul className="list-disc pl-5 space-y-2">
+                          {analysis.analysis.risks_opportunities.opportunities.map((opportunity, index) => (
+                            <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                              {opportunity.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Forward Outlook */}
+                {analysis.analysis.forward_outlook && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Forward Outlook & Catalysts</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {analysis.analysis.forward_outlook.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
+                    </p>
+                  </div>
+                )}
+
+                {/* Market Analysis */}
+                {analysis.market_analysis && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Market Context</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(analysis.market_analysis).map(([key, value]) => (
+                        <div key={key} className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                          <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </dt>
+                          <dd className="mt-1 text-sm font-semibold text-gray-900 dark:text-white capitalize">{value}</dd>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Recommendation */}

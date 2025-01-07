@@ -81,15 +81,31 @@ export interface AnalysisSentiment {
 }
 
 export interface AIAnalysis {
-  id: string
-  company_name: string
-  symbol: string
-  analysis: string
-  recommendation: string
-  sentiment: AnalysisSentiment
-  technical_indicators: Record<string, any>
-  fundamental_analysis: Record<string, any>
-  timestamp: string
+  id: string;
+  company_name: string;
+  symbol: string;
+  analysis: string | {
+    sentiment_summary: string;
+    key_factors: string[];
+    news_impact: string[];
+    risks_opportunities: {
+      risks: string[];
+      opportunities: string[];
+    };
+    forward_outlook: string;
+  };
+  sentiment: {
+    score: number;
+    label: string;
+  };
+  technical_indicators: Record<string, any>;
+  market_analysis: {
+    sector_sentiment: string;
+    peer_comparison: string;
+    institutional_interest: string;
+  };
+  recommendation: string;
+  timestamp: string;
 }
 
 export interface AIAnalysisHistory {
