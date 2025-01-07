@@ -1,35 +1,28 @@
 import "./globals.css"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
+import type { ReactNode } from 'react'
 import { Toaster } from "sonner"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-
-const inter = Inter({ subsets: ["latin"] })
+import { Providers } from "@/components/providers"
 
 export const metadata = {
   title: "Stock Analysis Dashboard",
   description: "Real-time stock analysis and insights",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+interface RootLayoutProps {
+  children: ReactNode
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+      <body className="font-sans antialiased">
+        <Providers>
           <DashboardLayout>
             {children}
           </DashboardLayout>
           <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )
