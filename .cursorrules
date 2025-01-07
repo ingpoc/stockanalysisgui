@@ -1,0 +1,76 @@
+# Frontend Project-Specific Instructions for Cursor AI
+
+## General Guidelines
+- Write clean, maintainable TypeScript/React code
+- Follow Next.js 15.x app router conventions
+- Use proper TypeScript types and interfaces
+- Implement responsive design patterns
+- Follow accessibility (a11y) best practices
+
+## Project Structure
+- Strict directory structure:
+  - `src/app/` - Next.js app router pages and layouts
+  - `src/components/` - React components
+    - `ui/` - shadcn/ui components
+    - `shared/` - Reusable components
+  - `src/lib/` - Utility functions and hooks
+  - `src/types/` - TypeScript type definitions
+  - `src/styles/` - Global styles and CSS modules
+  - `public/` - Static assets
+
+## Component Guidelines
+- Use TypeScript for all components
+- Implement proper prop types
+- Follow functional component patterns
+- Use proper error boundaries
+- Implement loading states
+- Handle edge cases
+
+## State Management
+- Use React hooks for local state
+- Implement proper context providers
+- Use SWR for data fetching
+- Handle loading and error states
+
+## Styling Requirements
+- Use Tailwind CSS for styling
+- Follow design system tokens
+- Implement dark mode support
+- Use CSS modules for component-specific styles
+
+## API Integration
+- Use typed API calls
+- Implement proper error handling
+- Use environment variables for API endpoints
+- Handle loading and error states
+- Cache API responses appropriately
+
+## Performance Requirements
+- Implement code splitting
+- Use proper image optimization
+- Implement lazy loading
+- Monitor and optimize bundle size
+- Use proper meta tags for SEO
+
+## Required Environment Variables
+- NEXT_PUBLIC_API_URL
+- NEXT_PUBLIC_ENVIRONMENT
+- NEXT_PUBLIC_ANALYTICS_ID
+
+## Documentation
+- Document components with proper JSDoc
+- Maintain README.md
+- Document custom hooks
+- Add comments for complex logic
+
+## Security
+- Implement proper CORS settings
+- Handle authentication properly
+- Sanitize user inputs
+- Follow security best practices
+
+## Accessibility
+- Follow WCAG guidelines
+- Implement proper ARIA labels
+- Ensure keyboard navigation
+- Test with screen readers 
