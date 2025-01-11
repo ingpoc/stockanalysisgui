@@ -74,3 +74,41 @@
 - Implement proper ARIA labels
 - Ensure keyboard navigation
 - Test with screen readers 
+
+# Authentication File Rules
+auth.files.location: src/auth/**
+auth.files.pattern: 
+  - "**/auth/**"
+  - "**/auth.*"
+  - "**/*.auth.*"
+  - "**/providers.tsx"
+  - "**/wagmi.*"
+  - "**/next-auth.*"
+  - "**/siwe.*"
+
+# Files that must be in src/auth/
+auth.required.location:
+  - config.ts
+  - types.ts
+  - route.ts
+  - providers.tsx
+  - wagmi.ts
+
+# Exceptions for Next.js pages and middleware
+auth.exceptions:
+  - src/app/auth/login/page.tsx  # Next.js page must be in app directory
+  - middleware.ts  # Next.js requires at root
+
+# Documentation
+auth.description: |
+  All authentication-related files should be located in the src/auth directory.
+  This includes:
+  - NextAuth configuration and types
+  - Wagmi configuration
+  - SIWE implementation
+  - Authentication providers
+  - API routes for auth
+  
+  Exceptions are made for:
+  1. Next.js pages which must follow the app directory structure
+  2. middleware.ts which must be at the root level for Next.js to function properly 
