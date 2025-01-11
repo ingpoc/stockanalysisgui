@@ -77,7 +77,7 @@ export default function StockDetailsPage() {
         <div className="text-center">
           <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Stock Not Found</h2>
           <p className="text-gray-500 dark:text-gray-400">The requested stock could not be found.</p>
-          <Link href="/">
+          <Link href="/dashboard">
             <Button className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
@@ -103,7 +103,7 @@ export default function StockDetailsPage() {
       <PageContainer>
         {/* Header */}
         <div className="mb-6">
-          <Link href="/">
+          <Link href="/dashboard">
             <Button variant="ghost" className="mb-2 hover:bg-gray-100 dark:hover:bg-gray-800">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard

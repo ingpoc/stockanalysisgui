@@ -1,9 +1,5 @@
-import { StockDashboard } from "@/components/stock-dashboard"
+import { redirect } from "next/navigation"
 
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-background">
-      <StockDashboard />
-    </main>
-  )
+export default function HomePage() {
+  redirect("/dashboard")
 }
