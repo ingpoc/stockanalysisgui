@@ -2,7 +2,7 @@ import "./globals.css"
 import type { ReactNode } from 'react'
 import { Toaster } from "sonner"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { Providers } from "@/components/providers"
+import { Providers } from "@/auth/providers"
 
 export const metadata = {
   title: "Stock Analysis Dashboard",

@@ -85,6 +85,7 @@ auth.files.pattern:
   - "**/wagmi.*"
   - "**/next-auth.*"
   - "**/siwe.*"
+  - "**/auth-button.tsx"
 
 # Files that must be in src/auth/
 auth.required.location:
@@ -93,6 +94,7 @@ auth.required.location:
   - route.ts
   - providers.tsx
   - wagmi.ts
+  - auth-context.tsx
 
 # Exceptions for Next.js pages and middleware
 auth.exceptions:

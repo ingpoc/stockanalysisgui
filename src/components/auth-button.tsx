@@ -2,7 +2,7 @@
 
 import type { FC } from 'react';
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/auth/auth-context"
 import { useAccount, useConnect, useDisconnect } from "wagmi"
 
 export const AuthButton: FC = () => {
