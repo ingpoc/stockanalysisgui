@@ -32,7 +32,8 @@ function GrowthIndicator({ value }: { value: string }) {
 }
 
 export default function StockDetailsPage() {
-  const { symbol } = useParams()
+  const params = useParams<{ symbol: string }>()
+  const symbol = params?.symbol
   const [stockDetails, setStockDetails] = useState<StockDetailsResponse | null>(null)
   const [loading, setLoading] = useState(true)
 

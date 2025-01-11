@@ -10,7 +10,7 @@ import { mainnet } from 'wagmi/chains';
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      NEXT_PUBLIC_REOWN_PROJECT_ID: string;
+        NEXT_PUBLIC_PROJECT_ID : string;
       NEXT_PUBLIC_APP_URL: string;
     }
   }
@@ -22,14 +22,14 @@ export const wagmiAdapter = new WagmiAdapter({
     storage: cookieStorage
   }),
   ssr: true,
-  projectId: process.env.NEXT_PUBLIC_REOWN_PROJECT_ID,
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID,
   networks: [mainnet]
 });
 
 // Create the AppKit instance
 const appKit = createAppKit({
   adapters: [wagmiAdapter],
-  projectId: process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || '',
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
   networks: [mainnet],
   defaultNetwork: mainnet,
   metadata: {
