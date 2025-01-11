@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { ModeToggle } from "@/components/mode-toggle"
-import { AuthButton } from "@/components/auth-button"
+import ConnectButton from "@/components/auth/connect-button"
 import { 
   LayoutGrid, 
   LineChart, 
@@ -195,9 +195,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <AuthButton />
+            <div className="flex items-center gap-4">
               <ModeToggle />
+              <ConnectButton />
             </div>
           </div>
         </header>

@@ -1,11 +1,12 @@
-"use client"
+'use client'
 
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { StockDashboard } from "@/components/stock-dashboard"
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-background">
+    <DashboardLayout>
       <StockDashboard />
-    </main>
+    </DashboardLayout>
   )
 } 

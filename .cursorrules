@@ -14,9 +14,37 @@
     - `ui/` - shadcn/ui components
     - `shared/` - Reusable components
   - `src/lib/` - Utility functions and hooks
+  - `src/config/` - Configuration files
+    - `index.ts` - AppKit and Wagmi configuration
+  - `src/context/` - React context providers
+    - `index.tsx` - AppKit context provider
   - `src/types/` - TypeScript type definitions
   - `src/styles/` - Global styles and CSS modules
   - `public/` - Static assets
+
+## Authentication Structure
+auth.files.location: src/config/** and src/context/**
+auth.files.pattern: 
+  - "**/config/index.ts"
+  - "**/context/index.tsx"
+  - "**/app/auth/**"
+  - "**/components/auth/**"
+
+# Required Configuration Files
+auth.required.location:
+  - config/index.ts      # AppKit and Wagmi configuration
+  - context/index.tsx    # AppKit context provider
+  - app/auth/login/page.tsx  # Login page
+  - components/auth/connect-button.tsx  # Connect button component
+
+# Exceptions for Next.js pages and middleware
+auth.exceptions:
+  - next.config.js  # Next.js webpack configuration
+  - middleware.ts   # Next.js requires at root
+
+## Required Environment Variables
+- NEXT_PUBLIC_PROJECT_ID=09fccb634332c292a3cb889c0592b928
+- NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## Component Guidelines
 - Use TypeScript for all components
@@ -28,8 +56,8 @@
 
 ## State Management
 - Use React hooks for local state
-- Implement proper context providers
-- Use SWR for data fetching
+- Use AppKit hooks for wallet state
+- Use TanStack Query for data fetching
 - Handle loading and error states
 
 ## Styling Requirements
@@ -38,12 +66,12 @@
 - Implement dark mode support
 - Use CSS modules for component-specific styles
 
-## API Integration
-- Use typed API calls
+## AppKit Integration
+- Use AppKit hooks for wallet interactions
 - Implement proper error handling
-- Use environment variables for API endpoints
+- Use environment variables for project ID
 - Handle loading and error states
-- Cache API responses appropriately
+- Cache wallet state appropriately
 
 ## Performance Requirements
 - Implement code splitting
@@ -51,11 +79,6 @@
 - Implement lazy loading
 - Monitor and optimize bundle size
 - Use proper meta tags for SEO
-
-## Required Environment Variables
-- NEXT_PUBLIC_API_URL
-- NEXT_PUBLIC_ENVIRONMENT
-- NEXT_PUBLIC_ANALYTICS_ID
 
 ## Documentation
 - Document components with proper JSDoc
@@ -73,44 +96,30 @@
 - Follow WCAG guidelines
 - Implement proper ARIA labels
 - Ensure keyboard navigation
-- Test with screen readers 
-
-# Authentication File Rules
-auth.files.location: src/auth/**
-auth.files.pattern: 
-  - "**/auth/**"
-  - "**/auth.*"
-  - "**/*.auth.*"
-  - "**/providers.tsx"
-  - "**/wagmi.*"
-  - "**/next-auth.*"
-  - "**/siwe.*"
-  - "**/auth-button.tsx"
-
-# Files that must be in src/auth/
-auth.required.location:
-  - config.ts
-  - types.ts
-  - route.ts
-  - providers.tsx
-  - wagmi.ts
-  - auth-context.tsx
-
-# Exceptions for Next.js pages and middleware
-auth.exceptions:
-  - src/app/auth/login/page.tsx  # Next.js page must be in app directory
-  - middleware.ts  # Next.js requires at root
+- Test with screen readers
 
 # Documentation
 auth.description: |
-  All authentication-related files should be located in the src/auth directory.
-  This includes:
-  - NextAuth configuration and types
-  - Wagmi configuration
-  - SIWE implementation
-  - Authentication providers
-  - API routes for auth
+  Authentication configuration follows the Reown AppKit structure:
   
-  Exceptions are made for:
-  1. Next.js pages which must follow the app directory structure
-  2. middleware.ts which must be at the root level for Next.js to function properly 
+  1. Configuration (src/config/index.ts):
+     - AppKit configuration
+     - Wagmi adapter setup
+     - Network configuration
+  
+  2. Context Provider (src/context/index.tsx):
+     - AppKit provider setup
+     - Wagmi provider
+     - Query client provider
+  
+  3. Components:
+     - Login page in app/auth/login/page.tsx
+     - Connect button in components/auth/connect-button.tsx
+  
+  4. Additional Configuration:
+     - next.config.js for webpack setup
+     - middleware.ts for protected routes
+  
+  Reference:
+  - https://docs.reown.com/appkit/next/core/installation
+  - https://github.com/reown-com/appkit-web-examples/tree/main/nextjs/next-multichain-app-router 

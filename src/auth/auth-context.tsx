@@ -1,61 +1,47 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { createContext, useContext } from 'react';
-import { createAppKit } from '@reown/appkit/react';
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { cookieStorage, createStorage, http } from '@wagmi/core';
-import { mainnet } from 'wagmi/chains';
+import { createContext, useContext, ReactNode } from 'react';
+import { useAccount } from 'wagmi';
+import { useAppKit } from '@reown/appkit/react';
+import { signIn } from 'next-auth/react';
 
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-        NEXT_PUBLIC_PROJECT_ID : string;
-      NEXT_PUBLIC_APP_URL: string;
-    }
-  }
+interface ConnectOptions {
+  method: 'wallet' | 'google' | 'apple' | 'email';
 }
 
-// Set up the Wagmi Adapter
-export const wagmiAdapter = new WagmiAdapter({
-  storage: createStorage({
-    storage: cookieStorage
-  }),
-  ssr: true,
-  projectId: process.env.NEXT_PUBLIC_PROJECT_ID,
-  networks: [mainnet]
-});
+interface AuthContextValue {
+  connect: (options: ConnectOptions) => Promise<void>;
+  isConnected: boolean;
+  isAuthenticated: boolean;
+}
 
-// Create the AppKit instance
-const appKit = createAppKit({
-  adapters: [wagmiAdapter],
-  projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
-  networks: [mainnet],
-  defaultNetwork: mainnet,
-  metadata: {
-    name: 'Stock Analysis Dashboard',
-    description: 'Real-time stock analysis and insights',
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    icons: ['https://avatars.githubusercontent.com/u/179229932']
-  }
-});
-
-type AppKitContextType = typeof appKit;
-
-const AuthContext = createContext<AppKitContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue>({} as AuthContextValue);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { open } = useAppKit();
+  const { isConnected } = useAccount();
+
+  const connect = async ({ method }: ConnectOptions) => {
+    if (method === 'wallet') {
+      await open();
+    } else {
+      await signIn(method);
+    }
+  };
+
+  const value = {
+    connect,
+    isConnected,
+    isAuthenticated: isConnected
+  };
+
   return (
-    <AuthContext.Provider value={appKit}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth(): AppKitContextType {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+export function useAuth() {
+  return useContext(AuthContext);
 } 

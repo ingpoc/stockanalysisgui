@@ -3,15 +3,15 @@
 import { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { WagmiProvider } from "wagmi"
-import { wagmiAdapter } from "@/auth/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/auth/auth-context"
+import { AuthProvider } from "./auth-context"
+import { config } from '@/config'
 
 const queryClient = new QueryClient()
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+    <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ThemeProvider

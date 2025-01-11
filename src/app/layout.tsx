@@ -1,28 +1,34 @@
-import "./globals.css"
-import type { ReactNode } from 'react'
-import { Toaster } from "sonner"
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { Providers } from "@/auth/providers"
+import './globals.css'
+import { headers } from 'next/headers'
+import ContextProvider from '@/context'
+import { ThemeProvider } from '@/components/theme-provider'
 
 export const metadata = {
-  title: "Stock Analysis Dashboard",
-  description: "Real-time stock analysis and insights",
+  title: 'Stock Analysis Dashboard',
+  description: 'Real-time stock analysis and insights',
 }
 
-interface RootLayoutProps {
-  children: ReactNode
-}
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const headersList = await headers()
+  const cookieStore = headersList.get('cookie')
 
-export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased">
-        <Providers>
-          <DashboardLayout>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ContextProvider cookies={cookieStore}>
             {children}
-          </DashboardLayout>
-          <Toaster richColors position="top-right" />
-        </Providers>
+          </ContextProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
