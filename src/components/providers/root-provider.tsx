@@ -6,6 +6,7 @@ import { WagmiProvider, type Config } from 'wagmi'
 import { ThemeProvider } from '@/components/theme-provider'
 import { config } from '@/config'
 import { useAppKitProvider } from '@reown/appkit/react'
+import { DisconnectHandler } from '@/components/auth/disconnect-handler'
 
 const queryClient = new QueryClient()
 
@@ -25,6 +26,7 @@ export function RootProvider({ children }: { children: ReactNode }) {
             enableSystem
             disableTransitionOnChange
           >
+            <DisconnectHandler />
             {children}
           </ThemeProvider>
         </AppKitClientProvider>

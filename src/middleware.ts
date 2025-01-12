@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { appKit } from '@/config'
 
-export async function middleware(request: NextRequest) {
-  const isPublicRoute = ['/auth/login', '/'].includes(request.nextUrl.pathname)
-  const isIgnoredRoute = ['/api/auth'].includes(request.nextUrl.pathname)
+const publicRoutes = ['/auth/login']
 
-  if (isPublicRoute || isIgnoredRoute) {
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Allow public routes
+  if (publicRoutes.includes(pathname)) {
     return NextResponse.next()
   }
 
-  const token = request.cookies.get('appkit.token')?.value
-  if (!token) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+  // Check for AppKit auth cookie
+  const isAuthenticated = request.cookies.has('wagmi.connected')
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    const loginUrl = new URL('/auth/login', request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
@@ -20,10 +25,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/stock/:path*",
-    "/insights/:path*",
-    "/technical/:path*",
-    "/api/protected/:path*",
-  ]
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
 } 
