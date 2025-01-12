@@ -9,117 +9,145 @@
 
 ## Project Structure
 - Strict directory structure:
-  - `src/app/` - Next.js app router pages and layouts
-  - `src/components/` - React components
-    - `ui/` - shadcn/ui components
-    - `shared/` - Reusable components
-  - `src/lib/` - Utility functions and hooks
-  - `src/config/` - Configuration files
-    - `index.ts` - AppKit and Wagmi configuration
-  - `src/context/` - React context providers
-    - `index.tsx` - AppKit context provider
-  - `src/types/` - TypeScript type definitions
-  - `src/styles/` - Global styles and CSS modules
+  - `src/` - Source code root
+    - `app/` - Next.js app router pages and layouts
+      - `layout.tsx` - Root layout with AppKit provider
+      - `page.tsx` - Root page
+      - `auth/` - Authentication pages
+        - `login/` - Login page
+        - `callback/` - OAuth callback handling
+    - `components/` - React components
+      - `ui/` - shadcn/ui components
+      - `auth/` - Authentication components
+        - `disconnect-handler.tsx` - Disconnect state handler
+        - `connect-button.tsx` - Connect wallet button
+      - `shared/` - Reusable components
+    - `lib/` - Utility functions and hooks
+    - `config/` - Configuration files
+      - `index.ts` - AppKit and Wagmi configuration
+    - `context/` - React context providers
+    - `types/` - TypeScript type definitions
+    - `styles/` - Global styles and CSS modules
   - `public/` - Static assets
 
 ## Authentication Structure
-auth.files.location: src/config/** and src/context/**
-auth.files.pattern: 
-  - "**/config/index.ts"
-  - "**/context/index.tsx"
-  - "**/app/auth/**"
-  - "**/components/auth/**"
+auth.files.required:
+  - src/config/index.ts:
+      description: "AppKit and Wagmi configuration with multichain support"
+      required_exports:
+        - appKit
+        - wagmiAdapter
+        - config
+  
+  - src/app/layout.tsx:
+      description: "Root layout with AppKit provider setup"
+      required_components:
+        - AppKitProvider
+        - DisconnectHandler
+  
+  - src/app/auth/login/page.tsx:
+      description: "Login page with wallet and social login"
+      required_hooks:
+        - useAppKit
+        - useRouter
+  
+  - src/components/auth/disconnect-handler.tsx:
+      description: "Handles disconnection and redirects"
+      required_hooks:
+        - useAppKit
+        - useRouter
+        - useEffect
+  
+  - src/components/auth/connect-button.tsx:
+      description: "Connect wallet button component"
+      required_hooks:
+        - useAppKit
 
-# Required Configuration Files
-auth.required.location:
-  - config/index.ts      # AppKit and Wagmi configuration
-  - context/index.tsx    # AppKit context provider
-  - app/auth/login/page.tsx  # Login page
-  - components/auth/connect-button.tsx  # Connect button component
-
-# Exceptions for Next.js pages and middleware
-auth.exceptions:
-  - next.config.js  # Next.js webpack configuration
-  - middleware.ts   # Next.js requires at root
+auth.files.optional:
+  - src/app/auth/callback/page.tsx:
+      description: "OAuth callback handling"
+  - src/components/auth/profile.tsx:
+      description: "User profile display"
 
 ## Required Environment Variables
-- NEXT_PUBLIC_PROJECT_ID=09fccb634332c292a3cb889c0592b928
-- NEXT_PUBLIC_APP_URL=http://localhost:3000
+env.required:
+  - NEXT_PUBLIC_PROJECT_ID:
+      description: "Reown AppKit project ID"
+      required: true
+  - NEXT_PUBLIC_APP_URL:
+      description: "Frontend application URL"
+      required: true
+  - GOOGLE_CLIENT_ID:
+      description: "Google OAuth client ID"
+      required: false
+  - GOOGLE_CLIENT_SECRET:
+      description: "Google OAuth client secret"
+      required: false
+  - APPLE_CLIENT_ID:
+      description: "Apple OAuth client ID"
+      required: false
+  - APPLE_CLIENT_SECRET:
+      description: "Apple OAuth client secret"
+      required: false
 
 ## Component Guidelines
-- Use TypeScript for all components
-- Implement proper prop types
-- Follow functional component patterns
-- Use proper error boundaries
-- Implement loading states
-- Handle edge cases
+components.rules:
+  - Use TypeScript for all components
+  - Implement proper prop types
+  - Follow functional component patterns
+  - Use proper error boundaries
+  - Implement loading states
+  - Handle edge cases
+  - Use AppKit hooks for wallet interactions
 
 ## State Management
-- Use React hooks for local state
-- Use AppKit hooks for wallet state
-- Use TanStack Query for data fetching
-- Handle loading and error states
+state.rules:
+  - Use AppKit hooks for authentication state:
+    - useAppKit for connection and modal
+    - isConnected for auth state checks
+  - Use React hooks for local state
+  - Use TanStack Query for data fetching
+  - Handle loading and error states
+  - Cache wallet state appropriately
 
 ## Styling Requirements
-- Use Tailwind CSS for styling
-- Follow design system tokens
-- Implement dark mode support
-- Use CSS modules for component-specific styles
+styling.rules:
+  - Use Tailwind CSS for styling
+  - Follow design system tokens
+  - Implement dark mode support
+  - Use CSS modules for component-specific styles
 
-## AppKit Integration
-- Use AppKit hooks for wallet interactions
-- Implement proper error handling
-- Use environment variables for project ID
-- Handle loading and error states
-- Cache wallet state appropriately
+## Security Requirements
+security.rules:
+  - Implement proper route protection
+  - Handle authentication state securely
+  - Implement proper CORS settings
+  - Sanitize user inputs
+  - Follow AppKit security guidelines
+  - Protect API routes
+  - Handle session management
 
 ## Performance Requirements
-- Implement code splitting
-- Use proper image optimization
-- Implement lazy loading
-- Monitor and optimize bundle size
-- Use proper meta tags for SEO
+performance.rules:
+  - Implement code splitting
+  - Use proper image optimization
+  - Implement lazy loading
+  - Monitor and optimize bundle size
+  - Use proper meta tags for SEO
 
-## Documentation
-- Document components with proper JSDoc
-- Maintain README.md
-- Document custom hooks
-- Add comments for complex logic
+## Documentation Requirements
+documentation.rules:
+  - Document components with proper JSDoc
+  - Maintain README.md
+  - Document custom hooks
+  - Add comments for complex logic
+  - Document authentication flow
 
-## Security
-- Implement proper CORS settings
-- Handle authentication properly
-- Sanitize user inputs
-- Follow security best practices
-
-## Accessibility
-- Follow WCAG guidelines
-- Implement proper ARIA labels
-- Ensure keyboard navigation
-- Test with screen readers
-
-# Documentation
-auth.description: |
-  Authentication configuration follows the Reown AppKit structure:
-  
-  1. Configuration (src/config/index.ts):
-     - AppKit configuration
-     - Wagmi adapter setup
-     - Network configuration
-  
-  2. Context Provider (src/context/index.tsx):
-     - AppKit provider setup
-     - Wagmi provider
-     - Query client provider
-  
-  3. Components:
-     - Login page in app/auth/login/page.tsx
-     - Connect button in components/auth/connect-button.tsx
-  
-  4. Additional Configuration:
-     - next.config.js for webpack setup
-     - middleware.ts for protected routes
-  
-  Reference:
-  - https://docs.reown.com/appkit/next/core/installation
-  - https://github.com/reown-com/appkit-web-examples/tree/main/nextjs/next-multichain-app-router 
+## Reference Documentation
+references:
+  - title: "AppKit Multichain Example"
+    url: "https://github.com/reown-com/appkit-web-examples/tree/main/nextjs/next-multichain-app-router"
+  - title: "AppKit Documentation"
+    url: "https://docs.reown.com/appkit"
+  - title: "Next.js Documentation"
+    url: "https://nextjs.org/docs" 
