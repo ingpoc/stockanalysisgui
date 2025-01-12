@@ -1,15 +1,14 @@
 'use client'
 
-import { useAppKit } from '@reown/appkit/react'
 import { useRouter } from 'next/navigation'
 import { useAccount } from 'wagmi'
 import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Wallet, LineChart, Lock, TrendingUp, Zap } from 'lucide-react'
+import { modal } from '@/config'
 
 export default function LoginPage() {
-  const { open } = useAppKit()
   const router = useRouter()
   const { isConnected, status } = useAccount()
 
@@ -21,7 +20,7 @@ export default function LoginPage() {
 
   const handleConnect = async () => {
     try {
-      await open()
+      await modal.open()
     } catch (error) {
       console.error('Failed to connect:', error)
     }
