@@ -1,23 +1,27 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const publicRoutes = ['/auth/login']
+// Add paths that don't require authentication
+const publicPaths = ['/auth/login', '/auth/callback']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
+  
+  // Get the connected address from the cookie
+  const hasConnectedAddress = request.cookies.has('wagmi.connected')
+  const isAuthenticated = hasConnectedAddress
 
-  // Allow public routes
-  if (publicRoutes.includes(pathname)) {
-    return NextResponse.next()
-  }
-
-  // Check for AppKit auth cookie
-  const isAuthenticated = request.cookies.has('wagmi.connected')
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
+  // Redirect to login if accessing protected route without authentication
+  if (!isAuthenticated && !isPublicPath) {
     const loginUrl = new URL('/auth/login', request.url)
     return NextResponse.redirect(loginUrl)
+  }
+
+  // Redirect to dashboard if accessing login while authenticated
+  if (isAuthenticated && isPublicPath) {
+    const dashboardUrl = new URL('/dashboard', request.url)
+    return NextResponse.redirect(dashboardUrl)
   }
 
   return NextResponse.next()
@@ -27,11 +31,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * 1. /api/ (API routes)
+     * 2. /_next/ (Next.js internals)
+     * 3. /_static (inside /public)
+     * 4. /_vercel (Vercel internals)
+     * 5. /favicon.ico, /icon.svg (static files)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next|_static|_vercel|favicon.ico|icon.svg).*)',
   ],
 } 

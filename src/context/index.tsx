@@ -1,23 +1,32 @@
 'use client'
 
-import { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider, type Config } from 'wagmi'
-import { ThemeProvider } from '@/components/theme-provider'
+import { cookieToInitialState } from 'wagmi'
 import { config } from '@/config'
 import { useAppKitProvider } from '@reown/appkit/react'
-import { DisconnectHandler } from '@/components/auth/disconnect-handler'
+import { ThemeProvider } from '@/components/theme-provider'
+import React, { type ReactNode } from 'react'
 
+// Set up queryClient
 const queryClient = new QueryClient()
 
-export function AppKitClientProvider({ children }: { children: ReactNode }) {
+function AppKitClientProvider({ children }: { children: ReactNode }) {
   useAppKitProvider('eip155' as const)
   return <>{children}</>
 }
 
-export function RootProvider({ children }: { children: ReactNode }) {
+export default function ContextProvider({ 
+  children, 
+  cookies 
+}: { 
+  children: ReactNode
+  cookies: string | null 
+}) {
+  const initialState = cookieToInitialState(config as Config, cookies)
+
   return (
-    <WagmiProvider config={config as Config}>
+    <WagmiProvider config={config as Config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
         <AppKitClientProvider>
           <ThemeProvider
@@ -26,7 +35,6 @@ export function RootProvider({ children }: { children: ReactNode }) {
             enableSystem
             disableTransitionOnChange
           >
-            <DisconnectHandler />
             {children}
           </ThemeProvider>
         </AppKitClientProvider>
