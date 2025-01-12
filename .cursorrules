@@ -11,7 +11,7 @@
 - Strict directory structure:
   - `src/` - Source code root
     - `app/` - Next.js app router pages and layouts
-      - `layout.tsx` - Root layout with AppKit provider
+      - `layout.tsx` - Root layout with providers
       - `page.tsx` - Root page
       - `auth/` - Authentication pages
         - `login/` - Login page
@@ -19,8 +19,6 @@
     - `components/` - React components
       - `ui/` - shadcn/ui components
       - `auth/` - Authentication components
-        - `disconnect-handler.tsx` - Disconnect state handler
-        - `connect-button.tsx` - Connect wallet button
       - `shared/` - Reusable components
     - `lib/` - Utility functions and hooks
     - `config/` - Configuration files
@@ -35,39 +33,63 @@ auth.files.required:
   - src/config/index.ts:
       description: "AppKit and Wagmi configuration with multichain support"
       required_exports:
-        - appKit
         - wagmiAdapter
+        - solanaWeb3JsAdapter
+        - networks
         - config
+        - modal
+      implementation_notes:
+        - Create adapters separately for EVM and Solana
+        - Use cookieStorage for persistence
+        - Define networks array with both EVM and Solana networks
+        - Create modal with both adapters
   
   - src/app/layout.tsx:
-      description: "Root layout with AppKit provider setup"
+      description: "Root layout with minimal provider setup"
       required_components:
-        - AppKitProvider
-        - DisconnectHandler
+        - WagmiProvider
+        - QueryClientProvider
+      implementation_notes:
+        - Get cookies from headers
+        - Initialize wagmi state from cookies
+        - No need for custom AppKit provider
   
   - src/app/auth/login/page.tsx:
-      description: "Login page with wallet and social login"
+      description: "Login page with AppKit modal"
       required_hooks:
-        - useAppKit
-        - useRouter
+        - useAppKitAccount
+        - useAppKitState
+      implementation_notes:
+        - Use modal.open() for connection
+        - Use AppKit hooks for connection state
+        - Don't mix wagmi and AppKit hooks
   
-  - src/components/auth/disconnect-handler.tsx:
-      description: "Handles disconnection and redirects"
-      required_hooks:
-        - useAppKit
-        - useRouter
-        - useEffect
-  
-  - src/components/auth/connect-button.tsx:
-      description: "Connect wallet button component"
-      required_hooks:
-        - useAppKit
+  - src/context/index.tsx:
+      description: "Context provider setup"
+      required_components:
+        - WagmiProvider
+        - QueryClientProvider
+      implementation_notes:
+        - Keep provider setup minimal
+        - Initialize state from cookies
+        - No need for custom providers
 
-auth.files.optional:
-  - src/app/auth/callback/page.tsx:
-      description: "OAuth callback handling"
-  - src/components/auth/profile.tsx:
-      description: "User profile display"
+## Authentication Flow
+auth.flow:
+  - Connection:
+    - Use modal.open() from AppKit config
+    - Handle both EVM and Solana through the same modal
+    - Don't implement custom connection logic
+  
+  - State Management:
+    - Use useAppKitAccount for connection state
+    - Use useAppKitState for loading state
+    - Don't mix wagmi and AppKit state
+  
+  - Redirection:
+    - Check isConnected from useAppKitAccount
+    - Redirect after successful connection
+    - Handle loading states from useAppKitState
 
 ## Required Environment Variables
 env.required:
@@ -77,77 +99,31 @@ env.required:
   - NEXT_PUBLIC_APP_URL:
       description: "Frontend application URL"
       required: true
-  - GOOGLE_CLIENT_ID:
-      description: "Google OAuth client ID"
-      required: false
-  - GOOGLE_CLIENT_SECRET:
-      description: "Google OAuth client secret"
-      required: false
-  - APPLE_CLIENT_ID:
-      description: "Apple OAuth client ID"
-      required: false
-  - APPLE_CLIENT_SECRET:
-      description: "Apple OAuth client secret"
-      required: false
-
-## Component Guidelines
-components.rules:
-  - Use TypeScript for all components
-  - Implement proper prop types
-  - Follow functional component patterns
-  - Use proper error boundaries
-  - Implement loading states
-  - Handle edge cases
-  - Use AppKit hooks for wallet interactions
 
 ## State Management
 state.rules:
-  - Use AppKit hooks for authentication state:
-    - useAppKit for connection and modal
-    - isConnected for auth state checks
-  - Use React hooks for local state
-  - Use TanStack Query for data fetching
-  - Handle loading and error states
-  - Cache wallet state appropriately
-
-## Styling Requirements
-styling.rules:
-  - Use Tailwind CSS for styling
-  - Follow design system tokens
-  - Implement dark mode support
-  - Use CSS modules for component-specific styles
+  - Use AppKit hooks exclusively for auth state:
+    - useAppKitAccount: { isConnected, address, caipAddress }
+    - useAppKitState: { loading, activeChain }
+    - useAppKitEvents: For connection events
+  - Don't mix wagmi hooks with AppKit hooks
+  - Use cookies for state persistence
+  - Handle loading states through AppKit
 
 ## Security Requirements
 security.rules:
-  - Implement proper route protection
-  - Handle authentication state securely
-  - Implement proper CORS settings
-  - Sanitize user inputs
-  - Follow AppKit security guidelines
-  - Protect API routes
-  - Handle session management
-
-## Performance Requirements
-performance.rules:
-  - Implement code splitting
-  - Use proper image optimization
-  - Implement lazy loading
-  - Monitor and optimize bundle size
-  - Use proper meta tags for SEO
-
-## Documentation Requirements
-documentation.rules:
-  - Document components with proper JSDoc
-  - Maintain README.md
-  - Document custom hooks
-  - Add comments for complex logic
-  - Document authentication flow
+  - Use cookieStorage for state persistence
+  - Initialize state from cookies in layout
+  - Follow AppKit's multichain security model
+  - Don't implement custom auth logic
 
 ## Reference Documentation
 references:
   - title: "AppKit Multichain Example"
     url: "https://github.com/reown-com/appkit-web-examples/tree/main/nextjs/next-multichain-app-router"
+    key_files:
+      - src/config/index.ts
+      - src/context/index.tsx
+      - src/app/layout.tsx
   - title: "AppKit Documentation"
-    url: "https://docs.reown.com/appkit"
-  - title: "Next.js Documentation"
-    url: "https://nextjs.org/docs" 
+    url: "https://docs.reown.com/appkit" 
