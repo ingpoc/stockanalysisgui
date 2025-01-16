@@ -9,8 +9,29 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { PageContainer } from "@/components/layout/page-container"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { StockChart } from "@/components/stock-chart"
-import { AIInsights } from "@/components/ai-insights"
+import dynamic from "next/dynamic"
+
+// Dynamically import heavy components
+const StockChart = dynamic(() => import("@/components/stock-chart").then(mod => mod.StockChart), {
+  loading: () => (
+    <div className="h-[400px] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+    </div>
+  ),
+  ssr: false
+})
+
+const AIInsights = dynamic(() => import("@/components/ai-insights").then(mod => mod.AIInsights), {
+  loading: () => (
+    <div className="animate-pulse p-6">
+      <div className="h-8 w-64 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
+      <div className="space-y-3">
+        <div className="h-4 w-full bg-gray-100 dark:bg-gray-900 rounded"></div>
+        <div className="h-4 w-3/4 bg-gray-100 dark:bg-gray-900 rounded"></div>
+      </div>
+    </div>
+  )
+})
 
 function GrowthIndicator({ value }: { value: string }) {
   // Remove any commas and extra % signs, then parse the number

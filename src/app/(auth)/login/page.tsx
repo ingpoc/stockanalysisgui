@@ -3,10 +3,27 @@
 import { useRouter } from 'next/navigation'
 import { useAccount } from 'wagmi'
 import { useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Wallet, LineChart, Lock, TrendingUp, Zap } from 'lucide-react'
+import { Wallet } from 'lucide-react'
 import { modal } from '@/config'
+
+// Lazy load feature cards
+const FeatureCards = dynamic(() => import('@/components/auth/feature-cards').then(mod => mod.FeatureCards), {
+  loading: () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="animate-pulse bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50">
+          <div className="h-8 w-8 bg-primary/20 rounded mb-4" />
+          <div className="h-6 w-32 bg-primary/20 rounded mb-2" />
+          <div className="h-4 w-full bg-primary/10 rounded" />
+        </div>
+      ))}
+    </div>
+  ),
+  ssr: false
+})
 
 export default function LoginPage() {
   const router = useRouter()
@@ -56,28 +73,7 @@ export default function LoginPage() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <TrendingUp className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">Real-time Analysis</h3>
-                <p className="text-muted-foreground mt-2">Track market trends and get instant insights</p>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <Lock className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">Secure Access</h3>
-                <p className="text-muted-foreground mt-2">Protected by blockchain technology</p>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <LineChart className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">Advanced Charts</h3>
-                <p className="text-muted-foreground mt-2">Comprehensive technical analysis tools</p>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <Zap className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">AI Insights</h3>
-                <p className="text-muted-foreground mt-2">Smart predictions and recommendations</p>
-              </div>
-            </div>
+            <FeatureCards />
           </div>
         </div>
       </div>
