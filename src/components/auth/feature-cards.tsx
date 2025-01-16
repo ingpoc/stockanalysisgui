@@ -1,12 +1,10 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+
+import { TrendingUp, Lock, LineChart, Zap } from 'lucide-react'
 
 // Dynamically import icons
-const TrendingUp = dynamic(() => import('lucide-react/dist/esm/icons/trending-up').then(mod => mod.default), { ssr: false })
-const Lock = dynamic(() => import('lucide-react/dist/esm/icons/lock').then(mod => mod.default), { ssr: false })
-const LineChart = dynamic(() => import('lucide-react/dist/esm/icons/line-chart').then(mod => mod.default), { ssr: false })
-const Zap = dynamic(() => import('lucide-react/dist/esm/icons/zap').then(mod => mod.default), { ssr: false })
+
 
 export function FeatureCards() {
   return (

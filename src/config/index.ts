@@ -1,6 +1,6 @@
 import { cookieStorage, createStorage } from '@wagmi/core'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { mainnet, polygon, optimism, arbitrum } from '@reown/appkit/networks'
+import { polygon, optimism, arbitrum, mainnet } from '@reown/appkit/networks'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 import { createAppKit } from '@reown/appkit/react'
 
@@ -11,8 +11,12 @@ if (!projectId) {
   throw new Error('Project ID is not defined')
 }
 
-// Define networks
-export const networks = [mainnet, polygon, optimism, arbitrum] as [AppKitNetwork, ...AppKitNetwork[]]
+// Define networks - L2s prioritized
+export const networks = [
+  polygon,   // Lowest fees (~$0.01)
+  optimism,  // Medium fees (~$0.50)
+  arbitrum,  // Medium fees (~$0.30)
+] as [AppKitNetwork, ...AppKitNetwork[]]
 
 // Set up the Wagmi Adapter
 export const wagmiAdapter = new WagmiAdapter({
@@ -21,7 +25,7 @@ export const wagmiAdapter = new WagmiAdapter({
   }),
   ssr: true,
   projectId,
-  networks
+  networks // Force Polygon as default
 })
 
 // Export wagmi config for use in providers
@@ -41,5 +45,6 @@ export const modal = createAppKit({
   themeMode: 'dark',
   features: {
     analytics: true
-  }
+  },
+  defaultNetwork : polygon // Ensure Polygon is default in modal too
 }) 
