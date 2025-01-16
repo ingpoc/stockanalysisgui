@@ -12,18 +12,26 @@
   - `src/` - Source code root
     - `app/` - Next.js app router pages and layouts
       - `layout.tsx` - Root layout with providers
-      - `page.tsx` - Root page
-      - `auth/` - Authentication pages
-        - `login/` - Login page
-        - `callback/` - OAuth callback handling
+      - `page.tsx` - Root page with components
+      - `(auth)/` - Authentication group
+        - `login/` - Login page with AppKit button
+      - `(protected)/` - Protected routes group
+        - `layout.tsx` - Protected layout
+        - `dashboard/` - Dashboard pages
+        - `analysis/` - Analysis pages
+        - `technical-analysis/` - Technical analysis pages
+        - `ai-insights/` - AI insights pages
     - `components/` - React components
       - `ui/` - shadcn/ui components
-      - `auth/` - Authentication components
-      - `shared/` - Reusable components
-    - `lib/` - Utility functions and hooks
+      - `ConnectButton.tsx` - AppKit button wrapper
+      - `ConnectionInfo.tsx` - Account/wallet info display
+      - `ActionButtons.tsx` - Connection actions
+      - `EventHandler.tsx` - Event monitoring
     - `config/` - Configuration files
-      - `index.ts` - AppKit and Wagmi configuration
+      - `index.ts` - AppKit and adapters configuration
     - `context/` - React context providers
+      - `index.tsx` - Provider setup with cookie state
+    - `middleware.ts` - Route protection middleware
     - `types/` - TypeScript type definitions
     - `styles/` - Global styles and CSS modules
   - `public/` - Static assets
@@ -31,7 +39,7 @@
 ## Authentication Structure
 auth.files.required:
   - src/config/index.ts:
-      description: "AppKit and Wagmi configuration with multichain support"
+      description: "AppKit and adapters configuration"
       required_exports:
         - wagmiAdapter
         - solanaWeb3JsAdapter
@@ -39,57 +47,61 @@ auth.files.required:
         - config
         - modal
       implementation_notes:
-        - Create adapters separately for EVM and Solana
         - Use cookieStorage for persistence
-        - Define networks array with both EVM and Solana networks
-        - Create modal with both adapters
-  
-  - src/app/layout.tsx:
-      description: "Root layout with minimal provider setup"
-      required_components:
-        - WagmiProvider
-        - QueryClientProvider
-      implementation_notes:
-        - Get cookies from headers
-        - Initialize wagmi state from cookies
-        - No need for custom AppKit provider
-  
-  - src/app/auth/login/page.tsx:
-      description: "Login page with AppKit modal"
-      required_hooks:
-        - useAppKitAccount
-        - useAppKitState
-      implementation_notes:
-        - Use modal.open() for connection
-        - Use AppKit hooks for connection state
-        - Don't mix wagmi and AppKit hooks
+        - Configure both EVM and Solana adapters
+        - Define multichain networks array
+        - Create AppKit modal with both adapters
+        - Set up proper metadata
   
   - src/context/index.tsx:
-      description: "Context provider setup"
+      description: "Context provider with cookie state"
       required_components:
         - WagmiProvider
         - QueryClientProvider
+      required_exports:
+        - ContextProvider
       implementation_notes:
-        - Keep provider setup minimal
         - Initialize state from cookies
-        - No need for custom providers
+        - Keep provider setup minimal
+        - No custom providers needed
+  
+  - src/components/ConnectButton.tsx:
+      description: "AppKit button wrapper"
+      required_components:
+        - appkit-button
+      implementation_notes:
+        - Keep component minimal
+        - Use built-in AppKit button
+  
+  - src/middleware.ts:
+      description: "Route protection for both chains"
+      implementation_notes:
+        - Check both chain cookies
+        - Handle public routes
+        - Proper redirection logic
 
 ## Authentication Flow
 auth.flow:
-  - Connection:
-    - Use modal.open() from AppKit config
-    - Handle both EVM and Solana through the same modal
-    - Don't implement custom connection logic
+  - Initial Connection:
+    - Use AppKit button for connection
+    - Support both EVM and Solana chains
+    - Cookie-based state persistence
   
   - State Management:
-    - Use useAppKitAccount for connection state
-    - Use useAppKitState for loading state
-    - Don't mix wagmi and AppKit state
+    - Use AppKit hooks exclusively:
+      - useAppKitAccount: Connection state
+      - useAppKitState: Loading state
+      - useAppKitEvents: Event monitoring
+      - useAppKitTheme: Theme management
+      - useWalletInfo: Wallet details
+      - useDisconnect: Disconnection
+      - useAppKit: Core functionality
+      - useAppKitNetwork: Network management
   
-  - Redirection:
-    - Check isConnected from useAppKitAccount
-    - Redirect after successful connection
-    - Handle loading states from useAppKitState
+  - Loading States:
+    - Use AppKit's built-in loading states
+    - Handle chain switching transitions
+    - Proper connection state transitions
 
 ## Required Environment Variables
 env.required:
@@ -99,23 +111,31 @@ env.required:
   - NEXT_PUBLIC_APP_URL:
       description: "Frontend application URL"
       required: true
-
-## State Management
-state.rules:
-  - Use AppKit hooks exclusively for auth state:
-    - useAppKitAccount: { isConnected, address, caipAddress }
-    - useAppKitState: { loading, activeChain }
-    - useAppKitEvents: For connection events
-  - Don't mix wagmi hooks with AppKit hooks
-  - Use cookies for state persistence
-  - Handle loading states through AppKit
+  - NEXT_PUBLIC_SOLANA_RPC_URL:
+      description: "Solana RPC URL"
+      required: true
 
 ## Security Requirements
 security.rules:
   - Use cookieStorage for state persistence
   - Initialize state from cookies in layout
   - Follow AppKit's multichain security model
-  - Don't implement custom auth logic
+  - Use built-in AppKit security features
+  - Proper error handling for both chains
+  - Clean disconnection handling
+
+## Best Practices
+best.practices:
+  - Use AppKit hooks for state management
+  - Monitor connection events with useAppKitEvents
+  - Handle network switching with useAppKitNetwork
+  - Use built-in theme management
+  - Follow AppKit security guidelines
+  - Implement proper error handling
+  - Keep components simple and focused
+  - Let AppKit handle connection flows
+  - Use cookie-based state management
+  - Follow multichain best practices
 
 ## Reference Documentation
 references:
@@ -125,5 +145,6 @@ references:
       - src/config/index.ts
       - src/context/index.tsx
       - src/app/layout.tsx
+      - src/components/ConnectButton.tsx
   - title: "AppKit Documentation"
     url: "https://docs.reown.com/appkit" 
