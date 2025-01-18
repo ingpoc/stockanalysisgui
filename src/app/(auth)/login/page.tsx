@@ -2,12 +2,12 @@
 
 import { useRouter } from 'next/navigation'
 import { useAccount } from 'wagmi'
+import { useAppKit } from '@reown/appkit/react'
 import { useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Wallet } from 'lucide-react'
-import { modal } from '@/config'
 
 // Lazy load feature cards
 const FeatureCards = dynamic(() => import('@/components/auth/feature-cards').then(mod => mod.FeatureCards), {
@@ -27,17 +27,19 @@ const FeatureCards = dynamic(() => import('@/components/auth/feature-cards').the
 
 export default function LoginPage() {
   const router = useRouter()
-  const { isConnected, status } = useAccount()
+  const { isConnected, address, status } = useAccount()
+  const { open } = useAppKit()
 
   useEffect(() => {
-    if (status === 'connected' && isConnected) {
-      router.replace('/dashboard')
+    if (isConnected && address) {
+      router.push('/dashboard')
+      router.refresh()
     }
-  }, [isConnected, router, status])
+  }, [isConnected, address, router])
 
   const handleConnect = async () => {
     try {
-      await modal.open()
+      await open()
     } catch (error) {
       console.error('Failed to connect:', error)
     }

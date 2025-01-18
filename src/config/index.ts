@@ -1,45 +1,34 @@
-import { cookieStorage, createStorage } from '@wagmi/core'
+import { cookieStorage, createStorage } from 'wagmi'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { mainnet, polygon, optimism, arbitrum } from '@reown/appkit/networks'
-import type { AppKitNetwork } from '@reown/appkit/networks'
+import { mainnet } from '@reown/appkit/networks'
 import { createAppKit } from '@reown/appkit/react'
 
-// Get projectId from environment
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-if (!projectId) {
-  throw new Error('Project ID is not defined')
-}
-
-// Define networks
-export const networks = [mainnet, polygon, optimism, arbitrum] as [AppKitNetwork, ...AppKitNetwork[]]
-
-// Set up the Wagmi Adapter
+// Set up the Wagmi Adapter with cookie storage
 export const wagmiAdapter = new WagmiAdapter({
   storage: createStorage({
-    storage: cookieStorage
+    storage: cookieStorage,
   }),
   ssr: true,
-  projectId,
-  networks
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
+  networks: [mainnet]
 })
 
-// Export wagmi config for use in providers
-export const config = wagmiAdapter.wagmiConfig
-
-// Create the modal
-export const modal = createAppKit({
+// Create the AppKit instance
+export const appKit = createAppKit({
   adapters: [wagmiAdapter],
-  projectId,
-  networks,
+  projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
+  networks: [mainnet],
+  themeMode: 'light',
+  defaultNetwork: mainnet,
   metadata: {
     name: 'Stock Analysis Dashboard',
     description: 'Real-time stock analysis and insights',
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    icons: ['https://avatars.githubusercontent.com/u/179229932']
-  },
-  themeMode: 'dark',
-  features: {
-    analytics: true
+    url: APP_URL,
+    icons: [`${APP_URL}/icon.svg`]
   }
-}) 
+})
+
+// Export wagmi config for use in other parts of the application
+export const config = wagmiAdapter.wagmiConfig 

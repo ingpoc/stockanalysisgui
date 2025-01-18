@@ -57,30 +57,21 @@ export function StockDashboard() {
   const [quarters, setQuarters] = useState<string[]>([])
   const [activeCategory, setActiveCategory] = useState<StockCategory>("top-performers")
 
-  // Load quarters only once on component mount
+  // Load quarters on mount
   useEffect(() => {
-    const abortController = new AbortController()
-
     async function loadQuarters() {
       try {
-        const data = await getQuarters(abortController.signal)
-        if (data.length > 0) {
-          setQuarters(data)
-          setSelectedQuarter(data[0])
+        const quartersData = await getQuarters()
+        if (quartersData.length > 0) {
+          setQuarters(quartersData)
+          // Only set selected quarter if it hasn't been set yet
+          setSelectedQuarter(current => current || quartersData[0])
         }
       } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error('Failed to fetch quarters:', error)
-          toast.error('Failed to fetch quarters. Please try again later.')
-        }
+        console.error('Failed to fetch quarters:', error)
       }
     }
-
     loadQuarters()
-
-    return () => {
-      abortController.abort()
-    }
   }, [])
 
   // Load market data when quarter changes
@@ -143,7 +134,7 @@ export function StockDashboard() {
   }
 
   const handleQuarterChange = (quarter: string) => {
-    setSelectedStock(null) // Reset selected stock when quarter changes
+    setSelectedStock(null)
     setSelectedQuarter(quarter)
   }
 
@@ -215,17 +206,19 @@ export function StockDashboard() {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time market insights and analysis</p>
           </div>
           <div className="flex items-center gap-4">
-            <select
-              value={selectedQuarter}
-              onChange={(e) => handleQuarterChange(e.target.value)}
-              className="bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
-            >
-              {quarters.map((quarter) => (
-                <option key={quarter} value={quarter}>
-                  {quarter}
-                </option>
-              ))}
-            </select>
+            {quarters.length > 0 && (
+              <select
+                value={selectedQuarter}
+                onChange={(e) => handleQuarterChange(e.target.value)}
+                className="bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+              >
+                {quarters.map((quarter) => (
+                  <option key={quarter} value={quarter}>
+                    {quarter}
+                  </option>
+                ))}
+              </select>
+            )}
             <Button
               onClick={handleRefresh}
               disabled={isRefreshing || !selectedStock}
@@ -254,10 +247,12 @@ export function StockDashboard() {
           ))}
         </div>
 
-        <StockTable 
-          onStockSelect={setSelectedStock} 
-          selectedStock={selectedStock}
+        {/* Stock Table */}
+        <StockTable
           stocks={getCurrentStocks()}
+          loading={loading}
+          selectedStock={selectedStock}
+          onStockSelect={setSelectedStock}
         />
       </div>
     </PageContainer>

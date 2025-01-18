@@ -9,6 +9,7 @@ interface StockTableProps {
   onStockSelect?: (symbol: string | null) => void
   selectedStock?: string | null
   stocks: Stock[]
+  loading?: boolean
 }
 
 type SortConfig = {
@@ -42,10 +43,22 @@ function generatePageNumbers(currentPage: number, totalPages: number) {
   ]
 }
 
-export function StockTable({ onStockSelect, selectedStock, stocks }: StockTableProps) {
+export function StockTable({ onStockSelect, selectedStock, stocks, loading = false }: StockTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [sortConfig, setSortConfig] = useState<SortConfig>(null)
   const router = useRouter()
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-pulse space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 rounded"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (!stocks?.length) {
     return (

@@ -2,15 +2,36 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Add paths that don't require authentication
-const publicPaths = ['/auth/login', '/auth/callback']
+const publicPaths = ['/auth/login']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
   
-  // Get the connected address from the cookie
-  const hasConnectedAddress = request.cookies.has('wagmi.connected')
-  const isAuthenticated = hasConnectedAddress
+  // Get wagmi store cookie and parse it
+  const wagmiStore = request.cookies.get('wagmi.store')?.value
+  let isAuthenticated = false
+
+  if (wagmiStore) {
+    try {
+      const store = JSON.parse(wagmiStore)
+      const connections = store.state?.connections?.value || []
+      // Check if there's an active connection with accounts
+      isAuthenticated = connections.some((conn: any) => 
+        conn[1]?.accounts?.length > 0 && store.state.current === conn[0]
+      )
+    } catch (error) {
+      console.error('Failed to parse wagmi store:', error)
+    }
+  }
+
+  // Debug logging
+  console.log('Auth Debug:', {
+    pathname,
+    isPublicPath,
+    isAuthenticated,
+    wagmiStore
+  })
 
   // Redirect to login if accessing protected route without authentication
   if (!isAuthenticated && !isPublicPath) {
@@ -19,7 +40,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Redirect to dashboard if accessing login while authenticated
-  if (isAuthenticated && isPublicPath) {
+  if (isAuthenticated && pathname === '/auth/login') {
     const dashboardUrl = new URL('/dashboard', request.url)
     return NextResponse.redirect(dashboardUrl)
   }
@@ -31,12 +52,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * 1. /api/ (API routes)
-     * 2. /_next/ (Next.js internals)
-     * 3. /_static (inside /public)
-     * 4. /_vercel (Vercel internals)
-     * 5. /favicon.ico, /icon.svg (static files)
+     * 1. /_next/ (Next.js internals)
+     * 2. /_static (inside /public)
+     * 3. /_vercel (Vercel internals)
+     * 4. /favicon.ico, /icon.svg (static files)
      */
-    '/((?!api|_next|_static|_vercel|favicon.ico|icon.svg).*)',
+    '/((?!_next|_static|_vercel|favicon.ico|icon.svg).*)',
   ],
 } 
