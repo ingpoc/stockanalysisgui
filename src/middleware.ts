@@ -2,15 +2,18 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Add paths that don't require authentication
-const publicPaths = ['/auth/login', '/auth/callback']
+const publicPaths = ['/auth/login']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
   
-  // Get the connected address from the cookie
-  const hasConnectedAddress = request.cookies.has('wagmi.connected')
-  const isAuthenticated = hasConnectedAddress
+  // Get both cookies and their values
+  const connectedCookie = request.cookies.get('wagmi.connected')
+  const addressCookie = request.cookies.get('wagmi.address')
+  
+  // Check if both cookies exist and connected is 'true'
+  const isAuthenticated = connectedCookie?.value === 'true' && addressCookie?.value
 
   // Redirect to login if accessing protected route without authentication
   if (!isAuthenticated && !isPublicPath) {
