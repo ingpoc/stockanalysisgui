@@ -1,12 +1,11 @@
 'use client'
 
-import { useAppKit } from '@reown/appkit/react'
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { Button } from '@/components/ui/button'
-import { useAccount } from 'wagmi'
 
 export default function ConnectButton() {
   const { open } = useAppKit()
-  const { address, isConnected } = useAccount()
+  const { address, isConnected } = useAppKitAccount()
 
   return (
     <Button 

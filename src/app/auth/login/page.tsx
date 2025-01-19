@@ -2,8 +2,10 @@
 
 import { useAppKit } from '@reown/appkit/react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
-import { useEffect, useState } from 'react'
+import {
+  useAppKitAccount
+   } from '@reown/appkit/react'
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Wallet, LineChart, Lock, TrendingUp, Zap } from 'lucide-react'
@@ -11,44 +13,29 @@ import { Wallet, LineChart, Lock, TrendingUp, Zap } from 'lucide-react'
 export default function LoginPage() {
   const { open } = useAppKit()
   const router = useRouter()
-  const { isConnected, isConnecting: isWagmiConnecting, address } = useAccount()
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [hasRedirected, setHasRedirected] = useState(false)
+  const {address, caipAddress, isConnected, status} = useAppKitAccount();
 
   useEffect(() => {
-    // Only redirect if we have a connection and haven't redirected yet
-    if (isConnected && address && !hasRedirected) {
-      setHasRedirected(true)
+    if (isConnected && address) {
       router.replace('/dashboard')
     }
-  }, [isConnected, address, router, hasRedirected])
+  }, [isConnected, address, router])
 
   const handleConnect = async () => {
-    if (isConnected) {
-      router.replace('/dashboard')
-      return
-    }
-
     try {
-      setIsConnecting(true)
       await open()
     } catch (error) {
       console.error('Failed to connect:', error)
-    } finally {
-      setIsConnecting(false)
     }
   }
 
-  // Show loading state when connecting or redirecting
-  if (isConnecting || isWagmiConnecting || (isConnected && !hasRedirected)) {
+  if (status === 'connecting' || (isConnected && address)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <LoadingSpinner />
-          <p className="text-muted-foreground mt-4">
-            {isConnected ? 'Loading dashboard...' : 'Connecting wallet...'}
-          </p>
-        </div>
+        <LoadingSpinner />
+        <p className="text-muted-foreground ml-2">
+          {isConnected ? 'Loading dashboard...' : 'Connecting wallet...'}
+        </p>
       </div>
     )
   }
@@ -109,7 +96,7 @@ export default function LoginPage() {
             onClick={handleConnect}
             size="lg"
             className="w-full py-6 text-lg relative overflow-hidden group"
-            disabled={isConnecting || isWagmiConnecting}
+            disabled={status === "connected"}
           >
             <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors" />
             <div className="relative flex items-center justify-center gap-3">

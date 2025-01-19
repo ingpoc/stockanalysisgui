@@ -1,6 +1,6 @@
 'use client'
 
-import { useAccount } from 'wagmi'
+import { useAppKitAccount } from '@reown/appkit/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -10,7 +10,7 @@ export function AuthLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isConnected, status } = useAccount()
+  const { isConnected, status } = useAppKitAccount()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
 
@@ -20,7 +20,7 @@ export function AuthLayout({
     }
 
     if (!isConnected) {
-      router.replace('/auth/login')
+      router.push('/auth/login')
     } else {
       setIsLoading(false)
     }

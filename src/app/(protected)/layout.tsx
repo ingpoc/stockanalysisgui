@@ -1,7 +1,7 @@
 'use client'
 
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
-import { useAccount } from 'wagmi'
+import { useAppKitAccount } from '@reown/appkit/react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export default function ProtectedLayout({
@@ -9,7 +9,7 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { status } = useAccount()
+  const { status } = useAppKitAccount()
 
   // Show loading state during connection
   if (status === 'connecting' || status === 'reconnecting') {
