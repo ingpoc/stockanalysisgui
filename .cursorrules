@@ -4,6 +4,93 @@
     ### Objective
     - Create a Next.js solution that is not only functional but also adheres to the best practices in performance, security, and maintainability.
 
+    ### Project Structure Map
+
+    ## Core Directories
+    - /public # Public assets
+    - /src
+      - /app
+        - /auth         # Authentication related pages and layouts
+        - /(protected)    # Protected routes requiring authentication
+        - /api           # API routes including auth endpoints
+        - /lottery       # Lottery related pages and layouts
+        - /dashboard         # Stock related pages and layouts
+        - /technical # Technical analysis related pages and layouts
+        - /insights # AI insights related pages and layouts
+        - /globals.css
+        - /layout.tsx
+        - /page.tsx
+        - /not-found.tsx
+        - /loading.tsx
+      - /components      # Reusable UI components
+      - /lib            # Utility functions and program services
+      - /types          # TypeScript type definitions
+      - /config         # Configuration files
+      - /context        # Context providers
+      - /hooks          # Custom React hooks
+      - /assets         # Assets
+    ## Key Functional Areas
+
+    1. Authentication (/src/app/(auth))
+      - /login         # Login page with wallet connection
+      - /layout.tsx    # Auth layout with protection
+      - /api/auth      # NextAuth configuration and routes
+
+    2. Protected Routes (/src/app/(protected))
+      - /dashboard     # Main dashboard view
+      - /analysis      # Stock analysis features
+      - /ai-insights   # AI-powered analysis
+      - /lottery       # Crypto lottery features
+      - /stock/[symbol] # Individual stock details
+      - /technical-analysis # Technical analysis tools
+
+    3. Components (/src/components)
+      - /layout        # Layout components (dashboard-layout, page-container)
+      - /ui           # Base UI components (buttons, inputs, etc.)
+      - /stock-dashboard # Stock-specific components
+      - /lottery      # Lottery-specific components
+      - /auth         # Authentication-related components
+
+    4. Integration Services (/src/lib)
+      - /api.ts       # API integration functions
+      - /utils.ts     # Utility functions
+      - /solana       # Solana program integration
+      - /lottery-program.ts # Lottery program service
+
+    5. Configuration Files
+      - next.config.js # Next.js configuration
+      - tailwind.config.js # Tailwind CSS configuration
+      - .env          # Environment variables
+      - .cursorrules  # Cursor AI rules
+      - .cursorignore # Cursor ignore patterns
+
+    ### File Location Rules
+
+    1. Component Files:
+      - UI Components: /src/components/ui/[component-name].tsx
+      - Feature Components: /src/components/[feature]/[component-name].tsx
+      - Layout Components: /src/components/layout/[layout-name].tsx
+
+    2. Page Files:
+      - Auth Pages: /src/app/auth/[page-name]/page.tsx
+      - Protected Pages: /src/app/(protected)/[page-name]/page.tsx
+      - API Routes: /src/app/api/[route-name]/route.ts
+
+    3. Integration Files:
+      
+      - API Functions: /src/lib/api.ts
+      - Utils: /src/lib/utils.ts
+
+    4. Type Definitions:
+      - Feature Types: /src/types/[feature].ts
+      - Common Types: /src/types/index.ts
+
+    5. Solana Program Files:
+      - Program Services: /src/lib/[program-name]-program.ts
+      - Lottery Program IDL: /src/lib/solana/crypto_lottery_idl.json
+      - Lottery type file : /src/types/lottery.ts
+
+
     ### Code Style and Structure
     - Write concise, technical TypeScript code with accurate examples.
     - Use functional and declarative programming patterns; avoid classes.

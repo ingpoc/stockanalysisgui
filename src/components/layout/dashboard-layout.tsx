@@ -14,7 +14,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Ticket
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -173,6 +174,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: BarChart3, label: "Stock Analysis", href: "/analysis" },
     { icon: TrendingUp, label: "Technical Analysis", href: "/technical-analysis" },
     { icon: Brain, label: "AI Insights", href: "/ai-insights" },
+    { icon: Ticket, label: "Crypto Lottery", href: "/lottery" },
   ], [])
 
   // Memoize footer items
