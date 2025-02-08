@@ -1,0 +1,581 @@
+{
+  "address": "4v1we6y3fhEKd54BM8ABPJpK9HSa1srjqJcvTkuhFugb",
+  "metadata": {
+    "name": "decentralized_lottery",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "buy_ticket",
+      "discriminator": [
+        11,
+        24,
+        17,
+        193,
+        168,
+        116,
+        164,
+        169
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.lottery_type",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.draw_time",
+                "account": "LotteryAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "lottery_token_account",
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "number_of_tickets",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_lottery",
+      "discriminator": [
+        242,
+        165,
+        247,
+        119,
+        17,
+        203,
+        21,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "lottery_type_enum"
+              },
+              {
+                "kind": "arg",
+                "path": "draw_time"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "lottery_type_enum",
+          "type": {
+            "defined": {
+              "name": "LotteryType"
+            }
+          }
+        },
+        {
+          "name": "ticket_price",
+          "type": "u64"
+        },
+        {
+          "name": "draw_time",
+          "type": "i64"
+        },
+        {
+          "name": "prize_pool",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "GlobalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
+    },
+    {
+      "name": "LotteryAccount",
+      "discriminator": [
+        1,
+        165,
+        125,
+        59,
+        215,
+        12,
+        246,
+        7
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "LotteryCreated",
+      "discriminator": [
+        162,
+        18,
+        70,
+        148,
+        241,
+        124,
+        57,
+        74
+      ]
+    },
+    {
+      "name": "TicketPurchased",
+      "discriminator": [
+        108,
+        59,
+        246,
+        95,
+        84,
+        145,
+        13,
+        71
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnsupportedLotteryType",
+      "msg": "Lottery type not supported"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidTicketPrice",
+      "msg": "Invalid ticket price"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidPrizePool",
+      "msg": "Invalid prize pool"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidDrawTime",
+      "msg": "Lottery draw time invalid"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidTicketAmount",
+      "msg": "Ticket purchase amount invalid"
+    },
+    {
+      "code": 6005,
+      "name": "TicketPurchaseLimitReached",
+      "msg": "Ticket purchase limit reached"
+    },
+    {
+      "code": 6006,
+      "name": "LotteryNotOpen",
+      "msg": "Lottery is not open"
+    },
+    {
+      "code": 6007,
+      "name": "LotteryDrawing",
+      "msg": "Lottery is drawing"
+    },
+    {
+      "code": 6008,
+      "name": "LotteryCompleted",
+      "msg": "Lottery is completed"
+    },
+    {
+      "code": 6009,
+      "name": "LotteryExpired",
+      "msg": "Lottery is expired"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidLotteryState",
+      "msg": "Invalid lottery state"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidAccountOwner",
+      "msg": "Invalid account owner"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidInstructionInput",
+      "msg": "Invalid instruction input"
+    },
+    {
+      "code": 6013,
+      "name": "SafeMathError",
+      "msg": "Safe Math Error"
+    },
+    {
+      "code": 6014,
+      "name": "PrizeClaimTimeExpired",
+      "msg": "Prize claim time expired"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidPrizeTier",
+      "msg": "Invalid prize tier"
+    },
+    {
+      "code": 6016,
+      "name": "TreasuryWithdrawalTimeLockNotReached",
+      "msg": "Treasury withdrawal time lock not yet reached"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidTreasuryMultisig",
+      "msg": "Invalid treasury multisig"
+    },
+    {
+      "code": 6018,
+      "name": "TokenTransferFailed",
+      "msg": "Token transfer failed"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidTokenAccount",
+      "msg": "Invalid token account"
+    },
+    {
+      "code": 6020,
+      "name": "OraclePriceFeedError",
+      "msg": "Oracle price feed error"
+    },
+    {
+      "code": 6021,
+      "name": "RandomnessGenerationFailed",
+      "msg": "Randomness generation failed"
+    },
+    {
+      "code": 6022,
+      "name": "UnauthorizedAccess",
+      "msg": "Unauthorized access"
+    }
+  ],
+  "types": [
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_fee_percentage",
+            "type": "u16"
+          },
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LotteryAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_type",
+            "type": {
+              "defined": {
+                "name": "LotteryType"
+              }
+            }
+          },
+          {
+            "name": "ticket_price",
+            "type": "u64"
+          },
+          {
+            "name": "draw_time",
+            "type": "i64"
+          },
+          {
+            "name": "prize_pool",
+            "type": "u64"
+          },
+          {
+            "name": "total_tickets",
+            "type": "u64"
+          },
+          {
+            "name": "winning_numbers",
+            "type": {
+              "option": "bytes"
+            }
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "LotteryState"
+              }
+            }
+          },
+          {
+            "name": "created_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "global_config",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LotteryCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "lottery_type",
+            "type": "string"
+          },
+          {
+            "name": "ticket_price",
+            "type": "u64"
+          },
+          {
+            "name": "draw_time",
+            "type": "i64"
+          },
+          {
+            "name": "prize_pool",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LotteryState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Drawing"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Expired"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LotteryType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Daily"
+          },
+          {
+            "name": "Weekly"
+          },
+          {
+            "name": "Monthly"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TicketPurchased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "number_of_tickets",
+            "type": "u64"
+          },
+          {
+            "name": "total_cost",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

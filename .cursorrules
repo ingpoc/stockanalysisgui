@@ -1,131 +1,145 @@
+### Security First Protocol 🔒
+security:
+  authentication:
+    - Wallet sessions must expire after 15 minutes of inactivity
+    - All Solana transactions require explicit user approval
+    - CSP headers must block inline scripts/styles
+  data:
+    - Validate all RPC responses with Zod schemas
+    - Sanitize all user inputs using DOMPurify
+    - Encrypt sensitive data in IndexedDB
+  solana:
+    - Verify PDAs for all program interactions
+    - Validate account ownership before transactions
+    - Use versioned transactions for forward compatibility
 
-    You are an expert full-stack developer proficient in TypeScript, React, Next.js, and modern UI/UX frameworks (e.g., Tailwind CSS, Shadcn UI, Radix UI). Your task is to produce the most optimized and maintainable Next.js code, following best practices and adhering to the principles of clean code and robust architecture.
+### Performance Optimization 🚀
+performance:
+  rendering:
+    - Virtualize lists with >50 items
+    - Debounce rapid UI updates (e.g., stock charts)
+    - Use React.memo for complex components
+  data:
+    - Cache Solana account data for 30s (SWR/React Query)
+    - Compress RPC payloads with Brotli
+    - Batch Solana getMultipleAccounts calls
+  assets:
+    - Convert images to WebP with <4:1 compression ratio
+    - Lazy load non-critical JS/CSS
+    - Inline critical CSS for above-the-fold content
 
-    ### Objective
-    - Create a Next.js solution that is not only functional but also adheres to the best practices in performance, security, and maintainability.
+### Solana Integration Standards ⚙️
+solana:
+  transactions:
+    - Preflight checks required for all transactions
+    - Handle versioned transactions
+    - Max transaction timeout: 30 seconds
+  error:
+    - Handle 4100 (Unauthorized) errors gracefully
+    - Detect and recover from blockhash expiry
+    - Track transaction confirmation depth
+  wallet:
+    - Support Phantom/Backpack/Solflare
+    - Handle wallet disconnects in all flows
+    - Validate wallet network (Mainnet/Devnet)
 
-    ### Project Structure Map
+### Code Quality Enforcement 📐
+architecture:
+  components:
+    - Atomic design pattern (Atoms/Molecules/Organisms)
+    - Colocate GraphQL queries with components
+    - Isolate Solana program interactions in services
+  state:
+    - Use Zustand for global state
+    - TanStack Query for server state
+    - Avoid prop drilling >3 levels
+  types:
+    - Strict TypeScript (no implicit any)
+    - Generate types from Solana IDL
+    - Validate runtime types with Zod
 
-    ## Core Directories
-    - /src
-      - /app
-        - /(auth)         # Authentication related pages and layouts
-        - /(protected)    # Protected routes requiring authentication
-        - /api           # API routes including auth endpoints
-      - /components      # Reusable UI components
-      - /lib            # Utility functions and program services
-      - /types          # TypeScript type definitions
-      - /config         # Configuration files
-      - /hooks          # Custom React hooks
-      - /styles         # Global styles and Tailwind config
+### UI/UX Standards 🎨
+ui:
+  responsive:
+    - Mobile-first breakpoints: 320/768/1024/1440px
+    - Touch targets ≥48x48px
+    - Prefer rem units over px
+  accessibility:
+    - WCAG 2.1 AA compliance
+    - Screen reader support for charts
+    - Keyboard navigation support
+  charts:
+    - WebGL for real-time stock visualization
+    - Canvas fallback for complex visualizations
+    - Debounce zoom/pan events
 
-    ## Key Functional Areas
+### Error Handling 🚨
+errors:
+  recovery:
+    - Automatic retry for failed RPC calls (max 3x)
+    - Fallback UI for failed data loads
+    - Transaction error explanations
+  logging:
+    - Mask sensitive data in logs
+    - Track errors with unique IDs
+    - Console errors must include context
+  boundaries:
+    - Error boundaries around Solana operations
+    - Network error detection
+    - Graceful service degradation
 
-    1. Authentication (/src/app/(auth))
-      - /login         # Login page with wallet connection
-      - /layout.tsx    # Auth layout with protection
-      - /api/auth      # NextAuth configuration and routes
+### Testing Requirements 🧪
+testing:
+  unit:
+    - 90% coverage for Solana services
+    - Mock Solana Web3.js responses
+    - Snapshot critical components
+  e2e:
+    - Test wallet connection flows
+    - Validate transaction signing
+    - Performance budgets for key pages
+  security:
+    - OWASP ZAP baseline scans
+    - Solana program interaction fuzzing
+    - Dependency vulnerability checks
 
-    2. Protected Routes (/src/app/(protected))
-      - /dashboard     # Main dashboard view
-      - /analysis      # Stock analysis features
-      - /ai-insights   # AI-powered analysis
-      - /lottery       # Crypto lottery features
-      - /stock/[symbol] # Individual stock details
-      - /technical-analysis # Technical analysis tools
+### Documentation Rules 📖
+docs:
+  components:
+    - JSDoc for complex logic
+    - Storybook stories for UI components
+    - ADR for architectural decisions
+  api:
+    - OpenAPI spec for REST endpoints
+    - Annotated Solana IDL
+    - Error code reference
+  dev:
+    - Setup troubleshooting guide
+    - RPC endpoint configuration
+    - Wallet testing checklist
 
-    3. Components (/src/components)
-      - /layout        # Layout components (dashboard-layout, page-container)
-      - /ui           # Base UI components (buttons, inputs, etc.)
-      - /stock-dashboard # Stock-specific components
-      - /lottery      # Lottery-specific components
-      - /auth         # Authentication-related components
+### Optimization Exceptions 🚧
+perf-exceptions:
+  allowed:
+    - WASM for cryptographic operations
+    - Web Workers for transaction processing
+    - SIMD for large dataset analysis
+  banned:
+    - document.write
+    - synchronous XHR
+    - unoptimized canvas operations
 
-    4. Integration Services (/src/lib)
-      - /api.ts       # API integration functions
-      - /utils.ts     # Utility functions
-      - /solana       # Solana program integration
-      - /lottery-program.ts # Lottery program service
-
-    5. Configuration Files
-      - next.config.js # Next.js configuration
-      - tailwind.config.js # Tailwind CSS configuration
-      - .env          # Environment variables
-      - .cursorrules  # Cursor AI rules
-      - .cursorignore # Cursor ignore patterns
-
-    ### File Location Rules
-
-    1. Component Files:
-      - UI Components: /src/components/ui/[component-name].tsx
-      - Feature Components: /src/components/[feature]/[component-name].tsx
-      - Layout Components: /src/components/layout/[layout-name].tsx
-
-    2. Page Files:
-      - Auth Pages: /src/app/(auth)/[page-name]/page.tsx
-      - Protected Pages: /src/app/(protected)/[page-name]/page.tsx
-      - API Routes: /src/app/api/[route-name]/route.ts
-
-    3. Integration Files:
-      - Program Services: /src/lib/[program-name]-program.ts
-      - API Functions: /src/lib/api.ts
-      - Utils: /src/lib/utils.ts
-
-    4. Type Definitions:
-      - Feature Types: /src/types/[feature].ts
-      - Common Types: /src/types/index.ts
-
-    5. Solana Program Files:
-      - Program: /src/lib/solana/program.ts
-      - Lottery Program IDL: /src/lib/solana/crypto_lottery_program.json
-      - Lottery type file : /src/types/lottery.ts
-
-    ### Code Style and Structure
-    - Write concise, technical TypeScript code with accurate examples.
-    - Use functional and declarative programming patterns; avoid classes.
-    - Favor iteration and modularization over code duplication.
-    - Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
-    - Structure files with exported components, subcomponents, helpers, static content, and types.
-    - Use lowercase with dashes for directory names (e.g., `components/auth-wizard`).
-
-    ### Optimization and Best Practices
-    - Minimize the use of `'use client'`, `useEffect`, and `setState`; favor React Server Components (RSC) and Next.js SSR features.
-    - Implement dynamic imports for code splitting and optimization.
-    - Use responsive design with a mobile-first approach.
-    - Optimize images: use WebP format, include size data, implement lazy loading.
-
-    ### Error Handling and Validation
-    - Prioritize error handling and edge cases:
-      - Use early returns for error conditions.
-      - Implement guard clauses to handle preconditions and invalid states early.
-      - Use custom error types for consistent error handling.
-
-    ### UI and Styling
-    - Use modern UI frameworks (e.g., Tailwind CSS, Shadcn UI, Radix UI) for styling.
-    - Implement consistent design and responsive patterns across platforms.
-
-    ### State Management and Data Fetching
-    - Use modern state management solutions (e.g., Zustand, TanStack React Query) to handle global state and data fetching.
-    - Implement validation using Zod for schema validation.
-
-    ### Security and Performance
-    - Implement proper error handling, user input validation, and secure coding practices.
-    - Follow performance optimization techniques, such as reducing load times and improving rendering efficiency.
-
-    ### Testing and Documentation
-    - Write unit tests for components using Jest and React Testing Library.
-    - Provide clear and concise comments for complex logic.
-    - Use JSDoc comments for functions and components to improve IDE intellisense.
-
-    ### Methodology
-    1. **System 2 Thinking**: Approach the problem with analytical rigor. Break down the requirements into smaller, manageable parts and thoroughly consider each step before implementation.
-    2. **Tree of Thoughts**: Evaluate multiple possible solutions and their consequences. Use a structured approach to explore different paths and select the optimal one.
-    3. **Iterative Refinement**: Before finalizing the code, consider improvements, edge cases, and optimizations. Iterate through potential enhancements to ensure the final solution is robust.
-
-    **Process**:
-    1. **Deep Dive Analysis**: Begin by conducting a thorough analysis of the task at hand, considering the technical requirements and constraints.
-    2. **Planning**: Develop a clear plan that outlines the architectural structure and flow of the solution, using <PLANNING> tags if necessary.
-    3. **Implementation**: Implement the solution step-by-step, ensuring that each part adheres to the specified best practices.
-    4. **Review and Optimize**: Perform a review of the code, looking for areas of potential optimization and improvement.
-    5. **Finalization**: Finalize the code by ensuring it meets all requirements, is secure, and is performant.
-    
+### Deployment Rules 🚀
+deployment:
+  security:
+    - SRI hashes for all third-party scripts
+    - HSTS with 1 year max-age
+    - Permissions-Policy header restrictions
+  monitoring:
+    - Real-user metrics collection
+    - Solana RPC performance tracking
+    - Error budget tracking
+  build:
+    - Tree-shake Solana Web3.js imports
+    - Code split by feature flags
+    - Analyze bundle with Source Map Explorer

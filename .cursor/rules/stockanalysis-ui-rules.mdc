@@ -1,0 +1,57 @@
+---
+description: ules for developing the Stock Analysis UI, focusing on Decentralized Lottery integration
+globs: src/**/*.tsx, src/**/*.ts, src/**/*.js, src/**/*.jsx, src/**/*.json
+---
+# StockAnalysis UI Development Rules for Decentralized Lottery Integration
+
+## 1. Program Initialization
+- When constructing the Anchor Program, always ensure the correct parameter order:
+  - Use: `new Program(IDL, provider, PROGRAM_ID)`
+  - Do not pass the `PROGRAM_ID` as the second argument; it must be the third argument.
+- Verify that the provider object includes all necessary properties (e.g., `connection`, `wallet`).
+
+## 2. Enum and Type Handling
+- **Enum Construction:**
+  - Avoid dynamic casts like using `toLowerCase()` to generate enum keys.
+  - Instead, explicitly create the enum object using conditional logic. For example:
+    ```ts
+    let lotteryTypeValue;
+    if (type === LotteryType.Daily) {
+       lotteryTypeValue = { daily: {} };
+    } else if (type === LotteryType.Weekly) {
+       lotteryTypeValue = { weekly: {} };
+    } else {
+       lotteryTypeValue = { monthly: {} };
+    }
+    ```
+  - Ensure that the constructed object exactly matches the variant names in the IDL (see @lottery_types.ts).
+
+- **Type Safety:**
+  - Avoid overgeneralizing with generic casts such as `as { [key: string]: Record<string, never> }`.
+  - Use the specific types generated from the IDL and validated with Zod schemas.
+
+## 3. Account Naming Conventions
+- **Matching Generated Types:**
+  - Always use the camelCase account names as defined in the generated types. For example, use `lotteryAccount` and `globalConfig`, not `lottery_account` or `global_config`.
+  - Ensure that the keys in the `.accounts({ ... })` calls exactly match what is defined in the IDL.
+
+## 4. Error Handling and Logging
+- **Error Mapping:**
+  - Use the error codes and messages from the IDL to map errors to user-friendly messages.
+  - Handle errors gracefully with clear, informative feedback to the user.
+- **Security:**
+  - Mask sensitive data in logs and adhere to CSP header restrictions.
+  - Validate all RPC responses with Zod schemas.
+
+## 5. Testing and Quality Assurance
+- Write comprehensive unit and integration tests covering:
+  - Program initialization and parameter order.
+  - Enum and type mappings to ensure they align with @lottery_types.ts.
+  - Account naming and validation in .accounts() calls.
+  - Robust error handling for various transaction scenarios.
+- Use automated linting and type-checking tools to enforce consistency and catch issues early.
+
+## 6. Additional Guidelines
+- Maintain the IDL (@decentralized_lottery.json) and the generated types (@lottery_types.ts) as the single source of truth.
+- Always cross-reference changes with the PRD (@lottery-PRD-notepad) to ensure all requirements are met.
+- Optimize UI updates per performance guidelines and debounce rapid changes appropriately.

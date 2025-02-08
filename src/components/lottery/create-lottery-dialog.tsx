@@ -1,121 +1,214 @@
 'use client'
 
 import { useState } from 'react'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useConnection } from '@solana/wallet-adapter-react'
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LotteryType } from '@/types/lottery'
-import { toast } from 'sonner'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import { LotteryProgram } from '@/lib/solana/program'
-import { handleProgramError } from '@/lib/utils'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm, ControllerRenderProps } from 'react-hook-form'
+import * as z from 'zod'
+import { addDays, addWeeks, addMonths, startOfTomorrow } from 'date-fns'
+
+const formSchema = z.object({
+  type: z.enum(['daily', 'weekly', 'monthly']),
+  ticketPrice: z.string().min(1),
+  prizePool: z.string().min(1),
+})
+
+type FormValues = z.infer<typeof formSchema>
 
 interface CreateLotteryDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
 
-export function CreateLotteryDialog({ open, onOpenChange, onSuccess }: CreateLotteryDialogProps) {
+export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
   const { publicKey, wallet } = useWallet()
   const { connection } = useConnection()
-  const [loading, setLoading] = useState(false)
-  const [type, setType] = useState<LotteryType>(LotteryType.Daily)
-  const [ticketPrice, setTicketPrice] = useState('')
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!publicKey || !connection) return
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      type: 'daily',
+      ticketPrice: '',
+      prizePool: '',
+    },
+  })
+
+  const getDrawTime = (type: LotteryType) => {
+    const tomorrow = startOfTomorrow()
+    switch (type) {
+      case LotteryType.Daily:
+        return addDays(tomorrow, 1)
+      case LotteryType.Weekly:
+        return addWeeks(tomorrow, 1)
+      case LotteryType.Monthly:
+        return addMonths(tomorrow, 1)
+      default:
+        return tomorrow
+    }
+  }
+
+  const onSubmit = async (values: FormValues) => {
+    if (!publicKey || !connection || !wallet) {
+      toast.error('Please connect your wallet')
+      return
+    }
 
     try {
       setLoading(true)
-      const price = parseFloat(ticketPrice) * LAMPORTS_PER_SOL
-      const adapter = wallet?.adapter as BaseSignerWalletAdapter
-      if (!adapter) return
-
-      // Calculate start and end times based on lottery type
-      const now = Math.floor(Date.now() / 1000)
-      let duration: number
-      switch (type) {
-        case LotteryType.Daily:
-          duration = 24 * 60 * 60 // 1 day in seconds
-          break
-        case LotteryType.Weekly:
-          duration = 7 * 24 * 60 * 60 // 1 week in seconds
-          break
-        case LotteryType.Monthly:
-          duration = 30 * 24 * 60 * 60 // 30 days in seconds
-          break
-      }
-
+      const adapter = wallet.adapter as BaseSignerWalletAdapter
       const program = new LotteryProgram(connection, {
         publicKey,
         signTransaction: adapter.signTransaction.bind(adapter),
         signAllTransactions: adapter.signAllTransactions.bind(adapter),
       })
 
+      const drawTime = getDrawTime(values.type as LotteryType)
       await program.createLottery(
-        type,
-        price,
-        now,
-        now + duration
+        values.type as LotteryType,
+        parseFloat(values.ticketPrice),
+        Math.floor(drawTime.getTime() / 1000),
+        parseFloat(values.prizePool)
       )
-      
+
       toast.success('Lottery created successfully!')
-      onOpenChange(false)
+      setOpen(false)
+      form.reset()
       onSuccess()
     } catch (error) {
       console.error('Failed to create lottery:', error)
-      toast.error(handleProgramError(error))
+      const errorMessage = LotteryProgram.formatError(error)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>Create Lottery</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Lottery</DialogTitle>
+          <DialogDescription>
+            Create a new lottery by specifying its type, ticket price, and prize pool.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleCreate} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="type">Lottery Type</Label>
-            <Select
-              value={type}
-              onValueChange={(value: string) => setType(value as LotteryType)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select lottery type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={LotteryType.Daily}>Daily Lottery</SelectItem>
-                <SelectItem value={LotteryType.Weekly}>Weekly Lottery</SelectItem>
-                <SelectItem value={LotteryType.Monthly}>Monthly Lottery</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ticketPrice">Ticket Price (SOL)</Label>
-            <Input
-              id="ticketPrice"
-              type="number"
-              step="0.01"
-              min="0"
-              value={ticketPrice}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTicketPrice(e.target.value)}
-              placeholder="Enter ticket price in SOL"
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }: { field: ControllerRenderProps<FormValues, 'type'> }) => (
+                <FormItem>
+                  <FormLabel>Lottery Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select lottery type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    The type determines when the lottery will be drawn.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Lottery'}
-          </Button>
-        </form>
+            <FormField
+              control={form.control}
+              name="ticketPrice"
+              render={({ field }: { field: ControllerRenderProps<FormValues, 'ticketPrice'> }) => (
+                <FormItem>
+                  <FormLabel>Ticket Price (USDC)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter ticket price"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The price of each ticket in USDC.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="prizePool"
+              render={({ field }: { field: ControllerRenderProps<FormValues, 'prizePool'> }) => (
+                <FormItem>
+                  <FormLabel>Prize Pool (USDC)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter prize pool"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The total prize pool in USDC.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Creating...' : 'Create Lottery'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )
