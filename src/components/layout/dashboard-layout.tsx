@@ -16,8 +16,7 @@ import {
   Settings,
   HelpCircle,
   Ticket
-  HelpCircle,
-  Ticket
+
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"

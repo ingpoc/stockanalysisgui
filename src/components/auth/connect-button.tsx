@@ -3,7 +3,7 @@
 import { memo } from 'react'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { Button } from '@/components/ui/button'
-import { truncateAddress } from '@/lib/utils'
+import { shortenAddress } from '@/lib/utils'
 
 interface ConnectButtonProps {
   className?: string
@@ -23,7 +23,7 @@ const ConnectButton = memo(function ConnectButton({ className }: ConnectButtonPr
       {status === 'connecting' ? (
         'Connecting...'
       ) : isConnected && address ? (
-        truncateAddress(address)
+        shortenAddress(address)
       ) : (
         'Connect Wallet'
       )}
