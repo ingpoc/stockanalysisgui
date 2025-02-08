@@ -14,7 +14,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Ticket
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -133,6 +134,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <SidebarItem icon={BarChart3} label="Stock Analysis" href="/analysis" isCollapsed={isCollapsed} />
               <SidebarItem icon={TrendingUp} label="Technical Analysis" href="/technical-analysis" isCollapsed={isCollapsed} />
               <SidebarItem icon={Brain} label="AI Insights" href="/ai-insights" isCollapsed={isCollapsed} />
+              <SidebarItem icon={Ticket} label="Crypto Lottery" href="/lottery" isCollapsed={isCollapsed} />
             </nav>
 
             <div className="mt-auto px-3 py-4 space-y-1">

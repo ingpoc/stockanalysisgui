@@ -91,11 +91,11 @@ export class LotteryProgram {
         new BN(prizePool)
       )
       .accounts({
-        lottery_account: lotteryAccount,
+        lotteryAccount: lotteryAccount,
         creator: this.program.provider.publicKey,
-        global_config: globalConfig,
-        system_program: SystemProgram.programId,
-      })
+        globalConfig: globalConfig,
+        systemProgram: SystemProgram.programId,
+      } as any)
       .rpc()
   }
 
@@ -139,12 +139,12 @@ export class LotteryProgram {
       const tx = await this.program.methods
         .buyTicket(new BN(numberOfTickets))
         .accounts({
-          lottery_account: lotteryAccountKey,
-          user_token_account: userTokenAccount,
-          lottery_token_account: lotteryTokenAccount,
+          lotteryAccount: lotteryAccount,
+          userTokenAccount: userTokenAccount,
+          lotteryTokenAccount: lotteryTokenAccount,
           buyer: this.program.provider.publicKey,
-          token_program: TOKEN_PROGRAM_ID,
-        })
+          tokenProgram: TOKEN_PROGRAM_ID,
+        } as any)
         .preInstructions([createAtaIx])
         .rpc()
       return tx
@@ -153,12 +153,12 @@ export class LotteryProgram {
     return await this.program.methods
       .buyTicket(new BN(numberOfTickets))
       .accounts({
-        lottery_account: lotteryAccountKey,
-        user_token_account: userTokenAccount,
-        lottery_token_account: lotteryTokenAccount,
+        lotteryAccount: lotteryAccountKey,
+        userTokenAccount: userTokenAccount,
+        lotteryTokenAccount: lotteryTokenAccount,
         buyer: this.program.provider.publicKey,
-        token_program: TOKEN_PROGRAM_ID,
-      })
+        tokenProgram: TOKEN_PROGRAM_ID,
+      } as any)
       .rpc()
   }
 
