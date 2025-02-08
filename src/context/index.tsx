@@ -1,23 +1,42 @@
 'use client'
 
+import { wagmiAdapter, solanaWeb3JsAdapter, projectId, networks } from '@/config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider, type Config } from 'wagmi'
-import { cookieToInitialState } from 'wagmi'
-import { wagmiAdapter, config } from '@/config'
-import { ThemeProvider } from '@/components/theme-provider'
+import { createAppKit, useAppKitProvider } from '@reown/appkit/react'
 import React, { type ReactNode } from 'react'
+import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
+import { ThemeProvider } from '@/components/theme-provider'
+
 
 // Set up queryClient
 const queryClient = new QueryClient()
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-export default function ContextProvider({ 
-  children, 
-  cookies 
-}: { 
-  children: ReactNode
-  cookies: string | null 
-}) {
+
+const metadata = {
+  name: 'Stock Analysis Dashboard',
+  description: 'Real-time stock analysis and insights',
+  url: APP_URL,
+  icons: [`${APP_URL}/icon.svg`]
+}
+
+export const modal = createAppKit({
+  adapters: [wagmiAdapter, solanaWeb3JsAdapter],
+  projectId,
+  networks,
+  metadata,
+  themeMode: 'light',
+  features: {
+    analytics: true // Optional - defaults to your Cloud configuration
+  }
+})
+
+
+
+function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
   const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
+  
+  
 
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
@@ -34,3 +53,4 @@ export default function ContextProvider({
     </WagmiProvider>
   )
 } 
+export default ContextProvider

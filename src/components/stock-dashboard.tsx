@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { StockTable } from "@/components/stock-table"
 import { refreshStockAnalysis, fetchMarketData, getQuarters, type MarketOverview } from "@/lib/api"
@@ -17,7 +17,14 @@ const TABS = [
   { id: "all-stocks", label: "All Stocks" },
 ] as const
 
-function StatsCard({ title, value, trend, trendValue, loading }: {
+// Memoized StatsCard component
+const StatsCard = memo(function StatsCard({ 
+  title, 
+  value, 
+  trend, 
+  trendValue, 
+  loading 
+}: {
   title: string
   value: string
   trend?: "up" | "down"
@@ -46,7 +53,31 @@ function StatsCard({ title, value, trend, trendValue, loading }: {
       )}
     </div>
   )
-}
+})
+
+// Memoized Tab component
+const CategoryTab = memo(function CategoryTab({ 
+  tab, 
+  isActive, 
+  onClick 
+}: { 
+  tab: typeof TABS[number]
+  isActive: boolean
+  onClick: () => void 
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
+        isActive
+          ? "border-blue-600 text-blue-600 dark:text-blue-500"
+          : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+      }`}
+    >
+      {tab.label}
+    </button>
+  )
+})
 
 export function StockDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -57,62 +88,62 @@ export function StockDashboard() {
   const [quarters, setQuarters] = useState<string[]>([])
   const [activeCategory, setActiveCategory] = useState<StockCategory>("top-performers")
 
-  // Load quarters only once on component mount
-  useEffect(() => {
-    const abortController = new AbortController()
+  // Memoized market statistics
+  const marketStats = useMemo(() => ({
+    marketCap: marketData?.all_stocks?.reduce((sum, stock) => sum + (parseFloat(stock.cmp) || 0), 0) || 0,
+    totalTrades: marketData?.all_stocks?.length || 0,
+    avgVolume: marketData?.all_stocks?.length 
+      ? (marketData.all_stocks.reduce((sum, stock) => sum + (parseFloat(stock.cmp) || 0), 0) / marketData.all_stocks.length)
+      : 0,
+    aiAnalyses: marketData?.all_stocks?.filter(stock => stock.recommendation !== '--').length || 0
+  }), [marketData])
 
-    async function loadQuarters() {
-      try {
-        const data = await getQuarters(abortController.signal)
-        if (data.length > 0) {
-          setQuarters(data)
-          setSelectedQuarter(data[0])
-        }
-      } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error('Failed to fetch quarters:', error)
-          toast.error('Failed to fetch quarters. Please try again later.')
-        }
-      }
+  // Memoized current stocks based on category
+  const currentStocks = useMemo(() => {
+    if (!marketData) return []
+    switch (activeCategory) {
+      case "top-performers": return marketData.top_performers || []
+      case "worst-performers": return marketData.worst_performers || []
+      case "latest-results": return marketData.latest_results || []
+      case "all-stocks": return marketData.all_stocks || []
+      default: return []
     }
+  }, [marketData, activeCategory])
 
-    loadQuarters()
-
-    return () => {
-      abortController.abort()
-    }
-  }, [])
-
-  // Load market data when quarter changes
   useEffect(() => {
     let mounted = true
+    async function loadQuarters() {
+      try {
+        const quartersData = await getQuarters()
+        if (mounted && quartersData.length > 0) {
+          setQuarters(quartersData)
+          setSelectedQuarter(current => current || quartersData[0])
+        }
+      } catch (error) {
+        console.error('Failed to fetch quarters:', error)
+      }
+    }
+    loadQuarters()
+    return () => { mounted = false }
+  }, [])
 
+  useEffect(() => {
+    let mounted = true
     async function loadMarketData() {
       if (!selectedQuarter) return
-      
       setLoading(true)
       try {
         const data = await fetchMarketData(selectedQuarter)
-        if (mounted) {
-          setMarketData(data)
-        }
+        if (mounted) setMarketData(data)
       } catch (error) {
         console.error('Failed to fetch market data:', error)
-        if (mounted) {
-          toast.error('Failed to fetch market data. Please try again later.')
-        }
+        if (mounted) toast.error('Failed to fetch market data. Please try again later.')
       } finally {
-        if (mounted) {
-          setLoading(false)
-        }
+        if (mounted) setLoading(false)
       }
     }
-
     loadMarketData()
-
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [selectedQuarter])
 
   const handleRefresh = async () => {
@@ -143,34 +174,8 @@ export function StockDashboard() {
   }
 
   const handleQuarterChange = (quarter: string) => {
-    setSelectedStock(null) // Reset selected stock when quarter changes
+    setSelectedStock(null)
     setSelectedQuarter(quarter)
-  }
-
-  // Calculate market statistics
-  const marketStats = {
-    marketCap: marketData?.all_stocks?.reduce((sum, stock) => sum + (parseFloat(stock.cmp) || 0), 0) || 0,
-    totalTrades: marketData?.all_stocks?.length || 0,
-    avgVolume: marketData?.all_stocks?.length 
-      ? (marketData.all_stocks.reduce((sum, stock) => sum + (parseFloat(stock.cmp) || 0), 0) / marketData.all_stocks.length)
-      : 0,
-    aiAnalyses: marketData?.all_stocks?.filter(stock => stock.recommendation !== '--').length || 0
-  }
-
-  const getCurrentStocks = () => {
-    if (!marketData) return []
-    switch (activeCategory) {
-      case "top-performers":
-        return marketData.top_performers || []
-      case "worst-performers":
-        return marketData.worst_performers || []
-      case "latest-results":
-        return marketData.latest_results || []
-      case "all-stocks":
-        return marketData.all_stocks || []
-      default:
-        return []
-    }
   }
 
   return (
@@ -215,17 +220,17 @@ export function StockDashboard() {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time market insights and analysis</p>
           </div>
           <div className="flex items-center gap-4">
-            <select
-              value={selectedQuarter}
-              onChange={(e) => handleQuarterChange(e.target.value)}
-              className="bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
-            >
-              {quarters.map((quarter) => (
-                <option key={quarter} value={quarter}>
-                  {quarter}
-                </option>
-              ))}
-            </select>
+            {quarters.length > 0 && (
+              <select
+                value={selectedQuarter}
+                onChange={(e) => handleQuarterChange(e.target.value)}
+                className="bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
+              >
+                {quarters.map((quarter) => (
+                  <option key={quarter} value={quarter}>{quarter}</option>
+                ))}
+              </select>
+            )}
             <Button
               onClick={handleRefresh}
               disabled={isRefreshing || !selectedStock}
@@ -240,24 +245,21 @@ export function StockDashboard() {
         {/* Category Tabs */}
         <div className="flex border-b border-gray-200 dark:border-gray-800 mb-6">
           {TABS.map((tab) => (
-            <button
+            <CategoryTab
               key={tab.id}
-              onClick={() => setActiveCategory(tab.id)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-                activeCategory === tab.id
-                  ? "border-blue-600 text-blue-600 dark:text-blue-500"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              {tab.label}
-            </button>
+              tab={tab}
+              isActive={activeCategory === tab.id}
+              onClick={() => setActiveCategory(tab.id as StockCategory)}
+            />
           ))}
         </div>
 
-        <StockTable 
-          onStockSelect={setSelectedStock} 
+        {/* Stock Table */}
+        <StockTable
+          stocks={currentStocks}
+          loading={loading}
           selectedStock={selectedStock}
-          stocks={getCurrentStocks()}
+          onStockSelect={setSelectedStock}
         />
       </div>
     </PageContainer>
