@@ -1,6 +1,6 @@
 import { cookieStorage, createStorage } from 'wagmi'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { polygon, optimism, arbitrum, mainnet } from '@reown/appkit/networks'
+import { polygon, optimism, arbitrum, mainnet, solana, solanaDevnet, solanaTestnet } from '@reown/appkit/networks'
 import { createAppKit } from '@reown/appkit/react'
 import type { AppKitNetwork } from '@reown/appkit/networks'
 import { HuobiWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets'
@@ -17,6 +17,10 @@ export const networks = [
   polygon,   // Lowest fees (~$0.01)
   optimism,  // Medium fees (~$0.50)
   arbitrum,  // Medium fees (~$0.30)
+  mainnet,
+  solana,
+  solanaDevnet,
+  solanaTestnet
 ] as [AppKitNetwork, ...AppKitNetwork[]]
 
 // Set up the Wagmi Adapter with cookie storage
@@ -33,20 +37,7 @@ export const solanaWeb3JsAdapter = new SolanaAdapter({
   wallets: [new HuobiWalletAdapter(), new SolflareWalletAdapter()]
 })
 
-// Create the AppKit instance
-/*export const appKit = createAppKit({
-  adapters: [wagmiAdapter],
-  projectId: process.env.NEXT_PUBLIC_PROJECT_ID || '',
-  networks: [mainnet],
-  themeMode: 'light',
-  defaultNetwork: mainnet,
-  metadata: {
-    name: 'Stock Analysis Dashboard',
-    description: 'Real-time stock analysis and insights',
-    url: APP_URL,
-    icons: [`${APP_URL}/icon.svg`]
-  }
-})*/
+
 
 // Export wagmi config for use in other parts of the application
 export const config = wagmiAdapter.wagmiConfig
