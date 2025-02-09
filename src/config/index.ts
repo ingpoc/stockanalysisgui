@@ -4,7 +4,7 @@ import { polygon, optimism, arbitrum, mainnet, solana, solanaDevnet, solanaTestn
 import type { AppKitNetwork } from '@reown/appkit/networks'
 import { HuobiWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets'
 import { SolanaAdapter } from '@reown/appkit-adapter-solana/react'
-import { createAppKit, useAppKit, useAppKitState, useAppKitTheme, useAppKitEvents, useAppKitAccount, useWalletInfo, useAppKitNetwork, useDisconnect } from '@reown/appkit/react'
+import { createAppKit, useAppKit, useAppKitState, useAppKitTheme, useAppKitEvents, useAppKitAccount, useWalletInfo, useAppKitNetwork, useDisconnect, useAppKitProvider } from '@reown/appkit/react'
 
 
 export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || "09fccb634332c292a3cb889c0592b928"
@@ -73,5 +73,6 @@ export {
   useAppKitAccount,
   useWalletInfo,
   useAppKitNetwork,
-  useDisconnect
+  useDisconnect,
+  useAppKitProvider
 }

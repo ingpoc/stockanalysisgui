@@ -2,8 +2,6 @@
 
 import React from 'react'
 import { useState } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useConnection } from '@solana/wallet-adapter-react'
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { LotteryType } from '@/types/lottery'
 import { LotteryProgram } from '@/lib/solana/program'
@@ -39,8 +37,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, ControllerRenderProps } from 'react-hook-form'
 import * as z from 'zod'
 import { addDays, addWeeks, addMonths, startOfTomorrow } from 'date-fns'
-import { useAppKitProvider, useAppKit } from '@reown/appkit/react'
-import { modal } from '@/context'
+import { useAppKitAccount, useAppKitProvider, useAppKit, useAppKitNetwork } from '@reown/appkit/react'
+import { Connection, PublicKey } from '@solana/web3.js'
+import { solana } from '@reown/appkit/networks'
 
 interface CreateLotteryDialogProps {
   onSuccess: () => void
@@ -55,11 +54,15 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
-  const { open: openWallet } = useAppKit();
+  const { open: openWallet } = useAppKit()
+  const { switchNetwork } = useAppKitNetwork()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { publicKey, wallet } = useWallet()
-  const { connection } = useConnection()
+  const { address, isConnected } = useAppKitAccount()
+  const { walletProvider } = useAppKitProvider('solana')
+  const connection = new Connection(solana.rpcUrls.default.http[0], {
+    commitment: 'confirmed'
+  })
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -84,17 +87,34 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
     }
   }
 
+  const handleCreateLottery = async () => {
+    if (!isConnected || !address || !walletProvider) {
+      openWallet()
+      return
+    }
+
+    // Switch to Solana network if needed
+    try {
+      await switchNetwork(solana)
+      form.handleSubmit(onSubmit)()
+    } catch (error) {
+      console.error('Failed to switch network:', error)
+      toast.error('Failed to switch to Solana network')
+    }
+  }
+
   const onSubmit = async (values: FormValues) => {
-    if (!publicKey || !connection || !wallet) {
+    if (!isConnected || !address || !walletProvider) {
       toast.error('Please connect your wallet')
+      openWallet()
       return
     }
 
     try {
       setLoading(true)
-      const adapter = wallet.adapter as BaseSignerWalletAdapter
+      const adapter = walletProvider as BaseSignerWalletAdapter
       const program = new LotteryProgram(connection, {
-        publicKey,
+        publicKey: new PublicKey(address),
         signTransaction: adapter.signTransaction.bind(adapter),
         signAllTransactions: adapter.signAllTransactions.bind(adapter),
       })
@@ -123,7 +143,7 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button>Create Lottery</Button>
+        <Button onClick={handleCreateLottery}>Create Lottery</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -207,7 +227,7 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading || !isConnected}>
                 {loading ? 'Creating...' : 'Create Lottery'}
               </Button>
             </DialogFooter>

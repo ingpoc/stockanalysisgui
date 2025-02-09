@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { useAppKitAccount, useAppKitNetwork, useAppKitProvider } from '@reown/appkit/react'
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { LotteryInfo } from '@/types/lottery'
 import { PageContainer } from '@/components/layout/page-container'
@@ -11,43 +11,48 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { LotteryProgram } from '@/lib/solana/program'
+import { PublicKey } from '@solana/web3.js'
+import { useConnection } from '@solana/wallet-adapter-react'
 
 export default function LotteryPage() {
   const [lotteries, setLotteries] = useState<LotteryInfo[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const { connection } = useConnection()
-  const { publicKey, wallet } = useWallet()
+  const { isConnected, address } = useAppKitAccount()
+  const { walletProvider } = useAppKitProvider('solana')
   const [subscriptions, setSubscriptions] = useState<number[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchLotteries()
     return () => {
-      // Cleanup subscriptions on unmount
-      if (connection && publicKey && wallet) {
-        const adapter = wallet.adapter as BaseSignerWalletAdapter
+      // Clean up subscriptions if all necessary values are present
+      if (connection && walletProvider && isConnected && address) {
+        const adapter = walletProvider as any // use proper adapter typing
         const program = new LotteryProgram(connection, {
-          publicKey,
+          publicKey: new PublicKey(address),
           signTransaction: adapter.signTransaction.bind(adapter),
           signAllTransactions: adapter.signAllTransactions.bind(adapter),
         })
         subscriptions.forEach(sub => program.unsubscribe(sub))
       }
     }
-  }, [connection, publicKey, wallet])
+  }, [connection, address, walletProvider, isConnected, subscriptions])
 
   const fetchLotteries = async () => {
     try {
       setLoading(true)
       setError(null)
-      if (!connection || !publicKey || !wallet) {
-        setError('Please connect your wallet to view lotteries')
+
+      // Check if we're connected with Solana wallet
+      if (!connection || !walletProvider || !isConnected || !address) {
+        setError('Please connect your Solana wallet to view lotteries')
         return
       }
 
-      const adapter = wallet.adapter as BaseSignerWalletAdapter
+      const adapter = walletProvider as BaseSignerWalletAdapter
       const program = new LotteryProgram(connection, {
-        publicKey,
+        publicKey: new PublicKey(address),
         signTransaction: adapter.signTransaction.bind(adapter),
         signAllTransactions: adapter.signAllTransactions.bind(adapter),
       })

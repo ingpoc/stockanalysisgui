@@ -26,7 +26,7 @@ const PROGRAM_ID = new PublicKey('4v1we6y3fhEKd54BM8ABPJpK9HSa1srjqJcvTkuhFugb')
 type ProgramType = Program<ProgramIDL>
 
 export class LotteryProgram {
-  private program: ProgramType
+  private program: Program<ProgramIDL>
   private connection: Connection
   private subscriptions: number[] = []
 
@@ -35,13 +35,18 @@ export class LotteryProgram {
     const provider = new AnchorProvider(
       connection,
       wallet,
-      AnchorProvider.defaultOptions()
+      { 
+        commitment: 'confirmed',
+        preflightCommitment: 'confirmed',
+        skipPreflight: false
+      }
     )
     this.program = new Program(
       IDL,
       provider
     ) as ProgramType
   }
+  
 
   async createLottery(
     type: LotteryType,

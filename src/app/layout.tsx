@@ -1,12 +1,12 @@
-
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
 import './globals.css'
 import ContextProvider from '@/context'
-import { useAppKitProvider, useAppKit } from '@reown/appkit/react'
+import { useAppKitProvider } from '@reown/appkit/react'
 import { modal } from '@/config'
 import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
+import { Toaster } from '@/components/ui/toaster'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,7 +31,8 @@ export default async function RootLayout({
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
         <ContextProvider cookies={cookies}>
           {children}
-          
+  
+          <Toaster />
         </ContextProvider>
       </body>
     </html>

@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useConnection } from '@solana/wallet-adapter-react'
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { LotteryInfo, LotteryState } from '@/types/lottery'
 import { LotteryProgram } from '@/lib/solana/program'
@@ -14,7 +12,11 @@ import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Ticket, Trophy, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { Connection, PublicKey } from '@solana/web3.js'
+import { useAppKitAccount, useAppKitProvider, useAppKit } from '@reown/appkit/react'
+import { solana } from '@reown/appkit/networks'
+import { useLotteryProgram } from '@/hooks/useLotteryProgram'
+import { useConnection } from '@solana/wallet-adapter-react'
 
 interface LotteryCardProps {
   lottery: LotteryInfo
@@ -24,26 +26,24 @@ interface LotteryCardProps {
 export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
   const [loading, setLoading] = useState(false)
   const [numberOfTickets, setNumberOfTickets] = useState(1)
-  const { publicKey, wallet } = useWallet()
+  const { address, isConnected } = useAppKitAccount()
+  const { walletProvider } = useAppKitProvider('solana')
+  const { open: openWallet } = useAppKit()
   const { connection } = useConnection()
   const isActive = lottery.state === LotteryState.Open
   const isEnded = new Date(lottery.drawTime * 1000) < new Date()
-  const isWinner = lottery.winningNumbers && publicKey?.toBase58() === lottery.createdBy
+  const isWinner = lottery.winningNumbers && address && new PublicKey(address).toBase58() === lottery.createdBy
 
   const handleBuyTickets = async () => {
-    if (!publicKey || !connection || !wallet) {
-      toast.error('Please connect your wallet')
+    if (!isConnected || !address || !walletProvider) {
+      openWallet()
       return
     }
 
     try {
       setLoading(true)
-      const adapter = wallet.adapter as BaseSignerWalletAdapter
-      const program = new LotteryProgram(connection, {
-        publicKey,
-        signTransaction: adapter.signTransaction.bind(adapter),
-        signAllTransactions: adapter.signAllTransactions.bind(adapter),
-      })
+     
+      const program = useLotteryProgram()
 
       await program.buyTicket(lottery.address, numberOfTickets)
       toast.success('Tickets purchased successfully!')
@@ -101,7 +101,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
             />
             <Button
               onClick={handleBuyTickets}
-              disabled={loading || !publicKey}
+              disabled={loading || !isConnected}
             >
               {loading ? 'Buying...' : 'Buy Tickets'}
             </Button>
@@ -128,11 +128,11 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
         )}
       </CardContent>
       <CardFooter className="flex gap-2">
-        {isActive && !isEnded && publicKey && (
+        {isActive && !isEnded && (
           <Button 
             className="flex-1" 
             onClick={handleBuyTickets}
-            disabled={loading}
+            disabled={loading || !isConnected}
           >
             {loading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

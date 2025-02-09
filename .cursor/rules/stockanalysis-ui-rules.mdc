@@ -1,111 +1,180 @@
 ---
-description: ules for developing the Stock Analysis UI, focusing on Decentralized Lottery integration
+description:  Cursor Rules for Stock Analysis UI with Crypto Lottery & Solana
 globs: src/**/*.tsx, src/**/*.ts, src/**/*.js, src/**/*.jsx, src/**/*.json
 ---
-# StockAnalysis UI Development Rules for Decentralized Lottery Integration
+### Refined Cursor Rules for Stock Analysis UI with Crypto Lottery & Solana
 
-## 1. Program Initialization
-- When constructing the Anchor Program, always ensure the correct parameter order:
-  - Use: `new Program(IDL, provider, PROGRAM_ID)`
-  - Do not pass the `PROGRAM_ID` as the second argument; it must be the third argument.
-- Verify that the provider object includes all necessary properties (e.g., `connection`, `wallet`).
-- **Use the correct IDL and Program ID**: Ensure you are using the `@decentralized_lottery.json` IDL and the program ID `4v1we6y3fhEKd54BM8ABPJpK9HSa1srjqJcvTkuhFugb` as defined in the IDL.
+**### Security First Protocol 🔒**
 
-## 2. Enum and Type Handling
-- **Enum Construction:**
-  - Avoid dynamic casts like using `toLowerCase()` to generate enum keys.
-  - Instead, explicitly create the enum object using conditional logic. For example:
-    ```ts
-    let lotteryTypeValue;
-    if (type === LotteryType.Daily) {
-       lotteryTypeValue = { daily: {} };
-    } else if (type === LotteryType.Weekly) {
-       lotteryTypeValue = { weekly: {} };
-    } else {
-       lotteryTypeValue = { monthly: {} };
-    }
-    ```
-  - Ensure that the constructed object exactly matches the variant names in the IDL (see `@lottery_types.ts`).
-- **Type Safety:**
-  - Avoid overgeneralizing with generic casts such as `as { [key: string]: Record<string, never> }`.
-  - Use the specific types generated from the IDL and validated with Zod schemas.
-  - **Camel Case Types**: Use camelCase types as defined in `@lottery_types.ts` (e.g., `LotteryType`, `LotteryState`, `GlobalConfig`, `LotteryAccount`).
+security:
+  authentication:
+    - Wallet sessions for lottery/crypto features must expire after **10 minutes** of inactivity (increased security for financial features).
+    - All Solana transactions (stock & lottery related) require explicit user approval.
+    - CSP headers must block inline scripts/styles.
+    - **Implement nonce verification for all wallet interactions to prevent replay attacks.**
+  data:
+    - Validate all RPC responses (stock & Solana) with Zod schemas.
+    - Sanitize all user inputs using DOMPurify, especially in lottery entry forms.
+    - Encrypt sensitive data in IndexedDB, including wallet-related information and lottery participation details.
+  solana:
+    - **Strictly verify PDAs for all program interactions in both stock analysis and lottery programs.**
+    - Validate account ownership before **any** Solana transactions (stock & lottery).
+    - Use versioned transactions for forward compatibility.
+    - **Implement robust transaction simulations before user confirmation for lottery interactions.**
+    - **Audit all Solana program interactions for potential vulnerabilities (re-entrancy, etc.).**
 
-## 3. Account Naming Conventions
-- **Matching Generated Types:**
-  - Always use the camelCase account names as defined in the generated types. For example, use `lotteryAccount` and `globalConfig`, not `lottery_account` or `global_config`.
-  - Ensure that the keys in the `.accounts({ ... })` calls exactly match what is defined in the IDL (and in `@lottery_types.ts`).
-  - **PDA Seeds**: When deriving PDAs, use the seeds specified in the IDL and ensure the seed types match (e.g., `const` for constant seeds, `arg` for instruction arguments, `account` for account fields).
+**### Performance Optimization 🚀**
 
-## 4. Error Handling and Logging
-- **Error Mapping:**
-  - Use the error codes and messages from the IDL to map errors to user-friendly messages.
-  - Handle errors gracefully with clear, informative feedback to the user.
-  - **IDL Error Codes**: Refer to the `errors` section of `@decentralized_lottery.json` and `@lottery_types.ts` for a list of program-specific errors (e.g., `UnsupportedLotteryType`, `LotteryNotOpen`). Use `LotteryProgram.formatError(error)` to format these errors.
-- **Security:**
-  - Mask sensitive data in logs and adhere to CSP header restrictions.
-  - Validate all RPC responses with Zod schemas.
+performance:
+  rendering:
+    - Virtualize lists with >50 items (stock tables, lottery history, etc.).
+    - Debounce rapid UI updates (stock charts, lottery animations).
+    - Use `React.memo` and `useCallback` for complex components, especially in lottery UI and data displays.
+  data:
+    - Cache Solana account data for **15 seconds** for lottery data (more real-time for lottery).
+    - Cache stock account data for 30s (SWR/React Query).
+    - Compress RPC payloads with Brotli.
+    - Batch Solana `getMultipleAccounts` calls, especially for fetching lottery participant data.
+  assets:
+    - Convert images to WebP with <4:1 compression ratio.
+    - Lazy load non-critical JS/CSS, especially for lottery-specific assets.
+    - Inline critical CSS for above-the-fold content.
+    - **Optimize Solana transaction processing to minimize UI blocking.**
 
-## 5. Testing and Quality Assurance
-- Write comprehensive unit and integration tests covering:
-  - Program initialization and parameter order.
-  - Enum and type mappings to ensure they align with `@lottery_types.ts`.
-  - Account naming and validation in `.accounts() calls.
-  - Robust error handling for various transaction scenarios, specifically testing error codes from the IDL.
-- Use automated linting and type-checking tools to enforce consistency and catch issues early.
-- **Event Handling Tests**: Implement tests to verify that event listeners for `LotteryCreated` and `TicketPurchased` are correctly set up and update the UI as expected.
+**### Solana & Appkit Integration Standards ⚙️**
 
-## 6. AppKit Integration and Context
-- **`useAppKitProvider` in `_layout.tsx`**: Initialize `useAppKitProvider(modal)` in your root `layout.tsx` file. This ensures that the AppKit context is set up at the highest level of your application.
-  ```tsx
-  // src/app/layout.tsx
-  'use client'
-  import { useAppKitProvider } from '@reown/appkit/react'
-  import { modal } from '@/context' // Import your modal instance
+solana:
+  transactions:
+    - Preflight checks required for **all** transactions (stock & lottery).
+    - Handle versioned transactions.
+    - Max transaction timeout: **20 seconds** for lottery transactions (time-sensitive).
+    - Max transaction timeout: 30 seconds for stock transactions.
+    - **Use Appkit's transaction abstraction for consistent transaction handling across features.**
+  error:
+    - Handle 4100 (Unauthorized) errors gracefully.
+    - Detect and recover from blockhash expiry.
+    - Track transaction confirmation depth.
+    - **Implement specific error handling for lottery program errors (e.g., insufficient funds, invalid entry).**
+    - **Use Appkit's error handling utilities for Solana interactions.**
+  wallet:
+    - Support Phantom/Backpack/Solflare.
+    - Handle wallet disconnects in all flows (stock & lottery).
+    - Validate wallet network (Mainnet/Devnet).
+    - **Ensure Appkit wallet adapters are correctly configured and utilized.**
+    - **Implement wallet connection persistence using Appkit's session management.**
 
-  export default function RootLayout({ children }: { children: React.ReactNode }) {
-    const { walletsModal, appKit } = useAppKitProvider(modal);
+**### Code Quality Enforcement 📐**
 
-    return (
-      <html>
-        <body>
-          {children}
-          {walletsModal} {/* Render walletsModal component here */}
-        </body>
-      </html>
-    )
-  }
-  ```
-- **Accessing `walletsModal` and `appKit`**:  You can then import `useAppKitProvider` and `modal` in any client component where you need to access `walletsModal` or `appKit`.
-  ```tsx
-  // src/components/lottery/create-lottery-dialog.tsx
-  'use client'
-  import { useAppKitProvider } from '@reown/appkit/react'
-  import { modal } from '@/context' // Import your modal instance
+architecture:
+  components:
+    - Atomic design pattern (Atoms/Molecules/Organisms).
+    - Colocate GraphQL queries with components (if applicable for stock data).
+    - Isolate Solana program interactions in **dedicated services** (e.g., `solana-lottery-service.ts`, `solana-stock-service.ts`).
+    - **Abstract Appkit functionalities into reusable hooks or services.**
+  state:
+    - Use Zustand for global state (consider separate stores for stock and lottery state if complexity increases).
+    - TanStack Query for server state (stock & lottery data).
+    - Avoid prop drilling >3 levels.
+    - **Manage lottery-specific state (e.g., ticket selection, lottery round info) with Zustand.**
+  types:
+    - Strict TypeScript (no implicit any).
+    - Generate types from Solana IDL for **both stock and lottery programs.**
+    - Validate runtime types with Zod.
+    - **Define clear types for Appkit-related data structures and interactions.**
 
-  function CreateLotteryDialog() {
-    const { walletsModal, appKit } = useAppKitProvider(modal);
-    // ... use walletsModal and appKit ...
-  }
-  ```
-- **No Custom Context**:  Based on the example app, you likely do not need to create a custom React Context for `appKit` and `walletsModal`. Calling `useAppKitProvider` in `_layout.tsx` and then importing it where needed should be sufficient.
-- **`ContextProvider`**: Ensure your `ContextProvider` (from `src/context/index.tsx`) is still wrapping your application in `_layout.tsx`, but it should primarily handle Wagmi and other providers, not AppKit context directly.
+**### UI/UX Standards 🎨**
 
-## 7. Additional Guidelines
-- Maintain the IDL (`@decentralized_lottery.json`) and the generated types (`@lottery_types.ts`) as the single source of truth.
-- Always cross-reference changes with the PRD (`@lottery-PRD-notepad`) to ensure all requirements are met.
-- Optimize UI updates per performance guidelines and debounce rapid changes appropriately.
-- **Solana Transaction Handling**: Implement preflight checks for all Solana transactions, handle versioned transactions, and set appropriate transaction timeouts (as per the Solana Integration Standards in `.cursorrules`).
-- **Error Recovery**: Implement automatic retry for failed RPC calls, fallback UI for data loading failures, and provide transaction error explanations (as per Error Handling rules in `.cursorrules`).
+ui:
+  responsive:
+    - Mobile-first breakpoints: 320/768/1024/1440px.
+    - Touch targets ≥48x48px.
+    - Prefer rem units over px.
+  accessibility:
+    - WCAG 2.1 AA compliance.
+    - Screen reader support for charts and lottery UI elements.
+    - Keyboard navigation support.
+  charts:
+    - WebGL for real-time stock visualization.
+    - Canvas fallback for complex visualizations.
+    - Debounce zoom/pan events.
+  lottery:
+    - **Visually engaging and clear lottery UI.**
+    - **Provide clear feedback on lottery actions (ticket purchase, entry confirmation, results).**
+    - **Ensure lottery UI is accessible and responsive.**
+    - **Consider animations and visual cues for lottery events (drawing, results reveal).**
 
-This updated `stockanalysis-ui-rules.mdc` provides more specific guidance for integrating the decentralized lottery, especially regarding AppKit context and error handling.
+**### Error Handling 🚨**
 
-Regarding the lottery program integration, based on the errors you are still facing, please ensure the following:
+errors:
+  recovery:
+    - Automatic retry for failed RPC calls (max 3x).
+    - Fallback UI for failed data loads.
+    - Transaction error explanations (stock & lottery).
+    - **Specific error recovery for lottery operations (e.g., handle race conditions in ticket purchase).**
+  logging:
+    - Mask sensitive data in logs.
+    - Track errors with unique IDs.
+    - Console errors must include context.
+    - **Log lottery-specific events and errors for debugging and monitoring.**
+  boundaries:
+    - Error boundaries around Solana operations (stock & lottery).
+    - Network error detection.
+    - Graceful service degradation.
+    - **Implement error boundaries specifically for lottery components.**
 
-1.  **`useAppKitProvider` in `_layout.tsx`**: Double-check that you have moved the `useAppKitProvider(modal)` call to your `src/app/layout.tsx` as shown in the updated rules.
-2.  **`walletsModal` Rendering**:  Make sure you are rendering `{walletsModal}` (or whatever the correct component is, if `walletsModal` is indeed a component) within your `RootLayout` in `src/app/layout.tsx`. If `walletsModal` is not a component to be rendered, remove that line and check the AppKit documentation for how to trigger the wallet modal.
-3.  **`ContextProvider` Placement**: Verify that your `ContextProvider` from `src/context/index.tsx` is still wrapping `{children}` in `src/app/layout.tsx`.
-4.  **Component Usage**: Ensure that `CreateLotteryDialog` and any other components needing `walletsModal` or `appKit` are descendants of the `RootLayout` in your component tree, so they are within the scope of where `useAppKitProvider` is initialized.
-5.  **Cache Clearing and Restart**:  Always clear your browser cache and restart your Next.js development server after making changes to context or layout files.
+**### Testing Requirements 🧪**
 
-If you continue to have issues after verifying these points, please share your updated `src/app/layout.tsx` and `src/components/lottery/create-lottery-dialog.tsx` files again, and we can take another look. It's crucial to get the root layout and context setup correct for AppKit to function properly in the app router.
+testing:
+  unit:
+    - 90% coverage for Solana services (stock & lottery).
+    - Mock Solana Web3.js and **Appkit** responses.
+    - Snapshot critical components.
+    - **Unit test lottery logic and state management.**
+  e2e:
+    - Test wallet connection flows (stock & lottery).
+    - Validate transaction signing (stock & lottery).
+    - Performance budgets for key pages.
+    - **E2E tests for lottery participation, ticket purchase, and result verification flows.**
+    - **Test Appkit integration for wallet and transaction flows.**
+  security:
+    - OWASP ZAP baseline scans.
+    - Solana program interaction fuzzing (stock & lottery programs).
+    - Dependency vulnerability checks.
+    - **Security audits specifically for lottery smart contract interactions.**
+
+**### Documentation Rules 📖**
+
+docs:
+  components:
+    - JSDoc for complex logic.
+    - Storybook stories for UI components (stock & lottery components).
+    - ADR for architectural decisions, especially regarding Appkit and Solana integration.
+  api:
+    - OpenAPI spec for REST endpoints (stock data).
+    - Annotated Solana IDL for **both stock and lottery programs.**
+    - Error code reference.
+    - **Document Appkit usage and integration patterns.**
+    - **Document lottery program interactions and state management.**
+  dev:
+    - Setup troubleshooting guide.
+    - RPC endpoint configuration.
+    - Wallet testing checklist.
+    - **Lottery testing and deployment guide.**
+    - **Appkit setup and usage guide within the project.**
+
+**### Optimization Exceptions 🚧**
+
+perf-exceptions:
+  allowed:
+    - WASM for cryptographic operations (if needed for lottery).
+    - Web Workers for transaction processing (stock & lottery).
+    - SIMD for large dataset analysis (stock data).
+  banned:
+    - `document.write`.
+    - synchronous XHR.
+    - unoptimized canvas operations.
+    - **Avoid blocking UI thread during lottery operations (e.g., ticket drawing animation).**
+
+These refined rules are more specific to your project's expanded scope, incorporating the crypto lottery and Appkit functionalities alongside the existing stock analysis features. They emphasize security, performance, and code quality best practices relevant to your integrated application.
+
+Do you have any specific areas within the lottery or Appkit integration where you'd like to focus the Cursor rules further? Let me know if you have any other questions or need further adjustments!
