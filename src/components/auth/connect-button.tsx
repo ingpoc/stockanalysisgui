@@ -1,7 +1,7 @@
 'use client'
 
 import { memo } from 'react'
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
+import { useAppKit, useAppKitAccount } from '@/config'
 import { Button } from '@/components/ui/button'
 import { shortenAddress } from '@/lib/utils'
 
@@ -13,9 +13,19 @@ const ConnectButton = memo(function ConnectButton({ className }: ConnectButtonPr
   const { open } = useAppKit()
   const { address, isConnected, status } = useAppKitAccount()
 
+  const handleConnect = () => {
+    try {
+      open({
+        view: 'Connect'
+      })
+    } catch (error) {
+      console.error('Failed to open connect modal:', error)
+    }
+  }
+
   return (
     <Button 
-      onClick={() => open()}
+      onClick={handleConnect}
       variant="secondary"
       className={className}
       disabled={status === 'connecting'}
