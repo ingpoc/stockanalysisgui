@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import './globals.css'
 import ContextProvider from '@/context'
 import { useAppKitProvider, useAppKit } from '@reown/appkit/react'
-import { modal } from '@/context'
+import { modal } from '@/config'
 import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
 
 const inter = Inter({ subsets: ['latin'] })
