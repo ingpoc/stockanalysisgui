@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useConnection } from '@solana/wallet-adapter-react'
@@ -38,6 +39,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, ControllerRenderProps } from 'react-hook-form'
 import * as z from 'zod'
 import { addDays, addWeeks, addMonths, startOfTomorrow } from 'date-fns'
+import { useAppKitProvider, useAppKit } from '@reown/appkit/react'
+import { modal } from '@/context'
+
+interface CreateLotteryDialogProps {
+  onSuccess: () => void
+}
 
 const formSchema = z.object({
   type: z.enum(['daily', 'weekly', 'monthly']),
@@ -47,12 +54,9 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-interface CreateLotteryDialogProps {
-  onSuccess: () => void
-}
-
 export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
-  const [open, setOpen] = useState(false)
+  const { open: openWallet } = useAppKit();
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const { publicKey, wallet } = useWallet()
   const { connection } = useConnection()
@@ -104,7 +108,7 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
       )
 
       toast.success('Lottery created successfully!')
-      setOpen(false)
+      setDialogOpen(false)
       form.reset()
       onSuccess()
     } catch (error) {
@@ -117,7 +121,7 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button>Create Lottery</Button>
       </DialogTrigger>

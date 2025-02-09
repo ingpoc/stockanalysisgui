@@ -9,6 +9,7 @@ globs: src/**/*.tsx, src/**/*.ts, src/**/*.js, src/**/*.jsx, src/**/*.json
   - Use: `new Program(IDL, provider, PROGRAM_ID)`
   - Do not pass the `PROGRAM_ID` as the second argument; it must be the third argument.
 - Verify that the provider object includes all necessary properties (e.g., `connection`, `wallet`).
+- **Use the correct IDL and Program ID**: Ensure you are using the `@decentralized_lottery.json` IDL and the program ID `4v1we6y3fhEKd54BM8ABPJpK9HSa1srjqJcvTkuhFugb` as defined in the IDL.
 
 ## 2. Enum and Type Handling
 - **Enum Construction:**
@@ -24,21 +25,23 @@ globs: src/**/*.tsx, src/**/*.ts, src/**/*.js, src/**/*.jsx, src/**/*.json
        lotteryTypeValue = { monthly: {} };
     }
     ```
-  - Ensure that the constructed object exactly matches the variant names in the IDL (see @lottery_types.ts).
-
+  - Ensure that the constructed object exactly matches the variant names in the IDL (see `@lottery_types.ts`).
 - **Type Safety:**
   - Avoid overgeneralizing with generic casts such as `as { [key: string]: Record<string, never> }`.
   - Use the specific types generated from the IDL and validated with Zod schemas.
+  - **Camel Case Types**: Use camelCase types as defined in `@lottery_types.ts` (e.g., `LotteryType`, `LotteryState`, `GlobalConfig`, `LotteryAccount`).
 
 ## 3. Account Naming Conventions
 - **Matching Generated Types:**
   - Always use the camelCase account names as defined in the generated types. For example, use `lotteryAccount` and `globalConfig`, not `lottery_account` or `global_config`.
-  - Ensure that the keys in the `.accounts({ ... })` calls exactly match what is defined in the IDL.
+  - Ensure that the keys in the `.accounts({ ... })` calls exactly match what is defined in the IDL (and in `@lottery_types.ts`).
+  - **PDA Seeds**: When deriving PDAs, use the seeds specified in the IDL and ensure the seed types match (e.g., `const` for constant seeds, `arg` for instruction arguments, `account` for account fields).
 
 ## 4. Error Handling and Logging
 - **Error Mapping:**
   - Use the error codes and messages from the IDL to map errors to user-friendly messages.
   - Handle errors gracefully with clear, informative feedback to the user.
+  - **IDL Error Codes**: Refer to the `errors` section of `@decentralized_lottery.json` and `@lottery_types.ts` for a list of program-specific errors (e.g., `UnsupportedLotteryType`, `LotteryNotOpen`). Use `LotteryProgram.formatError(error)` to format these errors.
 - **Security:**
   - Mask sensitive data in logs and adhere to CSP header restrictions.
   - Validate all RPC responses with Zod schemas.
@@ -46,12 +49,63 @@ globs: src/**/*.tsx, src/**/*.ts, src/**/*.js, src/**/*.jsx, src/**/*.json
 ## 5. Testing and Quality Assurance
 - Write comprehensive unit and integration tests covering:
   - Program initialization and parameter order.
-  - Enum and type mappings to ensure they align with @lottery_types.ts.
-  - Account naming and validation in .accounts() calls.
-  - Robust error handling for various transaction scenarios.
+  - Enum and type mappings to ensure they align with `@lottery_types.ts`.
+  - Account naming and validation in `.accounts() calls.
+  - Robust error handling for various transaction scenarios, specifically testing error codes from the IDL.
 - Use automated linting and type-checking tools to enforce consistency and catch issues early.
+- **Event Handling Tests**: Implement tests to verify that event listeners for `LotteryCreated` and `TicketPurchased` are correctly set up and update the UI as expected.
 
-## 6. Additional Guidelines
-- Maintain the IDL (@decentralized_lottery.json) and the generated types (@lottery_types.ts) as the single source of truth.
-- Always cross-reference changes with the PRD (@lottery-PRD-notepad) to ensure all requirements are met.
+## 6. AppKit Integration and Context
+- **`useAppKitProvider` in `_layout.tsx`**: Initialize `useAppKitProvider(modal)` in your root `layout.tsx` file. This ensures that the AppKit context is set up at the highest level of your application.
+  ```tsx
+  // src/app/layout.tsx
+  'use client'
+  import { useAppKitProvider } from '@reown/appkit/react'
+  import { modal } from '@/context' // Import your modal instance
+
+  export default function RootLayout({ children }: { children: React.ReactNode }) {
+    const { walletsModal, appKit } = useAppKitProvider(modal);
+
+    return (
+      <html>
+        <body>
+          {children}
+          {walletsModal} {/* Render walletsModal component here */}
+        </body>
+      </html>
+    )
+  }
+  ```
+- **Accessing `walletsModal` and `appKit`**:  You can then import `useAppKitProvider` and `modal` in any client component where you need to access `walletsModal` or `appKit`.
+  ```tsx
+  // src/components/lottery/create-lottery-dialog.tsx
+  'use client'
+  import { useAppKitProvider } from '@reown/appkit/react'
+  import { modal } from '@/context' // Import your modal instance
+
+  function CreateLotteryDialog() {
+    const { walletsModal, appKit } = useAppKitProvider(modal);
+    // ... use walletsModal and appKit ...
+  }
+  ```
+- **No Custom Context**:  Based on the example app, you likely do not need to create a custom React Context for `appKit` and `walletsModal`. Calling `useAppKitProvider` in `_layout.tsx` and then importing it where needed should be sufficient.
+- **`ContextProvider`**: Ensure your `ContextProvider` (from `src/context/index.tsx`) is still wrapping your application in `_layout.tsx`, but it should primarily handle Wagmi and other providers, not AppKit context directly.
+
+## 7. Additional Guidelines
+- Maintain the IDL (`@decentralized_lottery.json`) and the generated types (`@lottery_types.ts`) as the single source of truth.
+- Always cross-reference changes with the PRD (`@lottery-PRD-notepad`) to ensure all requirements are met.
 - Optimize UI updates per performance guidelines and debounce rapid changes appropriately.
+- **Solana Transaction Handling**: Implement preflight checks for all Solana transactions, handle versioned transactions, and set appropriate transaction timeouts (as per the Solana Integration Standards in `.cursorrules`).
+- **Error Recovery**: Implement automatic retry for failed RPC calls, fallback UI for data loading failures, and provide transaction error explanations (as per Error Handling rules in `.cursorrules`).
+
+This updated `stockanalysis-ui-rules.mdc` provides more specific guidance for integrating the decentralized lottery, especially regarding AppKit context and error handling.
+
+Regarding the lottery program integration, based on the errors you are still facing, please ensure the following:
+
+1.  **`useAppKitProvider` in `_layout.tsx`**: Double-check that you have moved the `useAppKitProvider(modal)` call to your `src/app/layout.tsx` as shown in the updated rules.
+2.  **`walletsModal` Rendering**:  Make sure you are rendering `{walletsModal}` (or whatever the correct component is, if `walletsModal` is indeed a component) within your `RootLayout` in `src/app/layout.tsx`. If `walletsModal` is not a component to be rendered, remove that line and check the AppKit documentation for how to trigger the wallet modal.
+3.  **`ContextProvider` Placement**: Verify that your `ContextProvider` from `src/context/index.tsx` is still wrapping `{children}` in `src/app/layout.tsx`.
+4.  **Component Usage**: Ensure that `CreateLotteryDialog` and any other components needing `walletsModal` or `appKit` are descendants of the `RootLayout` in your component tree, so they are within the scope of where `useAppKitProvider` is initialized.
+5.  **Cache Clearing and Restart**:  Always clear your browser cache and restart your Next.js development server after making changes to context or layout files.
+
+If you continue to have issues after verifying these points, please share your updated `src/app/layout.tsx` and `src/components/lottery/create-lottery-dialog.tsx` files again, and we can take another look. It's crucial to get the root layout and context setup correct for AppKit to function properly in the app router.

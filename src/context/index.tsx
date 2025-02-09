@@ -7,7 +7,6 @@ import React, { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 import { ThemeProvider } from '@/components/theme-provider'
 
-
 // Set up queryClient
 const queryClient = new QueryClient()
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -35,7 +34,7 @@ export const modal = createAppKit({
 
 function ContextProvider({ children, cookies }: { children: ReactNode; cookies: string | null }) {
   const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
-  
+
   
 
   return (
@@ -52,5 +51,6 @@ function ContextProvider({ children, cookies }: { children: ReactNode; cookies: 
       </QueryClientProvider>
     </WagmiProvider>
   )
-} 
+}
+
 export default ContextProvider
