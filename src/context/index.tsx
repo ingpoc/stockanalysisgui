@@ -3,9 +3,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider, type Config } from 'wagmi'
 import { cookieToInitialState } from 'wagmi'
-import { wagmiAdapter, config } from '@/config'
+import { wagmiAdapter } from '@/config'
 import { ThemeProvider } from '@/components/theme-provider'
-import React, { type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 // Set up queryClient
 const queryClient = new QueryClient()

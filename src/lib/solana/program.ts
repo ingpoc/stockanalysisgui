@@ -11,17 +11,15 @@ import {
   LotteryType, 
   LotteryState, 
   LotteryInfo, 
-  GlobalConfig, 
-  LotteryAccount,
-  LotteryTypeValue,
-  LotteryStateValue
+  LotteryAccount
 } from '@/types/lottery'
 
-// Import IDL
 import { DecentralizedLottery as ProgramIDL } from '@/types/lottery_types'
 const IDL = require('./decentralized_lottery.json') as ProgramIDL & Idl
 
 const PROGRAM_ID = new PublicKey('4v1we6y3fhEKd54BM8ABPJpK9HSa1srjqJcvTkuhFugb')
+const GLOBAL_CONFIG_SEED = 'global_config'
+const LOTTERY_SEED = 'lottery'
 
 type ProgramType = Program<ProgramIDL>
 
@@ -55,7 +53,7 @@ export class LotteryProgram {
 
     // Get global config PDA
     const [globalConfig] = PublicKey.findProgramAddressSync(
-      [Buffer.from('global_config')],
+      [Buffer.from(GLOBAL_CONFIG_SEED)],
       this.program.programId
     )
 
@@ -76,7 +74,7 @@ export class LotteryProgram {
     // Get lottery account PDA using the explicit lotteryTypeString
     const [lotteryAccount] = PublicKey.findProgramAddressSync(
       [
-        Buffer.from('lottery'),
+        Buffer.from(LOTTERY_SEED),
         Buffer.from(lotteryTypeString),
         new BN(drawTime).toArrayLike(Buffer, 'le', 8)
       ],
