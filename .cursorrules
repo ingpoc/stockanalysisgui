@@ -1,0 +1,114 @@
+# Lesson
+- Refer to @appkit.md for the documentation of the appkit. Update/Edit the file if needed.
+
+### Quick Reference
+📦 Package Verification Commands:
+```typescript
+// 1. Quick type check
+import type { PackageType } from 'package-name';
+const verified: PackageType = /* ... */;
+
+// 2. Runtime verification
+function verifyExports<T>(pkg: unknown): pkg is T {
+  return typeof pkg === 'object' && pkg !== null;
+}
+
+// 3. Package structure check
+import { readFileSync } from 'fs';
+const pkgJson = JSON.parse(readFileSync('node_modules/package-name/package.json', 'utf8'));
+```
+
+📝 Documentation Update Checklist:
+[ ] Verify exports in node_modules
+[ ] Compare with existing docs
+[ ] Update package documentation
+[ ] Add to verification history
+[ ] Update .cursorrules index
+
+🔍 Common MCP Commands:
+```typescript
+// Package verification
+mcp_search_npm --query "package-name"
+
+// Usage examples
+mcp_search_stackoverflow --query "package-name typescript usage"
+
+// Implementation check
+mcp_search_github --query "package-name example" --language typescript
+
+// Web documentation
+mcp_search_mdn --query "package-name implementation"
+```
+
+⚡ Quick Actions:
+- 📋 Copy template: `cp docs/package-doc-template.md docs/package-name.md`
+- 🔍 Verify types: `grep -r "export type" node_modules/package-name/`
+- 📦 Check exports: `ls -R node_modules/package-name/dist/`
+
+### Documentation Management
+- Always verify package exports in node_modules before using
+- Update docs when discrepancies are found
+- Maintain verification history in package docs
+- Track documentation status in this file
+
+### Package Verification Process
+1. Check node_modules implementation
+2. Compare with existing docs
+3. Update documentation if needed
+4. Add verification result to .cursorrules
+
+### Documentation Index
+- appkit.md: Up to date (Last verified: [Current Date])
+[Add new docs as they're created]
+
+### Scratchpad - Current Task: AppKit Multichain Integration
+
+[X] Initial setup of Wagmi and Solana adapters
+[X] Investigated package implementations in node_modules
+[X] Fixed configuration and type issues
+[X] Updated adapter configurations based on actual types
+
+#### Package Verification Results
+Package: @reown/appkit-adapter-solana
+Version: 1.6.4
+Verified Exports: {
+  - SolanaAdapter: Class
+  - AdapterOptions: Type
+}
+Documentation Status: Up to date
+
+Key Findings:
+1. Package Structure Investigation:
+   - Found correct types in @reown/appkit/dist/types/src/utils/TypesUtil.d.ts
+   - Network hooks located in @reown/appkit-core/react
+   - Adapter configurations have specific type constraints
+
+2. Configuration Corrections:
+   - WagmiAdapter requires networks array in its configuration
+   - SolanaAdapter only accepts connectionSettings and wallets
+   - Proper usage of defaultNetwork instead of defaultChain
+
+3. Hook Usage Learnings:
+   - useAppKitNetworkCore provides caipNetwork information
+   - Network type checking should use caipNetwork.id
+   - Proper error handling for disconnect operations
+
+4. Type System Insights:
+   - AppKitOptions type defines valid configuration options
+   - WagmiAdapter requires Partial<CreateConfigParameters> & { networks: AppKitNetwork[]; projectId: string }
+   - SolanaAdapter accepts { connectionSettings?: Commitment | ConnectionConfig; wallets?: BaseWalletAdapter[] }
+
+### Lessons
+1. Always verify package implementations in node_modules for accurate types
+2. Use TypeScript errors as guidance to discover correct package usage
+3. Document findings in package-specific .md files
+4. Keep configuration minimal and type-safe
+5. Handle disconnection errors gracefully with fallback behavior
+6. Different adapters have different configuration requirements
+7. Check actual adapter types in node_modules before assuming configuration options
+
+### Todo
+[X] Update appkit.md with correct configuration options
+[X] Document proper hook usage patterns
+[X] Add error handling best practices
+[X] Verify adapter options type requirements
