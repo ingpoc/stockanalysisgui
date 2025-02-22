@@ -1,36 +1,32 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { WagmiProvider, type Config } from 'wagmi'
-import { cookieToInitialState } from 'wagmi'
-import { wagmiAdapter } from '@/config'
 import { ThemeProvider } from '@/components/theme-provider'
-import { type ReactNode } from 'react'
+import { WalletConnectionProvider } from '@/config'
+import { Toaster } from '@/components/ui/toaster'
 
-// Set up queryClient
 const queryClient = new QueryClient()
 
-export default function ContextProvider({ 
-  children, 
-  cookies 
-}: { 
-  children: ReactNode
-  cookies: string | null 
+export default function ContextProvider({
+  children,
+  cookies,
+}: {
+  children: React.ReactNode
+  cookies?: string
 }) {
-  const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
-
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <WalletConnectionProvider>
           {children}
-        </ThemeProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+          <Toaster />
+        </WalletConnectionProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   )
 } 

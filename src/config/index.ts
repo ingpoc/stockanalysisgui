@@ -1,42 +1,40 @@
-import { cookieStorage, createStorage } from '@wagmi/core'
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { polygon } from '@reown/appkit/networks'
-import type { AppKitNetwork } from '@reown/appkit/networks'
-import { createAppKit } from '@reown/appkit/react'
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
+import { PhantomWalletAdapter, SolflareWalletAdapter, TorusWalletAdapter } from '@solana/wallet-adapter-wallets'
+import { clusterApiUrl } from '@solana/web3.js'
+import { useMemo, type ReactNode, createElement } from 'react'
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 
-// Get projectId from environment
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID
+// Load styles
+require('@solana/wallet-adapter-react-ui/styles.css')
 
-if (!projectId) {
-  throw new Error('Project ID is not defined')
+// Get environment variables with fallbacks
+const NETWORK = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet') as WalletAdapterNetwork
+const RPC_ENDPOINT = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(NETWORK)
+
+export function WalletConnectionProvider({ children }: { children: ReactNode }) {
+  // Initialize wallets for the provider
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+      new TorusWalletAdapter(),
+    ],
+    []
+  )
+
+  const modalProvider = createElement(WalletModalProvider, { children })
+  const walletProvider = createElement(WalletProvider, { 
+    wallets, 
+    autoConnect: true,
+    children: modalProvider 
+  })
+  
+  return createElement(ConnectionProvider, {
+    endpoint: RPC_ENDPOINT,
+    children: walletProvider
+  })
 }
 
-// Define networks - L2s prioritized
-export const networks = [polygon] as [AppKitNetwork, ...AppKitNetwork[]]
-
-// Set up the Wagmi Adapter
-export const wagmiAdapter = new WagmiAdapter({
-  storage: createStorage({
-    storage: cookieStorage
-  }),
-  ssr: true,
-  projectId,
-  networks
-})
-
-// Export wagmi config for use in providers
-export const config = wagmiAdapter.wagmiConfig
-
-// Create the modal
-export const modal = createAppKit({
-  adapters: [wagmiAdapter],
-  projectId,
-  networks,
-  metadata: {
-    name: 'Stock Analysis Dashboard',
-    description: 'Real-time stock analysis and insights',
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    icons: ['https://avatars.githubusercontent.com/u/179229932']
-  },
-  themeMode: 'dark'
-}) 
+// Export commonly used values
+export const LAMPORTS_PER_SOL = 1000000000 // 1 SOL = 1 billion lamports 

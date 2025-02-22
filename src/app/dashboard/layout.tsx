@@ -1,6 +1,6 @@
 'use client'
 
-import { useAccount } from 'wagmi'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -10,17 +10,17 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isConnected, status } = useAccount()
+  const { connected, connecting } = useWallet()
   const router = useRouter()
 
   useEffect(() => {
-    if (status !== 'connecting' && !isConnected) {
+    if (!connecting && !connected) {
       router.replace('/auth/login')
     }
-  }, [isConnected, status, router])
+  }, [connected, connecting, router])
 
   // Show loading state while checking authentication
-  if (status === 'connecting' || !isConnected) {
+  if (connecting || !connected) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <LoadingSpinner />

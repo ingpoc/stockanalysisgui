@@ -1,52 +1,51 @@
 'use client'
 
-import { useAppKit } from '@reown/appkit/react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
-import { useEffect, useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useEffect } from 'react'
+import dynamic from 'next/dynamic'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Wallet, LineChart, Lock, TrendingUp, Zap } from 'lucide-react'
+
+require('@solana/wallet-adapter-react-ui/styles.css')
+
+// Lazy load feature cards
+const FeatureCards = dynamic(() => import('@/components/auth/feature-cards').then(mod => mod.FeatureCards), {
+  loading: () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="animate-pulse bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50">
+          <div className="h-8 w-8 bg-primary/20 rounded mb-4" />
+          <div className="h-6 w-32 bg-primary/20 rounded mb-2" />
+          <div className="h-4 w-full bg-primary/10 rounded" />
+        </div>
+      ))}
+    </div>
+  ),
+  ssr: false
+})
 
 export default function LoginPage() {
-  const { open } = useAppKit()
   const router = useRouter()
-  const { isConnected, isConnecting: isWagmiConnecting, address } = useAccount()
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [hasRedirected, setHasRedirected] = useState(false)
+  const { connected, connecting } = useWallet()
 
   useEffect(() => {
-    // Only redirect if we have a connection and haven't redirected yet
-    if (isConnected && address && !hasRedirected) {
-      setHasRedirected(true)
-      router.replace('/dashboard')
-    }
-  }, [isConnected, address, router, hasRedirected])
-
-  const handleConnect = async () => {
-    if (isConnected) {
-      router.replace('/dashboard')
+    if (connecting) {
       return
     }
 
-    try {
-      setIsConnecting(true)
-      await open()
-    } catch (error) {
-      console.error('Failed to connect:', error)
-    } finally {
-      setIsConnecting(false)
+    if (connected) {
+      router.replace('/dashboard')
     }
-  }
+  }, [connected, connecting, router])
 
-  // Show loading state when connecting or redirecting
-  if (isConnecting || isWagmiConnecting || (isConnected && !hasRedirected)) {
+  if (connecting) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <LoadingSpinner />
           <p className="text-muted-foreground mt-4">
-            {isConnected ? 'Loading dashboard...' : 'Connecting wallet...'}
+            Connecting wallet...
           </p>
         </div>
       </div>
@@ -69,28 +68,7 @@ export default function LoginPage() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <TrendingUp className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">Real-time Analysis</h3>
-                <p className="text-muted-foreground mt-2">Track market trends and get instant insights</p>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <Lock className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">Secure Access</h3>
-                <p className="text-muted-foreground mt-2">Protected by blockchain technology</p>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <LineChart className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">Advanced Charts</h3>
-                <p className="text-muted-foreground mt-2">Comprehensive technical analysis tools</p>
-              </div>
-              <div className="bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50 hover:border-primary/50 transition-colors">
-                <Zap className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-semibold text-lg">AI Insights</h3>
-                <p className="text-muted-foreground mt-2">Smart predictions and recommendations</p>
-              </div>
-            </div>
+            <FeatureCards />
           </div>
         </div>
       </div>
@@ -104,22 +82,18 @@ export default function LoginPage() {
               Connect your wallet to continue
             </p>
           </div>
-          
-          <Button
-            onClick={handleConnect}
-            size="lg"
-            className="w-full py-6 text-lg relative overflow-hidden group"
-            disabled={isConnecting || isWagmiConnecting}
-          >
-            <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors" />
-            <div className="relative flex items-center justify-center gap-3">
-              <Wallet className="h-5 w-5" />
-              <span>Connect Wallet</span>
-            </div>
-          </Button>
-
-          <div className="text-center text-sm text-muted-foreground">
-            <p>By connecting, you agree to our Terms of Service and Privacy Policy</p>
+          <div className="flex justify-center">
+            <WalletMultiButton
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+              style={{
+                height: '48px',
+                padding: '0 32px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: 500,
+                border: 'none'
+              }}
+            />
           </div>
         </div>
       </div>

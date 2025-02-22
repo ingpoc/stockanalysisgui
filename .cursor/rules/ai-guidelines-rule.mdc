@@ -5,6 +5,9 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 
 # Your rule content
 
+Environment variable is [.env.local](mdc:.env.local)
+
+
 ### Information Gathering
 1. **Search Strategy**
    - Start with codebase search for context.

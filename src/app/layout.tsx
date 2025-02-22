@@ -1,33 +1,41 @@
-import type { Metadata } from 'next'
+'use client'
+
 import { Inter } from 'next/font/google'
-import { headers } from 'next/headers'
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
+import { WalletConnectionProvider } from '@/config'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './globals.css'
-import ContextProvider from '@/context'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'Stock Analysis Dashboard',
-  description: 'Real-time stock analysis and insights',
-}
+const queryClient = new QueryClient()
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const headersData = await headers()
-  const cookies = headersData.get('cookie')
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/icon.svg" />
+        <title>Stock Analysis Dashboard</title>
+        <meta name="description" content="Advanced stock analysis powered by blockchain" />
       </head>
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
-        <ContextProvider cookies={cookies}>
-          {children}
-        </ContextProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <WalletConnectionProvider>
+              {children}
+            </WalletConnectionProvider>
+            <Toaster />
+          </ThemeProvider>
+        </QueryClientProvider>
       </body>
     </html>
   )
