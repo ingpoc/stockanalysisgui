@@ -2,144 +2,24 @@
 description: Building the project
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 ---
+
 # Project Development Guidelines
 
 ## Core Principles
-- Always refer to `@appkit.md` for appkit documentation
-- Update/Edit documentation as needed
-- Maintain verification history
-- Follow systematic package verification
 
-## Development Workflow
+- For AI Guidelines use rule [ai-guidelines-rule.mdc](mdc:.cursor/rules/ai-guidelines-rule.mdc)
+- For development use rule [development-workflow.mdc](mdc:.cursor/rules/development-workflow.mdc)
+- For isssue-fix use rule [issue-fix.mdc](mdc:.cursor/rules/issue-fix.mdc)
+- For lint error use rule [lint-error-fix.mdc](mdc:.cursor/rules/lint-error-fix.mdc)
 
-### Before Starting Any New Task
-1. **Review Past Lessons**
-   - Check "Lessons" section for relevant insights
-   - Review previous mistakes and corrections
-   - Apply learned best practices
+- Keep 3 sections in `@.cursorrules`: Lessons Learnt, Scratch Pad, Best Practises.
+- The "Lessons Learnt" section in @.cursorrules should capture specific instances where the AI encountered issues with third-party libraries, documenting mistakes and their resolutions. This fosters iterative learning and prevents repetition. Example entries include:
 
-2. **Review Knowledge Files**
-   - For third-party packages: check `@docs/<package-name>.md`
-   - Verify existing documentation accuracy
-   - Note any missing documentation needs
+"[2023-10-01] Error: 'Module not found' for library-z. Solution: Ensured the library was correctly installed and imported. Checked package.json and node_modules, confirming the import statement."
 
-3. **Prepare Scratchpad** (in `@.cursorrules`)
-   - Clear old, unrelated content
-   - Write task summary and goals
-   - Plan steps with todo markers:
-     ```markdown
-     [ ] Task 1
-     [X] Task 2 (completed)
-     ```
+"[2023-10-05] Lint error: 'No overload matches this call' with library-x. Solution: Referred to the library's documentation and found that I was passing incorrect arguments. Updated the function call accordingly."
 
-### During the Task
-1. **Track Progress**
-   - Update scratchpad regularly
-   - Document completed steps
-   - Note any blockers or issues
+- Update the section 'Scratch Pad' to jot down tasks which should be completed and would help during new chat sessions to not make a fresh start again. When given a query jot down all the task you will need to perform to complete it in Scratchpad.
+- Update the section 'Best Practises' when you uncover certain best practises from documentation or research.
+- `@.cursorrules` should not contain any code patterns. All code and patterns should be kept cdocumentation. If required documentation doesn't exist, it should be created in `@docs` folder and `@.cursorrules` should be updated on when to refer to it.
 
-2. **Handle Third-Party Packages**
-   - Check `@docs/<package-name>.md` first
-   - Inspect package implementation in `node_modules`
-   - Document findings in package docs
-   - Update documentation if discrepancies found
-
-3. **Document Mistakes**
-   - Record errors in scratchpad
-   - Detail what went wrong
-   - Document the solution
-   - Update relevant documentation
-
-4. **Capture Insights**
-   - Add reusable solutions to "Lessons"
-   - Document library workarounds
-   - Note common pitfalls
-
-### After Completing a Task
-1. **Reflect**
-   - Write brief reflection in scratchpad
-   - Note what worked/didn't work
-   - Include package-specific learnings
-
-2. **Update Documentation**
-   - Add key takeaways to "Lessons"
-   - Update package documentation
-   - Review documentation accuracy
-
-3. **Maintain Project Structure**
-   - Update relevant sections
-   - Document new files/changes
-   - Keep documentation index current
-
-## Tool Usage Guidelines
-
-### Strategic Tool Use
-1. **MCP Servers**
-   - Web search for unfamiliar errors
-   - StackOverflow for syntax help
-   - GitHub issues for package problems
-
-2. **Documentation Tools**
-   - Note tool usage in scratchpad
-   - Document learnings
-   - Share useful findings
-
-## Version Control Best Practices
-
-### Commit Guidelines
-1. **Multiline Commits**
-   - Write message in file
-   - Use `git commit -F <filename>`
-   - Include "[Cursor] " prefix
-   - Delete message file after
-
-2. **Commit Structure**
-   - Make small, atomic commits
-   - Clear, descriptive messages
-   - Include documentation updates
-   - Reference related issues
-
-3. **Documentation Updates**
-   - Include `@docs/<package-name>.md`
-   - Update after significant changes
-   - Document at milestones
-
-### Environment Management
-- Activate Python virtual environment
-  ```bash
-  ./venv/bin/activate
-  ```
-- Run Python scripts in venv
-- Maintain environment consistency
-
-## Avoiding Hallucinations
-
-### Verification Process
-1. **Package Details**
-   - Check `node_modules` first
-   - Review knowledge files
-   - Verify with documentation
-
-2. **Information Sources**
-   - Use MCP servers for verification
-   - Check official documentation
-   - Verify community insights
-
-3. **Best Practices**
-   - Never assume package behavior
-   - Verify before implementing
-   - Document verification results
-
-### Documentation Standards
-1. **Package Documentation**
-   - Version information
-   - Verified exports
-   - Usage examples
-   - Common issues
-   - Solutions
-
-2. **Update Process**
-   - Regular verification
-   - Version tracking
-   - Discrepancy notes
-   - Solution documentation

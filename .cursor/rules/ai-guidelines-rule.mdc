@@ -1,0 +1,25 @@
+---
+description: AI guidelines to follow
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+
+# Your rule content
+
+### Information Gathering
+1. **Search Strategy**
+   - Start with codebase search for context.
+   - Use `grep` for exact matches.
+   - Check documentation before making changes.
+   - Verify assumptions with multiple tools.
+   - **For third-party libraries, always check the official documentation and GitHub repository (README, examples, and issues) for usage examples, common pitfalls, and reported bugs.**
+
+2. **Code Understanding**
+   - Read related files completely.
+   - Check for dependencies and imports.
+   - Verify type definitions.
+   - Understand the component hierarchy.
+
+3. **Error Analysis**
+   - Check terminal logs first.
+   - Review the error provided by the user
+  

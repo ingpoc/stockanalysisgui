@@ -1,0 +1,26 @@
+---
+description: Use this rule when faced with lint error your
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+
+# Your rule content
+
+- When faced with lint error during your code generation for example 
+
+Found Lints:
+ This expression is not callable. Type '
+ Property 'startswith' does not exist
+ Expected 0 argument got 1
+ .....
+
+ - Run the commands to know about the type and exports of package
+   # Check package structure
+   ls -R node_modules/package-name/
+   
+   # Verify types
+   grep -r "export" node_modules/package-name/
+   
+   # Check package.json
+   cat node_modules/package-name/package.json
+
+   - Update the documentation in `@docs/<package-name>.md` 
