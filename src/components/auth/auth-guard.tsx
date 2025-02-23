@@ -1,8 +1,8 @@
 'use client'
 
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, memo } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useCallback, useEffect, memo, useState } from 'react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface AuthGuardProps {
@@ -11,49 +11,67 @@ interface AuthGuardProps {
 }
 
 function AuthGuardComponent({ children, requireAuth = true }: AuthGuardProps) {
-  const { connected, connecting, disconnect } = useWallet()
+  const { connected, connecting } = useWallet()
   const router = useRouter()
-
-  const handleAuthChange = useCallback(async () => {
-    if (connecting) return
-
-    try {
-      if (requireAuth && !connected) {
-        await router.replace('/auth/login')
-      } else if (!requireAuth && connected) {
-        await router.replace('/dashboard')
-      }
-    } catch (error) {
-      console.error('Navigation error:', error)
-      // If navigation fails, disconnect the wallet to maintain consistent state
-      if (connected) {
-        await disconnect()
-      }
-    }
-  }, [connected, connecting, requireAuth, router, disconnect])
+  const pathname = usePathname()
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    handleAuthChange()
-  }, [handleAuthChange])
+    setIsMounted(true)
+  }, [])
 
-  const getLoadingMessage = () => {
-    if (connecting) return 'Connecting wallet...'
-    if (requireAuth && !connected) return 'Please connect your wallet to continue'
-    if (!requireAuth && connected) return 'Redirecting to dashboard...'
-    return 'Loading...'
+  const handleNavigation = useCallback((path: string) => {
+    if (typeof window !== 'undefined') {
+      router.replace(path)
+    }
+  }, [router])
+
+  const checkAuth = useCallback((): string | null => {
+    if (!isMounted) return null
+    
+    const isAuthPage = pathname === '/auth/login'
+    
+    if (requireAuth && !connected && !isAuthPage) {
+      return '/auth/login'
+    }
+    
+    if (!requireAuth && connected && isAuthPage) {
+      return '/dashboard'
+    }
+    
+    return null
+  }, [connected, requireAuth, pathname, isMounted])
+
+  useEffect(() => {
+    if (isMounted) {
+      const redirectPath = checkAuth()
+      if (redirectPath) {
+        handleNavigation(redirectPath)
+      }
+    }
+  }, [checkAuth, isMounted, handleNavigation])
+
+  // Don't render anything until mounted
+  if (!isMounted) {
+    return null
   }
 
-  if (connecting || (requireAuth && !connected) || (!requireAuth && connected)) {
+  // Show loading only during wallet connection
+  if (connecting) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <LoadingSpinner />
-          <p className="text-muted-foreground">
-            {getLoadingMessage()}
-          </p>
+          <p className="text-muted-foreground">Connecting wallet...</p>
         </div>
       </div>
     )
+  }
+
+  // If auth check returns a path, we're redirecting, so render nothing
+  const redirectPath = checkAuth()
+  if (redirectPath !== null) {
+    return null
   }
 
   return <>{children}</>

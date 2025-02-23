@@ -9,14 +9,9 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 
 ### Before Starting Any Task
 1. **Review Past Lessons**
-   - Check "Lessons Learnt" section for insights in `@.cursorrules`.
-   - Review previous mistakes and corrections in `@.cursorrules`.
-   - Apply learned best practices from `@.cursorrules`.
-
-2. **Review Knowledge Files**
-   - For third-party packages: check `@docs/<package-name>.md`.
-   - Verify existing documentation accuracy.
-   - Note any missing documentation needs.
+   - Get relevant context from [.cursorrules](mdc:.cursorrules)
+   - Check relevant files to gain full context as needed.
+   - Search of github or Web or use mcp as needed
 
 ### During Development
 
@@ -28,11 +23,6 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 2. **Code Generation and Lint Errors**
    - During code generation, if faced with lint errors use rule [lint-error-fix.mdc](mdc:.cursor/rules/lint-error-fix.mdc)
 
-3. **State Management**
-   - Use appropriate state level.
-   - Implement proper cleanup.
-   - Handle loading states.
-   - Manage error states.
 
 4. **Error Handling**
    - Implement proper boundaries.

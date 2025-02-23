@@ -176,3 +176,107 @@
    - Don't render unnecessary components
    - Don't ignore React.memo opportunities
    - Monitor bundle sizes
+
+## Solana Integration Learnings
+
+1. Account Data Handling:
+   - Always handle BigInt conversions safely with fallbacks
+   - Use proper type casting for Anchor program accounts
+   - Implement proper cleanup for account subscriptions
+   - Log raw account data for debugging purposes
+
+2. Program Interaction:
+   - Keep program ID and PDAs in a centralized configuration
+   - Implement proper error handling for program calls
+   - Use proper type definitions for program accounts
+   - Handle wallet connection state appropriately
+
+3. State Management:
+   - Subscribe to account changes for real-time updates
+   - Clean up subscriptions on component unmount
+   - Handle loading and error states consistently
+   - Cache program instances when appropriate
+
+4. Error Handling:
+   - Implement program-specific error codes and messages
+   - Log detailed error information for debugging
+   - Provide user-friendly error messages
+   - Handle wallet connection errors gracefully
+
+## Lottery System Implementation
+
+1. Account Structure:
+   - Use camelCase for TypeScript interfaces
+   - Match Anchor program account structures
+   - Handle enum values consistently
+   - Implement proper type conversion
+
+2. UI Components:
+   - Show loading states during transactions
+   - Display real-time updates for lottery state
+   - Handle different lottery types appropriately
+   - Implement proper date formatting
+
+3. Transaction Handling:
+   - Validate transaction parameters
+   - Handle token account creation
+   - Implement proper fee calculations
+   - Manage transaction confirmations
+
+4. Performance Optimization:
+   - Minimize account fetching
+   - Implement proper data caching
+   - Use efficient subscription methods
+   - Handle large datasets appropriately
+
+# Updated Best Practices
+
+1. Solana Development:
+   - "Always validate account structures against Anchor program definitions"
+   - "Implement proper subscription cleanup to prevent memory leaks"
+   - "Use proper type definitions for program accounts"
+   - "Handle BigInt conversions safely with fallbacks"
+
+2. Error Handling:
+   - "Log raw account data for debugging purposes"
+   - "Implement program-specific error codes"
+   - "Provide user-friendly error messages"
+   - "Handle wallet connection errors gracefully"
+
+3. State Management:
+   - "Subscribe to account changes for real-time updates"
+   - "Clean up subscriptions on component unmount"
+   - "Handle loading and error states consistently"
+   - "Cache program instances when appropriate"
+
+4. UI Development:
+   - "Show loading states during transactions"
+   - "Display real-time updates for lottery state"
+   - "Handle different lottery types appropriately"
+   - "Implement proper date formatting"
+
+# Common Pitfalls to Avoid
+
+1. Solana Integration:
+   - Don't skip wallet connection validation
+   - Don't forget to cleanup subscriptions
+   - Don't ignore BigInt conversion errors
+   - Don't skip proper error handling
+
+2. Account Handling:
+   - Don't assume account data structure
+   - Don't skip type validation
+   - Don't ignore program errors
+   - Don't forget to handle loading states
+
+3. Transaction Management:
+   - Don't skip parameter validation
+   - Don't ignore transaction confirmations
+   - Don't forget to handle fees
+   - Don't skip error handling
+
+4. UI Updates:
+   - Don't skip loading states
+   - Don't ignore real-time updates
+   - Don't forget to handle errors
+   - Don't skip proper date formatting

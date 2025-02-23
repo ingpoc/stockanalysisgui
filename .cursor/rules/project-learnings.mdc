@@ -12,28 +12,24 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 - For isssue-fix use rule [issue-fix.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/issue-fix.mdc)
 - For lint error use rule [lint-error-fix.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/lint-error-fix.mdc)
 
+MCP Tools Available
+    - Brave MCP Server
+    - Code Search
+    - Sequential thinking
+    - github
+
+
 <Goal>
-Make Crypto lottery system work
+Build robust, efficient and optmized Stock dashboard app with decentralized Crypto lottery system.
 </Goal>
 
 
 
 <plan>
-Program ID: 7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt
-Authority (your CLI wallet): 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
-Program Balance: 1.72255128 SOL
-
-Program ID: 7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt
-USDC Mint: 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
-Global Config PDA: 9Gmin1DevMjy9Too8ZQq78KdWoX16wSpEtQ2xj863f6W
-Program Authority/Admin/Treasurer: 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
-
-
-
-- Configure the app to devnet
-- Test creation of lottery
-- Test rest of the features
-
+- On recieving the query from the user, check if you have proper context.
+- Do you need to scan code package so that you dont end up creating or editing wrong file.
+- What is the best possible way to optmize or create this functionality.
+- Do I need to check for best practises on github or web or use mcp tools to do research
 </plan>
 
 
@@ -51,4 +47,14 @@ Program Authority/Admin/Treasurer: 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
 
 
 - `@.cursorrules` should not contain any code patterns. All code and patterns should be kept cdocumentation. If required documentation doesn't exist, it should be created in `@docs` folder and `@.cursorrules` should be updated on when to refer to it.
+
+Program ID: 7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt
+Authority (your CLI wallet): 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
+Program Balance: 1.72255128 SOL
+
+Program ID: 7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt
+USDC Mint: 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+Global Config PDA: 9Gmin1DevMjy9Too8ZQq78KdWoX16wSpEtQ2xj863f6W
+Program Authority/Admin/Treasurer: 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
+
 
