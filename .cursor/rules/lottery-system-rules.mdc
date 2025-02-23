@@ -2,154 +2,126 @@
 description: Decentralized Lottery System Rules
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 ---
+---
+description: Decentralized Lottery System Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
 
-## Core Components
+## Program Constants
 
-1. **LotteryProgram Class**
-   - Acts as the main interface to the Solana program
-   - Handles all program interactions and state management
+1. **Critical Addresses**
    - Program ID: `7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt`
-
-2. **Account Structure**
    - Global Config PDA: `9Gmin1DevMjy9Too8ZQq78KdWoX16wSpEtQ2xj863f6W`
    - USDC Mint: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
-   - Lottery Account PDA: Generated using [lottery_seed, lottery_type, draw_time]
-   - **Uniqueness Constraints**: 
-     - Only one lottery can exist for a given combination of type and draw time
-     - Wait for current lottery's draw time to pass before creating new one of same type
-     - PDA collision will occur if attempting duplicate lottery parameters
 
-## State Management
+## Type Consistency Rules
 
-1. **Lottery Types**
+1. **Field Naming Convention**
    ```typescript
-   enum LotteryType {
-     Daily = 'daily',
-     Weekly = 'weekly',
-     Monthly = 'monthly'
+   // ❌ Never use snake_case in TypeScript
+   const lottery_type = account.lottery_type;
+   const ticket_price = account.ticket_price;
+   
+   // ✅ Always use camelCase in TypeScript
+   const lotteryType = account.lotteryType;
+   const ticketPrice = account.ticketPrice;
+   ```
+
+2. **Rust to TypeScript Type Mappings**
+   ```rust
+   // Rust Types        // TypeScript Types
+   String              // string
+   u64/i64            // bigint
+   Option<T>          // T | null
+   Vec<u8>            // Buffer
+   Pubkey             // PublicKey (needs .toString() for display)
+   ```
+
+3. **Account Field Access**
+   ```typescript
+   // ❌ Incorrect - Using Rust field names
+   decodedAccount.lottery_type
+   decodedAccount.ticket_price
+   decodedAccount.winning_numbers
+   
+   // ✅ Correct - Using TypeScript field names
+   decodedAccount.lotteryType
+   decodedAccount.ticketPrice
+   decodedAccount.winningNumbers
+   ```
+
+## Account Handling
+
+1. **Account Deserialization**
+   ```typescript
+   // ✅ Correct account decoding
+   const decodedAccount = this.program.coder.accounts.decode(
+     'lotteryAccount',  // Exact name from IDL
+     accountInfo.data
+   )
+
+   // ✅ Correct field access and conversion
+   const info = {
+     ticketPrice: Number(decodedAccount.ticketPrice),
+     createdBy: decodedAccount.createdBy.toString(),
+     winningNumbers: decodedAccount.winningNumbers ? 
+       Buffer.from(decodedAccount.winningNumbers).toString('hex') : null
    }
    ```
 
-2. **Lottery States**
+2. **PublicKey Handling**
    ```typescript
-   enum LotteryState {
-     Created = 'created',
-     Open = 'open',
-     Drawing = 'drawing',
-     Completed = 'completed',
-     Expired = 'expired'
-   }
+   // ❌ Incorrect - Using PublicKey directly in UI
+   account.createdBy
+   
+   // ✅ Correct - Convert to string for UI
+   account.createdBy.toString()
    ```
-
-## Transaction Guidelines
-
-1. **Compute Budget**
-   - Always set compute budget for lottery creation: 300,000 units
-   - Add compute budget instruction before main transaction
-   ```typescript
-   const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
-     units: 300000
-   });
-   ```
-
-2. **Token Handling**
-   - Check for existing token accounts before transactions
-   - Create Associated Token Account if needed
-   - Handle USDC token transfers properly
-
-## Error Handling
-
-1. **Program Error Codes**
-   - 6000-6019: Lottery-specific error codes
-   - Common errors:
-     - 6001: Invalid ticket price
-     - 6002: Invalid prize pool
-     - 6006: Lottery not open
-     - 6018: Token transfer failed
-
-2. **Error Categories**
-   - Wallet errors: Connection and signing issues
-   - Transaction errors: Failed transactions
-   - Simulation errors: Pre-flight simulation failures
-   - Network errors: Connection and timeout issues
-
-## Component Best Practices
-
-1. **Lottery Creation**
-   - Validate inputs before submission
-   - Handle wallet connection state
-   - Show proper loading states
-   - Provide clear error messages
-
-2. **Ticket Purchase**
-   - Validate lottery state before purchase
-   - Check user's token balance
-   - Handle token account creation
-   - Show transaction progress
 
 ## Common Pitfalls
 
-1. **Account Creation**
-   - Always check if token accounts exist
-   - Handle PDA derivation carefully
-   - Verify account ownership
+1. **Type Errors to Watch**
+   - Using snake_case instead of camelCase for field names
+   - Forgetting to convert PublicKey to string for display
+   - Not handling Option types as nullable (T | null)
+   - Incorrect Buffer handling for winning numbers
+   - Missing bigint to number conversions for numeric displays
 
-2. **Transaction Handling**
-   - Don't assume transaction success
-   - Handle all possible error states
-   - Provide proper user feedback
+2. **Account Field Requirements**
+   ```typescript
+   interface LotteryAccount {
+     // Required field types
+     lotteryType: LotteryTypeValue;     // enum
+     ticketPrice: bigint;               // u64
+     drawTime: bigint;                  // i64
+     prizePool: bigint;                 // u64
+     totalTickets: bigint;              // u64
+     winningNumbers: Buffer | null;      // Option<Vec<u8>>
+     state: LotteryStateValue;          // enum
+     createdBy: PublicKey;              // Pubkey
+     globalConfig: PublicKey;           // Pubkey
+   }
+   ```
 
-3. **State Management**
-   - Don't assume account data format
-   - Handle enum parsing errors gracefully
-   - Validate all incoming data
+## Error Prevention
 
-## Testing Guidelines
+1. **Always Validate**
+   - Account structure matches program definition
+   - Field names are in camelCase
+   - Proper type conversions are applied
+   - Option/nullable fields are handled
+   - PublicKey fields are converted to strings for display
 
-1. **Transaction Testing**
-   - Test with different lottery types
-   - Verify compute budget sufficiency
-   - Check token account handling
-   - Validate error scenarios
-
-2. **Component Testing**
-   - Test wallet connection states
-   - Verify loading indicators
-   - Check error message display
-   - Validate user interactions
-
-## Performance Optimization
-
-1. **Account Subscriptions**
-   - Implement proper cleanup
-   - Use efficient data fetching
-   - Handle subscription updates properly
-
-2. **Transaction Optimization**
-   - Batch instructions when possible
-   - Set appropriate compute budgets
-   - Handle rate limiting
-
-## Integration Points
-
-1. **Wallet Integration**
-   - Support multiple wallet adapters
-   - Handle connection state changes
-   - Manage transaction signing
-
-2. **Token Integration**
-   - Handle USDC token operations
-   - Manage Associated Token Accounts
-   - Track token balances
-
-## Documentation Requirements
-
-1. **Program Constants**
-   - Document all seeds and PDAs
-   - Keep program IDs updated
-   - Document token addresses
-
-2. **Error Messages**
-   - Maintain clear error messages
-   - Document error codes
-   - Update handling procedures
+2. **Common Fixes**
+   ```typescript
+   // ❌ Problem: snake_case field access
+   account.global_config
+   
+   // ✅ Solution: use camelCase
+   account.globalConfig
+   
+   // ❌ Problem: raw PublicKey usage
+   account.createdBy
+   
+   // ✅ Solution: convert to string
+   account.createdBy.toString()

@@ -140,7 +140,7 @@ export class LotteryProgram {
     ) as unknown as LotteryAccount
 
     const globalConfig = await this.program.account.globalConfig.fetch(
-      lotteryAccount.global_config
+      lotteryAccount.globalConfig
     ) as unknown as GlobalConfig
 
     // Get user's USDC token account
@@ -270,15 +270,15 @@ export class LotteryProgram {
           ) as unknown as LotteryAccount
           callback({
             address: lotteryAddress,
-            lotteryType: this.getLotteryTypeFromAccount(decodedAccount.lottery_type),
-            ticketPrice: Number(decodedAccount.ticket_price),
-            drawTime: Number(decodedAccount.draw_time),
-            prizePool: Number(decodedAccount.prize_pool),
-            totalTickets: Number(decodedAccount.total_tickets),
+            lotteryType: this.getLotteryTypeFromAccount(decodedAccount.lotteryType),
+            ticketPrice: Number(decodedAccount.ticketPrice),
+            drawTime: Number(decodedAccount.drawTime),
+            prizePool: Number(decodedAccount.prizePool),
+            totalTickets: Number(decodedAccount.totalTickets),
             state: this.getLotteryStateFromAccount(decodedAccount.state),
-            createdBy: decodedAccount.created_by.toString(),
-            globalConfig: decodedAccount.global_config.toString(),
-            winningNumbers: decodedAccount.winning_numbers ? Buffer.from(decodedAccount.winning_numbers).toString('hex') : null
+            createdBy: decodedAccount.createdBy.toString(),
+            globalConfig: decodedAccount.globalConfig.toString(),
+            winningNumbers: decodedAccount.winningNumbers ? Buffer.from(decodedAccount.winningNumbers).toString('hex') : null
           })
         } catch (error) {
           console.error('Error decoding lottery account:', error)
