@@ -54,24 +54,35 @@ export default function LotteryPage() {
       })
 
       const lotteries = await program.getLotteries()
+      console.log('Fetched lotteries:', lotteries) // Debug log
       setLotteries(lotteries)
 
       // Subscribe to updates for each lottery
       const newSubscriptions = await Promise.all(
-        lotteries.map(lottery =>
-          program.subscribeToLotteryChanges(lottery.address, (updatedLottery) => {
-            setLotteries(current =>
-              current.map(l =>
-                l.address === updatedLottery.address ? updatedLottery : l
+        lotteries.map(async lottery => {
+          try {
+            return await program.subscribeToLotteryChanges(lottery.address, (updatedLottery) => {
+              console.log('Lottery updated:', updatedLottery) // Debug log
+              setLotteries(current =>
+                current.map(l =>
+                  l.address === updatedLottery.address ? updatedLottery : l
+                )
               )
-            )
-          })
-        )
+            })
+          } catch (subError) {
+            console.error('Failed to subscribe to lottery:', lottery.address, subError)
+            return -1 // Return invalid subscription ID
+          }
+        })
       )
-      setSubscriptions(newSubscriptions)
+      setSubscriptions(newSubscriptions.filter(id => id !== -1))
     } catch (error) {
       console.error('Failed to fetch lotteries:', error)
-      setError(LotteryProgram.formatError(error))
+      const errorMessage = error instanceof Error ? error.message : LotteryProgram.formatError(error)
+      setError(`Failed to fetch lotteries: ${errorMessage}`)
+      toast.error('Failed to fetch lotteries', {
+        description: errorMessage
+      })
     } finally {
       setLoading(false)
     }

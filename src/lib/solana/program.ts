@@ -83,17 +83,24 @@ export class LotteryProgram {
     )
 
     // Create the lottery type enum value and corresponding string for PDA seed
-    let lotteryTypeValue;
-    let lotteryTypeString;
-    if (type === LotteryType.Daily) {
-      lotteryTypeValue = { daily: {} };
-      lotteryTypeString = 'daily';
-    } else if (type === LotteryType.Weekly) {
-      lotteryTypeValue = { weekly: {} };
-      lotteryTypeString = 'weekly';
-    } else {
-      lotteryTypeValue = { monthly: {} };
-      lotteryTypeString = 'monthly';
+    let lotteryTypeValue: LotteryTypeValue;
+    let lotteryTypeString: string;
+    
+    switch (type) {
+      case LotteryType.Daily:
+        lotteryTypeValue = { daily: {} };
+        lotteryTypeString = 'daily';
+        break;
+      case LotteryType.Weekly:
+        lotteryTypeValue = { weekly: {} };
+        lotteryTypeString = 'weekly';
+        break;
+      case LotteryType.Monthly:
+        lotteryTypeValue = { monthly: {} };
+        lotteryTypeString = 'monthly';
+        break;
+      default:
+        throw new Error('Invalid lottery type');
     }
 
     // Get lottery account PDA using the explicit lotteryTypeString
@@ -186,19 +193,67 @@ export class LotteryProgram {
   }
 
   async getLotteries(): Promise<LotteryInfo[]> {
-    const accounts = await this.program.account.lotteryAccount.all()
-    return accounts.map(({ publicKey, account }: any) => ({
-      address: publicKey.toString(),
-      lotteryType: this.getLotteryTypeFromAccount(account.lottery_type),
-      ticketPrice: Number(account.ticket_price),
-      drawTime: Number(account.draw_time),
-      prizePool: Number(account.prize_pool),
-      totalTickets: Number(account.total_tickets),
-      state: this.getLotteryStateFromAccount(account.state),
-      createdBy: account.created_by.toString(),
-      globalConfig: account.global_config.toString(),
-      winningNumbers: account.winning_numbers ? Buffer.from(account.winning_numbers).toString('hex') : null
-    }))
+    try {
+      const accounts = await this.program.account.lotteryAccount.all()
+      console.log('Raw accounts from program:', accounts)
+
+      return await Promise.all(accounts.map(async ({ publicKey, account }: any) => {
+        try {
+          // Fetch the account data directly to ensure we have fresh data
+          const accountData = await this.program.account.lotteryAccount.fetch(publicKey)
+          console.log('Account data for', publicKey.toString(), ':', accountData)
+
+          // Safely extract lottery type
+          let lotteryType: LotteryType
+          try {
+            lotteryType = this.getLotteryTypeFromAccount(accountData.lotteryType)
+          } catch (error) {
+            console.error('Error parsing lottery type:', error)
+            lotteryType = LotteryType.Daily // Default to daily if parsing fails
+          }
+
+          // Safely extract lottery state
+          let state: LotteryState
+          try {
+            state = this.getLotteryStateFromAccount(accountData.state)
+          } catch (error) {
+            console.error('Error parsing lottery state:', error)
+            state = LotteryState.Created // Default to created if parsing fails
+          }
+
+          // Convert BigInts to numbers safely
+          const toBigIntSafe = (value: any) => {
+            try {
+              return typeof value === 'bigint' ? Number(value) : 
+                     typeof value === 'number' ? value :
+                     Number(value.toString())
+            } catch {
+              return 0
+            }
+          }
+
+          return {
+            address: publicKey.toString(),
+            lotteryType,
+            ticketPrice: toBigIntSafe(accountData.ticketPrice),
+            drawTime: toBigIntSafe(accountData.drawTime),
+            prizePool: toBigIntSafe(accountData.prizePool),
+            totalTickets: toBigIntSafe(accountData.totalTickets),
+            state,
+            createdBy: accountData.createdBy.toString(),
+            globalConfig: accountData.globalConfig.toString(),
+            winningNumbers: accountData.winningNumbers ? 
+              Buffer.from(accountData.winningNumbers).toString('hex') : null
+          }
+        } catch (error) {
+          console.error('Error processing lottery account:', publicKey.toString(), error)
+          return null
+        }
+      })).then(results => results.filter((result): result is LotteryInfo => result !== null))
+    } catch (error) {
+      console.error('Error fetching lottery accounts:', error)
+      throw error
+    }
   }
 
   async subscribeToLotteryChanges(
@@ -300,25 +355,63 @@ export class LotteryProgram {
     return error.message || 'An unexpected error occurred'
   }
 
-  private getLotteryTypeFromAccount(type: LotteryTypeValue): LotteryType {
-    const key = Object.keys(type)[0] as keyof typeof type
-    switch (key) {
-      case 'daily': return LotteryType.Daily
-      case 'weekly': return LotteryType.Weekly
-      case 'monthly': return LotteryType.Monthly
-      default: throw new Error('Invalid lottery type')
+  private getLotteryTypeFromAccount(type: any): LotteryType {
+    if (!type || typeof type !== 'object') {
+      throw new Error('Invalid lottery type: type is null or undefined')
+    }
+
+    // Log the type for debugging
+    console.log('Raw lottery type from account:', type)
+
+    // Handle Anchor enum format
+    try {
+      // The type might be coming as { [key: string]: {} }
+      // or as a discriminated object from Anchor
+      if (type.daily) return LotteryType.Daily
+      if (type.weekly) return LotteryType.Weekly
+      if (type.monthly) return LotteryType.Monthly
+
+      // If not found in direct properties, try to parse the Anchor format
+      const enumValue = type.toString()
+      if (enumValue.includes('daily')) return LotteryType.Daily
+      if (enumValue.includes('weekly')) return LotteryType.Weekly
+      if (enumValue.includes('monthly')) return LotteryType.Monthly
+
+      throw new Error(`Invalid lottery type format: ${JSON.stringify(type)}`)
+    } catch (error) {
+      console.error('Error parsing lottery type:', error)
+      throw new Error(`Failed to parse lottery type: ${JSON.stringify(type)}`)
     }
   }
 
-  private getLotteryStateFromAccount(state: LotteryStateValue): LotteryState {
-    const key = Object.keys(state)[0] as keyof typeof state
-    switch (key) {
-      case 'created': return LotteryState.Created
-      case 'open': return LotteryState.Open
-      case 'drawing': return LotteryState.Drawing
-      case 'completed': return LotteryState.Completed
-      case 'expired': return LotteryState.Expired
-      default: throw new Error('Invalid lottery state')
+  private getLotteryStateFromAccount(state: any): LotteryState {
+    if (!state || typeof state !== 'object') {
+      throw new Error('Invalid lottery state: state is null or undefined')
+    }
+
+    // Log the state for debugging
+    console.log('Raw lottery state from account:', state)
+
+    try {
+      // Handle direct property access
+      if (state.created) return LotteryState.Created
+      if (state.open) return LotteryState.Open
+      if (state.drawing) return LotteryState.Drawing
+      if (state.completed) return LotteryState.Completed
+      if (state.expired) return LotteryState.Expired
+
+      // Try to parse the Anchor format
+      const stateValue = state.toString()
+      if (stateValue.includes('created')) return LotteryState.Created
+      if (stateValue.includes('open')) return LotteryState.Open
+      if (stateValue.includes('drawing')) return LotteryState.Drawing
+      if (stateValue.includes('completed')) return LotteryState.Completed
+      if (stateValue.includes('expired')) return LotteryState.Expired
+
+      throw new Error(`Invalid lottery state format: ${JSON.stringify(state)}`)
+    } catch (error) {
+      console.error('Error parsing lottery state:', error)
+      throw new Error(`Failed to parse lottery state: ${JSON.stringify(state)}`)
     }
   }
 } 

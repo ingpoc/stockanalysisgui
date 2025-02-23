@@ -1,18 +1,16 @@
 import { PublicKey } from '@solana/web3.js'
 
-export type LotteryTypeValue = {
-  daily?: Record<string, never>
-  weekly?: Record<string, never>
-  monthly?: Record<string, never>
-}
+export type LotteryTypeValue = 
+  | { daily: Record<string, never> }
+  | { weekly: Record<string, never> }
+  | { monthly: Record<string, never> }
 
-export type LotteryStateValue = {
-  created?: Record<string, never>
-  open?: Record<string, never>
-  drawing?: Record<string, never>
-  completed?: Record<string, never>
-  expired?: Record<string, never>
-}
+export type LotteryStateValue = 
+  | { created: Record<string, never> }
+  | { open: Record<string, never> }
+  | { drawing: Record<string, never> }
+  | { completed: Record<string, never> }
+  | { expired: Record<string, never> }
 
 export enum LotteryType {
   Daily = 'daily',
@@ -36,15 +34,15 @@ export interface GlobalConfig {
 }
 
 export interface LotteryAccount {
-  lottery_type: LotteryTypeValue
-  ticket_price: bigint
-  draw_time: bigint
-  prize_pool: bigint
-  total_tickets: bigint
-  winning_numbers: Buffer | null
+  lotteryType: LotteryTypeValue
+  ticketPrice: bigint
+  drawTime: bigint
+  prizePool: bigint
+  totalTickets: bigint
+  winningNumbers: Buffer | null
   state: LotteryStateValue
-  created_by: PublicKey
-  global_config: PublicKey
+  createdBy: PublicKey
+  globalConfig: PublicKey
 }
 
 export interface LotteryInfo {

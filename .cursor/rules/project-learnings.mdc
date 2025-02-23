@@ -37,14 +37,18 @@ Program Authority/Admin/Treasurer: 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
 </plan>
 
 
-- Keep 3 sections in `@.cursorrules`: Lessons Learnt, Scratch Pad, Best Practises.
-- The "Lessons Learnt" section in @.cursorrules should capture specific instances where the AI encountered issues with third-party libraries, documenting mistakes and their resolutions. This fosters iterative learning and prevents repetition. Example entries include:
+- Keep `@.cursorrules`updated with  # Component Structure Guidelines which includes :
+## Core Components
+## Feature Modules
+## Data Flow Guidelines
+## Integration Points
+## Component Guidelines
+# Lessons Learnt
+# Best Practices
+# Common Pitfalls to Avoid
 
-"[2023-10-01] Error: 'Module not found' for library-z. Solution: Ensured the library was correctly installed and imported. Checked package.json and node_modules, confirming the import statement."
+- To keep your context up todate so that you dont have to scan all files everytime keep the [.cursorrules](mdc:.cursorrules) updated with relevant information which would need next time.
 
-"[2023-10-05] Lint error: 'No overload matches this call' with library-x. Solution: Referred to the library's documentation and found that I was passing incorrect arguments. Updated the function call accordingly."
 
-- Update the section 'Scratch Pad' to jot down tasks which should be completed and would help during new chat sessions to not make a fresh start again. When given a query jot down all the task you will need to perform to complete it in Scratchpad.
-- Update the section 'Best Practises' when you uncover certain best practises from documentation or research.
 - `@.cursorrules` should not contain any code patterns. All code and patterns should be kept cdocumentation. If required documentation doesn't exist, it should be created in `@docs` folder and `@.cursorrules` should be updated on when to refer to it.
 
