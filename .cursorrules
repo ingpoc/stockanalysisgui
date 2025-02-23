@@ -1,23 +1,178 @@
-# Lesson Learnt
+# Component Structure Guidelines
 
+## Core Components
+- `components/stock-dashboard.tsx`: Main dashboard component - Do not create separate dashboards
+  - Handles main layout and data orchestration
+  - Integrates with stock-table, stock-chart, and ai-insights
+  - Uses context for global state management
+  
+- `components/stock-table.tsx`: Stock data table - Use this for all tabular stock data
+  - Supports sorting, filtering, and pagination
+  - Integrates with search-bar component
+  - Reuse for any tabular stock data display
+  
+- `components/stock-chart.tsx`: Base chart component - Extend this for new chart types
+  - Built on TradingView's lightweight charts
+  - Supports multiple timeframes and indicators
+  - Extend for specialized chart types
+  
+- `components/ai-insights.tsx`: AI analysis component - Central place for AI features
+  - Handles all AI-related computations and displays
+  - Uses shared API utilities from lib/api
+  - Integration point for new AI features
+  
+- `components/search-bar.tsx`: Global search component - Reuse for all search functionality
+  - Supports stocks, lottery tickets, and user searches
+  - Implements debouncing and caching
+  - Use for any search functionality
 
-# Scratch pad
+## Feature Modules
+- `components/lottery/`: All lottery-related components
+  - Contains Solana program integration
+  - Manages wallet connections and transactions
+  - Handles ticket purchases and rewards
+  
+- `components/auth/`: Authentication components
+  - Implements JWT-based authentication
+  - Handles wallet-based authentication
+  - Manages user sessions
+  
+- `components/layout/`: Page layout components
+  - Contains responsive layout templates
+  - Manages navigation and routing
+  - Handles theme switching
+  
+- `components/ui/`: Reusable UI components
+  - Built on shadcn/ui
+  - Contains all shared UI elements
+  - Follow shadcn/ui patterns
+  
+- `components/stock/`: Stock-specific components
+  - Contains specialized stock views
+  - Implements stock-specific logic
+  - Extends core components
 
+## Data Flow Guidelines
+1. API Integration:
+   - Use lib/api utilities for all external calls
+   - Implement proper error handling and retries
+   - Cache responses where appropriate
 
+2. State Management:
+   - Global state: Use context/stock-context.tsx
+   - Auth state: Use context/auth-context.tsx
+   - Lottery state: Use context/lottery-context.tsx
+   - Local state: Use React.useState or useSWR
 
+3. Event Handling:
+   - Use shared event handlers from lib/events
+   - Implement proper event debouncing
+   - Follow established event naming conventions
 
+## Integration Points
+1. Solana Integration:
+   - Use hooks/use-wallet for wallet connections
+   - Use hooks/use-lottery-program for program calls
+   - Handle all transactions in lottery components
 
+2. Stock Data Integration:
+   - Use lib/api/stock-api for market data
+   - Implement proper data transformation
+   - Cache responses using SWR
 
+3. AI Features Integration:
+   - Use lib/api/ai-api for AI services
+   - Handle rate limiting and quotas
+   - Implement proper error handling
 
+## Component Guidelines
+1. Reuse existing components before creating new ones
+2. Extend existing components for similar functionality
+3. Keep components focused and single-responsibility
+4. Use shared UI components from `components/ui/`
+5. Follow established naming conventions
+6. Implement proper error boundaries
+7. Use TypeScript strictly - no any types
+8. Document complex logic with comments
+9. Use proper prop typing and validation
+10. Implement loading and error states
 
+# Lessons Learnt
 
+1. Component Organization:
+   - Keep related components together in feature-specific directories
+   - Use index.ts files for clean exports
+   - Maintain consistent file naming (kebab-case)
+   - Document component dependencies
 
+2. State Management:
+   - Use hooks directory for shared state logic
+   - Leverage context for global state
+   - Keep component state minimal
+   - Document state shape and updates
+
+3. Performance:
+   - Implement proper memoization for expensive calculations
+   - Use dynamic imports for large components
+   - Optimize re-renders with React.memo where needed
+   - Monitor bundle sizes
+
+4. Error Handling:
+   - Implement consistent error boundaries
+   - Use try-catch blocks for async operations
+   - Document error scenarios in comments
+   - Log errors appropriately
+
+5. API Integration:
+   - Use centralized API utilities
+   - Implement proper retry logic
+   - Handle rate limiting
+   - Cache responses appropriately
 
 # Best Practices
 
+- Component Development: "Before creating a new component, check existing components in the same category. Extend or modify existing components rather than creating duplicates."
+
 - External Resource Reference: "When integrating a third-party library, always check its official documentation and GitHub repository for usage examples, common pitfalls, and reported bugs. This ensures correct usage and awareness of common issues."
-- Version Compatibility: "Verify the library’s version compatibility with your project and review the changelog for any breaking changes or fixes relevant to lint errors. Check package.json against the latest stable release."
+
+- Version Compatibility: "Verify the library's version compatibility with your project and review the changelog for any breaking changes or fixes relevant to lint errors. Check package.json against the latest stable release."
+
 - Robust Testing: "Write unit tests for any code that integrates a third-party library to catch issues before linting. Test edge cases and error conditions to ensure robustness."
+
 - Error Handling: "For third-party libraries, wrap calls in try-catch blocks and check for library-specific error codes or messages. Document these in @docs/<package-name>.md for future reference."
+
 - Community Resources: "If a third-party library issue persists, search Stack Overflow, GitHub issues, or forums for solutions. Record workarounds in 'Lessons Learnt' and @docs, ensuring knowledge sharing."
+
 - Direct Research: "When researching third-party libraries, use the browse_page action to directly access their official documentation or GitHub pages for specific information, enhancing research efficiency."
+
+- Code Organization: "Follow the established project structure. Place new components in their appropriate feature directories and maintain consistent naming conventions."
+
+- State Management: "Use React Context for global state, custom hooks for shared logic, and local state for component-specific data. Document state management decisions."
+
+- Performance Optimization: "Implement proper code splitting, lazy loading, and memoization. Monitor and optimize component re-renders."
+
+# Common Pitfalls to Avoid
+
+1. Data Fetching:
+   - Don't implement duplicate fetch logic
+   - Don't skip error handling
+   - Don't forget to handle loading states
+   - Use existing API utilities
+
+2. Component Creation:
+   - Don't create new components for minor variations
+   - Don't duplicate existing functionality
+   - Don't skip TypeScript types
+   - Don't mix presentation and logic
+
+3. State Management:
+   - Don't use global state for local concerns
+   - Don't skip proper state initialization
+   - Don't mutate state directly
+   - Use appropriate context providers
+
+4. Performance:
+   - Don't skip memoization for expensive operations
+   - Don't render unnecessary components
+   - Don't ignore React.memo opportunities
+   - Monitor bundle sizes

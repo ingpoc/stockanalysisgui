@@ -7,34 +7,33 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 
 ## Core Principles
 
-- For AI Guidelines use rule [ai-guidelines-rule.mdc](mdc:.cursor/rules/ai-guidelines-rule.mdc)
-- For development use rule [development-workflow.mdc](mdc:.cursor/rules/development-workflow.mdc)
-- For isssue-fix use rule [issue-fix.mdc](mdc:.cursor/rules/issue-fix.mdc)
-- For lint error use rule [lint-error-fix.mdc](mdc:.cursor/rules/lint-error-fix.mdc)
+- For AI Guidelines use rule [ai-guidelines-rule.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/ai-guidelines-rule.mdc)
+- For development use rule [development-workflow.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/development-workflow.mdc)
+- For isssue-fix use rule [issue-fix.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/issue-fix.mdc)
+- For lint error use rule [lint-error-fix.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/lint-error-fix.mdc)
 
 <Goal>
-Replace the Reown appkit and wagmi implementation with direct Solana implementation while keeping all other functionality and UI intact. 
+Make Crypto lottery system work
 </Goal>
 
 
 
 <plan>
-Implementation Plan:
-Step 1: Set up Solana Wallet Adapter
-Create a new Solana wallet provider setup
-Replace wagmi's account management with Solana's wallet adapter
-Implement wallet connection modal using Solana's wallet adapter
-Step 2: Replace Auth Components
-Update ConnectButton to use Solana wallet adapter
-Modify auth layouts to use Solana connection state
-Update protected layout to use Solana wallet state
-Step 3: Update Configuration
-Remove Reown appkit and wagmi configurations
-Set up Solana network configuration
-Configure Solana wallet adapter
-Step 4: Update Dependencies
-Remove unnecessary wagmi and Reown dependencies
-Add any missing Solana dependencies
+Program ID: 7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt
+Authority (your CLI wallet): 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
+Program Balance: 1.72255128 SOL
+
+Program ID: 7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt
+USDC Mint: 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+Global Config PDA: 9Gmin1DevMjy9Too8ZQq78KdWoX16wSpEtQ2xj863f6W
+Program Authority/Admin/Treasurer: 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
+
+
+
+- Configure the app to devnet
+- Test creation of lottery
+- Test rest of the features
+
 </plan>
 
 

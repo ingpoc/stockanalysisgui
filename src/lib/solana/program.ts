@@ -11,13 +11,16 @@ import {
   LotteryType, 
   LotteryState, 
   LotteryInfo, 
-  LotteryAccount
+  LotteryAccount,
+  LotteryTypeValue,
+  LotteryStateValue,
+  GlobalConfig
 } from '@/types/lottery'
 
 import { DecentralizedLottery as ProgramIDL } from '@/types/lottery_types'
 const IDL = require('./decentralized_lottery.json') as ProgramIDL & Idl
 
-const PROGRAM_ID = new PublicKey('4v1we6y3fhEKd54BM8ABPJpK9HSa1srjqJcvTkuhFugb')
+const PROGRAM_ID = new PublicKey('7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt')
 const GLOBAL_CONFIG_SEED = 'global_config'
 const LOTTERY_SEED = 'lottery'
 
@@ -39,6 +42,28 @@ export class LotteryProgram {
       IDL,
       provider
     ) as ProgramType
+  }
+
+  async initialize(usdcMint: PublicKey) {
+    if (!this.program.provider.publicKey) {
+      throw new Error("Wallet not connected")
+    }
+
+    // Get global config PDA
+    const [globalConfig] = PublicKey.findProgramAddressSync(
+      [Buffer.from(GLOBAL_CONFIG_SEED)],
+      this.program.programId
+    )
+
+    return await this.program.methods
+      .initialize()
+      .accounts({
+        globalConfig: globalConfig,
+        admin: this.program.provider.publicKey,
+        usdcMint: usdcMint,
+        systemProgram: SystemProgram.programId,
+      } as any)
+      .rpc()
   }
 
   async createLottery(

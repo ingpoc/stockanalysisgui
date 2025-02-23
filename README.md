@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stock Analysis GUI
+
+A comprehensive stock analysis dashboard built with Next.js that combines real-time market data with decentralized lottery features on the Solana blockchain.
+
+## Features
+
+- 📊 Real-time stock market dashboard
+- 📈 Interactive stock charts and analysis
+- 🤖 AI-powered market insights
+- 🎲 Integrated decentralized lottery system
+- 🌓 Dark/Light mode support
+- 🔐 Secure authentication system
+- 💱 Solana wallet integration
+
+## Project Structure
+
+```
+src/
+├── app/          # Next.js app router pages
+├── components/   # React components
+│   ├── auth/     # Authentication components
+│   ├── layout/   # Layout components
+│   ├── lottery/  # Solana lottery components
+│   ├── stock/    # Stock analysis components
+│   └── ui/       # Reusable UI components
+├── hooks/        # Custom React hooks
+├── lib/          # Utility functions and services
+├── config/       # Configuration files
+├── context/      # React context providers
+├── types/        # TypeScript type definitions
+└── assets/       # Static assets
+```
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Copy `.env.example` to `.env.local` and fill in your environment variables:
+   ```
+   # Required environment variables
+   NEXT_PUBLIC_API_KEY=your_api_key
+   NEXT_PUBLIC_SOLANA_RPC_URL=your_solana_rpc_url
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+3. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Run the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+5. Open [http://localhost:3000](http://localhost:3000) with your browser
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Key Components
 
-## Learn More
+- **Stock Dashboard**: Real-time stock market monitoring and analysis
+- **AI Insights**: Machine learning-powered market analysis and predictions
+- **Lottery System**: Decentralized lottery implementation on Solana
+- **Authentication**: Secure user authentication and authorization
+- **Wallet Integration**: Solana wallet connection and transaction handling
 
-To learn more about Next.js, take a look at the following resources:
+## Technologies
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js](https://nextjs.org/) - React framework
+- [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/) - Solana blockchain integration
+- [TailwindCSS](https://tailwindcss.com/) - Styling
+- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- TypeScript - Type safety
+- [Vercel](https://vercel.com) - Deployment platform
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Contributing
 
-## Deploy on Vercel
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License.

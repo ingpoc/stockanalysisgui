@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { LotteryProgram } from '@/lib/solana/program'
+import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
 
 export default function LotteryPage() {
   const [lotteries, setLotteries] = useState<LotteryInfo[]>([])
@@ -80,7 +81,10 @@ export default function LotteryPage() {
     <PageContainer>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Lotteries</h1>
-        <CreateLotteryDialog onSuccess={fetchLotteries} />
+        <div className="space-x-2">
+          <InitializeProgramDialog />
+          <CreateLotteryDialog onSuccess={fetchLotteries} />
+        </div>
       </div>
 
       {error && (
@@ -110,7 +114,7 @@ export default function LotteryPage() {
           ))}
           {lotteries.length === 0 && !error && (
             <div className="col-span-full text-center py-12 text-muted-foreground">
-              No lotteries found. Create one to get started!
+              No lotteries found. Initialize the program to get started!
             </div>
           )}
         </div>

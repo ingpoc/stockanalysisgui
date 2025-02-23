@@ -5,7 +5,7 @@
  * IDL can be found at `src/lib/solana/decentralized_lottery.json`.
  */
 export type DecentralizedLottery = {
-  "address": "4v1we6y3fhEKd54BM8ABPJpK9HSa1srjqJcvTkuhFugb",
+  "address": "7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt",
   "metadata": {
     "name": "decentralizedLottery",
     "version": "0.1.0",
