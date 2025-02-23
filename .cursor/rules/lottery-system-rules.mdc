@@ -1,0 +1,155 @@
+---
+description: Decentralized Lottery System Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+
+## Core Components
+
+1. **LotteryProgram Class**
+   - Acts as the main interface to the Solana program
+   - Handles all program interactions and state management
+   - Program ID: `7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt`
+
+2. **Account Structure**
+   - Global Config PDA: `9Gmin1DevMjy9Too8ZQq78KdWoX16wSpEtQ2xj863f6W`
+   - USDC Mint: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
+   - Lottery Account PDA: Generated using [lottery_seed, lottery_type, draw_time]
+   - **Uniqueness Constraints**: 
+     - Only one lottery can exist for a given combination of type and draw time
+     - Wait for current lottery's draw time to pass before creating new one of same type
+     - PDA collision will occur if attempting duplicate lottery parameters
+
+## State Management
+
+1. **Lottery Types**
+   ```typescript
+   enum LotteryType {
+     Daily = 'daily',
+     Weekly = 'weekly',
+     Monthly = 'monthly'
+   }
+   ```
+
+2. **Lottery States**
+   ```typescript
+   enum LotteryState {
+     Created = 'created',
+     Open = 'open',
+     Drawing = 'drawing',
+     Completed = 'completed',
+     Expired = 'expired'
+   }
+   ```
+
+## Transaction Guidelines
+
+1. **Compute Budget**
+   - Always set compute budget for lottery creation: 300,000 units
+   - Add compute budget instruction before main transaction
+   ```typescript
+   const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+     units: 300000
+   });
+   ```
+
+2. **Token Handling**
+   - Check for existing token accounts before transactions
+   - Create Associated Token Account if needed
+   - Handle USDC token transfers properly
+
+## Error Handling
+
+1. **Program Error Codes**
+   - 6000-6019: Lottery-specific error codes
+   - Common errors:
+     - 6001: Invalid ticket price
+     - 6002: Invalid prize pool
+     - 6006: Lottery not open
+     - 6018: Token transfer failed
+
+2. **Error Categories**
+   - Wallet errors: Connection and signing issues
+   - Transaction errors: Failed transactions
+   - Simulation errors: Pre-flight simulation failures
+   - Network errors: Connection and timeout issues
+
+## Component Best Practices
+
+1. **Lottery Creation**
+   - Validate inputs before submission
+   - Handle wallet connection state
+   - Show proper loading states
+   - Provide clear error messages
+
+2. **Ticket Purchase**
+   - Validate lottery state before purchase
+   - Check user's token balance
+   - Handle token account creation
+   - Show transaction progress
+
+## Common Pitfalls
+
+1. **Account Creation**
+   - Always check if token accounts exist
+   - Handle PDA derivation carefully
+   - Verify account ownership
+
+2. **Transaction Handling**
+   - Don't assume transaction success
+   - Handle all possible error states
+   - Provide proper user feedback
+
+3. **State Management**
+   - Don't assume account data format
+   - Handle enum parsing errors gracefully
+   - Validate all incoming data
+
+## Testing Guidelines
+
+1. **Transaction Testing**
+   - Test with different lottery types
+   - Verify compute budget sufficiency
+   - Check token account handling
+   - Validate error scenarios
+
+2. **Component Testing**
+   - Test wallet connection states
+   - Verify loading indicators
+   - Check error message display
+   - Validate user interactions
+
+## Performance Optimization
+
+1. **Account Subscriptions**
+   - Implement proper cleanup
+   - Use efficient data fetching
+   - Handle subscription updates properly
+
+2. **Transaction Optimization**
+   - Batch instructions when possible
+   - Set appropriate compute budgets
+   - Handle rate limiting
+
+## Integration Points
+
+1. **Wallet Integration**
+   - Support multiple wallet adapters
+   - Handle connection state changes
+   - Manage transaction signing
+
+2. **Token Integration**
+   - Handle USDC token operations
+   - Manage Associated Token Accounts
+   - Track token balances
+
+## Documentation Requirements
+
+1. **Program Constants**
+   - Document all seeds and PDAs
+   - Keep program IDs updated
+   - Document token addresses
+
+2. **Error Messages**
+   - Maintain clear error messages
+   - Document error codes
+   - Update handling procedures

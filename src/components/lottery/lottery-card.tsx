@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Ticket, Trophy, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { handleProgramError } from '@/lib/utils'
 
 interface LotteryCardProps {
   lottery: LotteryInfo
@@ -32,7 +33,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
 
   const handleBuyTickets = async () => {
     if (!publicKey || !connection || !wallet) {
-      toast.error('Please connect your wallet')
+      toast.error('Please connect your wallet to buy tickets')
       return
     }
 
@@ -49,8 +50,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
       toast.success('Tickets purchased successfully!')
       onParticipate()
     } catch (error) {
-      console.error('Failed to buy tickets:', error)
-      const errorMessage = LotteryProgram.formatError(error)
+      const errorMessage = handleProgramError(error)
       toast.error(errorMessage)
     } finally {
       setLoading(false)

@@ -7,6 +7,7 @@ import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { LotteryType } from '@/types/lottery'
 import { LotteryProgram } from '@/lib/solana/program'
 import { toast } from 'sonner'
+import { handleProgramError } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -82,7 +83,7 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
 
   const onSubmit = async (values: FormValues) => {
     if (!publicKey || !connection || !wallet) {
-      toast.error('Please connect your wallet')
+      toast.error("Please connect your wallet to create a lottery")
       return
     }
 
@@ -103,13 +104,12 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
         parseFloat(values.prizePool)
       )
 
-      toast.success('Lottery created successfully!')
+      toast.success("Lottery created successfully!")
       setOpen(false)
       form.reset()
       onSuccess()
     } catch (error) {
-      console.error('Failed to create lottery:', error)
-      const errorMessage = LotteryProgram.formatError(error)
+      const errorMessage = handleProgramError(error)
       toast.error(errorMessage)
     } finally {
       setLoading(false)

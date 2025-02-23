@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from '@/components/theme-provider'
 import { WalletConnectionProvider } from '@/config'
-import { Toaster } from '@/components/ui/toaster'
+import { Toaster } from 'sonner'
 
 const queryClient = new QueryClient()
 
@@ -24,7 +24,7 @@ export default function ContextProvider({
       >
         <WalletConnectionProvider>
           {children}
-          <Toaster />
+          <Toaster richColors position="top-right" />
         </WalletConnectionProvider>
       </ThemeProvider>
     </QueryClientProvider>

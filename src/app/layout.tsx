@@ -2,7 +2,7 @@
 
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
-import { Toaster } from '@/components/ui/toaster'
+import { Toaster } from 'sonner'
 import { WalletConnectionProvider } from '@/config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './globals.css'
@@ -33,7 +33,7 @@ export default function RootLayout({
             <WalletConnectionProvider>
               {children}
             </WalletConnectionProvider>
-            <Toaster />
+            <Toaster richColors position="top-right" />
           </ThemeProvider>
         </QueryClientProvider>
       </body>

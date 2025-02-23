@@ -15,7 +15,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { handleProgramError } from '@/lib/utils'
-import { useToast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 
 export function InitializeProgramDialog() {
   const [open, setOpen] = useState(false)
@@ -23,15 +23,12 @@ export function InitializeProgramDialog() {
   const [isLoading, setIsLoading] = useState(false)
   const { connected } = useWallet()
   const program = useLotteryProgram()
-  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!connected) {
-      toast({
-        variant: "destructive",
-        title: "Wallet not connected",
-        description: "Please connect your wallet to initialize the program.",
+      toast.error("Wallet not connected", {
+        description: "Please connect your wallet to initialize the program."
       })
       return
     }
@@ -40,17 +37,14 @@ export function InitializeProgramDialog() {
       setIsLoading(true)
       const mintPubkey = new PublicKey(usdcMint)
       await program.initialize(mintPubkey)
-      toast({
-        title: "Program initialized",
-        description: "The lottery program has been initialized successfully.",
+      toast.success("Program initialized", {
+        description: "The lottery program has been initialized successfully."
       })
       setOpen(false)
     } catch (error) {
       const errorMessage = handleProgramError(error)
-      toast({
-        variant: "destructive",
-        title: "Initialization failed",
-        description: errorMessage,
+      toast.error("Initialization failed", {
+        description: errorMessage
       })
     } finally {
       setIsLoading(false)
