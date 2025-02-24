@@ -1,5 +1,5 @@
 {
-  "address": "7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt",
+  "address": "F1pffGp4n5qyNRcCnpoTH5CEfVKQEGxAxmRuRScUw4tz",
   "metadata": {
     "name": "decentralized_lottery",
     "version": "0.1.0",
@@ -76,6 +76,82 @@
       ]
     },
     {
+      "name": "cancel_lottery",
+      "discriminator": [
+        85,
+        35,
+        29,
+        73,
+        218,
+        192,
+        9,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.lottery_type",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.draw_time",
+                "account": "LotteryAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "create_lottery",
       "discriminator": [
         242,
@@ -147,8 +223,62 @@
           }
         },
         {
+          "name": "token_mint",
+          "docs": [
+            "The mint for the token being used (USDC)"
+          ]
+        },
+        {
+          "name": "creator_token_account",
+          "docs": [
+            "The creator's token account to fund the prize pool"
+          ],
+          "writable": true
+        },
+        {
+          "name": "lottery_token_account",
+          "docs": [
+            "The lottery's token account for prize pool"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -227,6 +357,114 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "transition_state",
+      "discriminator": [
+        52,
+        205,
+        208,
+        34,
+        155,
+        130,
+        12,
+        18
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.lottery_type",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.draw_time",
+                "account": "LotteryAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "lottery_token_account",
+          "docs": [
+            "The lottery's token account for prize pool"
+          ],
+          "writable": true
+        },
+        {
+          "name": "oracle_account",
+          "docs": [
+            "Optional Oracle/VRF account for randomness",
+            "Only required when transitioning to Drawing state"
+          ],
+          "optional": true
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "next_state",
+          "type": {
+            "defined": {
+              "name": "LotteryState"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -269,6 +507,19 @@
         124,
         57,
         74
+      ]
+    },
+    {
+      "name": "LotteryStateChanged",
+      "discriminator": [
+        116,
+        62,
+        184,
+        135,
+        124,
+        90,
+        153,
+        26
       ]
     },
     {
@@ -400,6 +651,26 @@
       "code": 6022,
       "name": "UnauthorizedAccess",
       "msg": "Unauthorized access"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidStateTransition",
+      "msg": "Invalid state transition"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidCancellation",
+      "msg": "Lottery cannot be cancelled in current state"
+    },
+    {
+      "code": 6025,
+      "name": "AdminRequired",
+      "msg": "Only admin can perform this action"
+    },
+    {
+      "code": 6026,
+      "name": "LotteryCancelled",
+      "msg": "Lottery is cancelled"
     }
   ],
   "types": [
@@ -477,6 +748,24 @@
           {
             "name": "global_config",
             "type": "pubkey"
+          },
+          {
+            "name": "auto_transition",
+            "type": "bool"
+          },
+          {
+            "name": "last_ticket_id",
+            "type": "u64"
+          },
+          {
+            "name": "oracle_pubkey",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "is_prize_pool_locked",
+            "type": "bool"
           }
         ]
       }
@@ -528,6 +817,49 @@
           },
           {
             "name": "Expired"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LotteryStateChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "previous_state",
+            "type": {
+              "defined": {
+                "name": "LotteryState"
+              }
+            }
+          },
+          {
+            "name": "new_state",
+            "type": {
+              "defined": {
+                "name": "LotteryState"
+              }
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "total_tickets_sold",
+            "type": "u64"
+          },
+          {
+            "name": "current_prize_pool",
+            "type": "u64"
           }
         ]
       }

@@ -8,7 +8,7 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 This document guides the AI on how to handle authentication-related requests and documentation updates.
 
 ## Documentation Reference
-- Implementation patterns are defined in [authentication.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/authentication.md)
+- Implementation patterns are defined in [authentication.md](mdc:decentralized-lottery/decentralized-lottery/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/authentication.md)
 - Always refer to authentication.md before making any changes
 
 ## Request Handling Rules

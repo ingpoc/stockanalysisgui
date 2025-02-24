@@ -2,10 +2,10 @@
  * Program IDL in camelCase format in order to be used in JS/TS.
  *
  * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `src/lib/solana/decentralized_lottery.json`.
+ * IDL can be found at `target/idl/decentralized_lottery.json`.
  */
 export type DecentralizedLottery = {
-  "address": "7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt",
+  "address": "F1pffGp4n5qyNRcCnpoTH5CEfVKQEGxAxmRuRScUw4tz",
   "metadata": {
     "name": "decentralizedLottery",
     "version": "0.1.0",
@@ -82,6 +82,82 @@ export type DecentralizedLottery = {
       ]
     },
     {
+      "name": "cancelLottery",
+      "discriminator": [
+        85,
+        35,
+        29,
+        73,
+        218,
+        192,
+        9,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "lotteryAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.lottery_type",
+                "account": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.draw_time",
+                "account": "lotteryAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createLottery",
       "discriminator": [
         242,
@@ -153,8 +229,62 @@ export type DecentralizedLottery = {
           }
         },
         {
+          "name": "tokenMint",
+          "docs": [
+            "The mint for the token being used (USDC)"
+          ]
+        },
+        {
+          "name": "creatorTokenAccount",
+          "docs": [
+            "The creator's token account to fund the prize pool"
+          ],
+          "writable": true
+        },
+        {
+          "name": "lotteryTokenAccount",
+          "docs": [
+            "The lottery's token account for prize pool"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lotteryAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -233,6 +363,114 @@ export type DecentralizedLottery = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "transitionState",
+      "discriminator": [
+        52,
+        205,
+        208,
+        34,
+        155,
+        130,
+        12,
+        18
+      ],
+      "accounts": [
+        {
+          "name": "lotteryAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.lottery_type",
+                "account": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.draw_time",
+                "account": "lotteryAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "lotteryTokenAccount",
+          "docs": [
+            "The lottery's token account for prize pool"
+          ],
+          "writable": true
+        },
+        {
+          "name": "oracleAccount",
+          "docs": [
+            "Optional Oracle/VRF account for randomness",
+            "Only required when transitioning to Drawing state"
+          ],
+          "optional": true
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nextState",
+          "type": {
+            "defined": {
+              "name": "lotteryState"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -275,6 +513,19 @@ export type DecentralizedLottery = {
         124,
         57,
         74
+      ]
+    },
+    {
+      "name": "lotteryStateChanged",
+      "discriminator": [
+        116,
+        62,
+        184,
+        135,
+        124,
+        90,
+        153,
+        26
       ]
     },
     {
@@ -406,6 +657,26 @@ export type DecentralizedLottery = {
       "code": 6022,
       "name": "unauthorizedAccess",
       "msg": "Unauthorized access"
+    },
+    {
+      "code": 6023,
+      "name": "invalidStateTransition",
+      "msg": "Invalid state transition"
+    },
+    {
+      "code": 6024,
+      "name": "invalidCancellation",
+      "msg": "Lottery cannot be cancelled in current state"
+    },
+    {
+      "code": 6025,
+      "name": "adminRequired",
+      "msg": "Only admin can perform this action"
+    },
+    {
+      "code": 6026,
+      "name": "lotteryCancelled",
+      "msg": "Lottery is cancelled"
     }
   ],
   "types": [
@@ -483,6 +754,24 @@ export type DecentralizedLottery = {
           {
             "name": "globalConfig",
             "type": "pubkey"
+          },
+          {
+            "name": "autoTransition",
+            "type": "bool"
+          },
+          {
+            "name": "lastTicketId",
+            "type": "u64"
+          },
+          {
+            "name": "oraclePubkey",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "isPrizePoolLocked",
+            "type": "bool"
           }
         ]
       }
@@ -534,6 +823,49 @@ export type DecentralizedLottery = {
           },
           {
             "name": "expired"
+          },
+          {
+            "name": "cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lotteryStateChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lotteryId",
+            "type": "pubkey"
+          },
+          {
+            "name": "previousState",
+            "type": {
+              "defined": {
+                "name": "lotteryState"
+              }
+            }
+          },
+          {
+            "name": "newState",
+            "type": {
+              "defined": {
+                "name": "lotteryState"
+              }
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "totalTicketsSold",
+            "type": "u64"
+          },
+          {
+            "name": "currentPrizePool",
+            "type": "u64"
           }
         ]
       }
