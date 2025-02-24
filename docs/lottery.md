@@ -4,10 +4,12 @@
    ```
    src/
    ├── types/
-   │   └── lottery.ts           // Type definitions and interfaces
+   │   ├── lottery.ts           // Type definitions and interfaces
+   │   └── lottery_types.ts     // IDL-generated TypeScript types
    ├── components/lottery/
    │   ├── lottery-card.tsx     // Individual lottery display
    │   ├── create-lottery-dialog.tsx  // Lottery creation UI
+   │   ├── admin-lottery-controls.tsx // Admin state management UI
    │   └── initialize-program-dialog.tsx  // Program initialization
    ├── hooks/
    │   └── use-lottery-subscriptions.ts  // Subscription management
@@ -16,9 +18,11 @@
    ```
 
 2. **File Responsibilities**
-   - `lottery.ts`: Core types, interfaces, and enums
+   - `lottery.ts`: Core types, interfaces, and enums for frontend use
+   - `lottery_types.ts`: IDL-generated TypeScript types for program interaction
    - `lottery-card.tsx`: Display and interaction with individual lotteries
    - `create-lottery-dialog.tsx`: UI for creating new lotteries
+   - `admin-lottery-controls.tsx`: UI for managing lottery states
    - `initialize-program-dialog.tsx`: Program initialization interface
    - `use-lottery-subscriptions.ts`: Real-time lottery data updates
    - `program.ts`: Solana program interaction methods
@@ -26,10 +30,15 @@
 ## Program Constants
 
 1. **Critical Addresses**
-            - Program ID: 7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt
-            - USDC Mint: 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
-            - Global Config PDA: 9Gmin1DevMjy9Too8ZQq78KdWoX16wSpEtQ2xj863f6W
-            - Program Authority/Admin/Treasurer: 7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4
+   ```typescript
+   // Program ID
+   const PROGRAM_ID = new PublicKey('7MTSfGTiXNH4ZGztQPdvzpkKivUEUzQhJvsccJFDEMyt')
+   
+   // PDA Seeds
+   const GLOBAL_CONFIG_SEED = 'global_config'
+   const LOTTERY_SEED = 'lottery'
+   const LOTTERY_TOKEN_SEED = 'lottery_token'
+   ```
 
 ## Type Definitions
 
@@ -57,7 +66,8 @@
      Open = 'open',
      Drawing = 'drawing',
      Completed = 'completed',
-     Expired = 'expired'
+     Expired = 'expired',
+     Cancelled = 'cancelled'  // Added for state transitions
    }
 
    // Type for on-chain data
@@ -67,6 +77,7 @@
      | { drawing: Record<string, never> }
      | { completed: Record<string, never> }
      | { expired: Record<string, never> }
+     | { cancelled: Record<string, never> }
    ```
 
 3. **Global Configuration**
@@ -83,65 +94,156 @@
 
 1. **Field Naming Convention**
    ```typescript
-   // ❌ Never use snake_case in TypeScript
-   const lottery_type = account.lottery_type;
-   const ticket_price = account.ticket_price;
+   // IMPORTANT: There are two naming conventions to be aware of:
    
-   // ✅ Always use camelCase in TypeScript
-   const lotteryType = account.lotteryType;
-   const ticketPrice = account.ticketPrice;
+   // 1. TypeScript/Frontend (camelCase)
+   interface LotteryInfo {
+     lotteryType: LotteryType
+     ticketPrice: number
+     // ... other fields
+   }
+   
+   // 2. Anchor Program (snake_case)
+   // When interacting with program methods:
+   program.methods.transitionState().accounts({
+     lottery_account: lotteryPubkey,
+     global_config: globalConfig,
+     lottery_token_account: lotteryTokenAccount,
+     // ... other accounts
+   })
    ```
 
-2. **Rust to TypeScript Type Mappings**
-   ```rust
-   // Rust Types        // TypeScript Types
-   String              // string
-   u64/i64            // bigint
-   Option<T>          // T | null
-   Vec<u8>            // Buffer
-   Pubkey             // PublicKey (needs .toString() for display)
-   ```
-
-3. **Account Field Access**
+2. **Account Naming Rules**
    ```typescript
-   // ❌ Incorrect - Using Rust field names
-   decodedAccount.lottery_type
-   decodedAccount.ticket_price
-   decodedAccount.winning_numbers
+   // ❌ INCORRECT: Using camelCase with program methods
+   .accounts({
+     lotteryAccount: lotteryPubkey,
+     globalConfig,
+     lotteryTokenAccount,
+   })
    
-   // ✅ Correct - Using TypeScript field names
-   decodedAccount.lotteryType
-   decodedAccount.ticketPrice
-   decodedAccount.winningNumbers
+   // ✅ CORRECT: Using snake_case with program methods
+   .accounts({
+     lottery_account: lotteryPubkey,
+     global_config: globalConfig,
+     lottery_token_account: lotteryTokenAccount,
+   } as any) // Type assertion needed due to TypeScript/Anchor mismatch
+   ```
+
+3. **State Transition Handling**
+   ```typescript
+   // ❌ INCORRECT: Passing UI enum directly
+   program.methods.transitionState(nextState)
+   
+   // ✅ CORRECT: Converting UI enum to program state
+   const programState = {
+     [LotteryState.Created]: { created: {} },
+     [LotteryState.Open]: { open: {} },
+     // ... other states
+   }[state]
+   program.methods.transitionState(programState)
    ```
 
 ## Account Handling
 
 1. **Account Deserialization**
    ```typescript
-   // ✅ Correct account decoding
-   const decodedAccount = this.program.coder.accounts.decode(
-     'lotteryAccount',  // Exact name from IDL
-     accountInfo.data
-   )
+   // ✅ Correct account decoding with proper error handling
+   try {
+     const decodedAccount = this.program.coder.accounts.decode(
+       'LotteryAccount',
+       accountInfo.data
+     ) as unknown as LotteryAccount
 
-   // ✅ Correct field access and conversion
-   const info = {
-     ticketPrice: Number(decodedAccount.ticketPrice),
-     createdBy: decodedAccount.createdBy.toString(),
-     winningNumbers: decodedAccount.winningNumbers ? 
-       Buffer.from(decodedAccount.winningNumbers).toString('hex') : null
+     // Convert to UI format
+     return {
+       ticketPrice: Number(decodedAccount.ticketPrice),
+       state: this.getLotteryStateFromAccount(decodedAccount.state),
+       // ... other fields
+     }
+   } catch (error) {
+     console.error('Error decoding account:', error)
+     throw error
    }
    ```
 
 2. **PublicKey Handling**
    ```typescript
-   // ❌ Incorrect - Using PublicKey directly in UI
-   account.createdBy
+   // In Components:
+   // ✅ CORRECT: Convert string to PublicKey before passing to program
+   const lotteryPubkey = new PublicKey(lottery.address)
+   await program.transitionState(lotteryPubkey, selectedState)
    
-   // ✅ Correct - Convert to string for UI
-   account.createdBy.toString()
+   // In Program Class:
+   // ✅ CORRECT: Accept PublicKey in method signatures
+   async transitionState(
+     lotteryPubkey: PublicKey,
+     nextState: LotteryState
+   ): Promise<TransactionSignature>
    ```
+
+## Common Pitfalls and Solutions
+
+1. **Account Naming Mismatches**
+   ```typescript
+   // Problem: TypeScript types use camelCase but program expects snake_case
+   // Solution: Use type assertion and snake_case in program calls
+   .accounts({
+     lottery_account: pubkey,
+     // ... other accounts
+   } as any)
+   ```
+
+2. **State Transition Errors**
+   ```typescript
+   // Problem: Direct enum usage with program
+   // Solution: Convert UI state to program state format
+   private getProgramLotteryState(state: LotteryState): any {
+     const stateMap = {
+       [LotteryState.Created]: { created: {} },
+       // ... other states
+     }
+     return stateMap[state]
+   }
+   ```
+
+3. **PDA Derivation**
+   ```typescript
+   // Problem: Inconsistent PDA seeds
+   // Solution: Use constants and consistent buffer creation
+   private findLotteryTokenAccountPDA(lotteryPubkey: PublicKey): [PublicKey, number] {
+     return PublicKey.findProgramAddressSync(
+       [Buffer.from('lottery_token'), lotteryPubkey.toBuffer()],
+       this.program.programId
+     )
+   }
+   ```
+
+## Best Practices
+
+1. **Program Method Calls**
+   - Always use snake_case for account names in program calls
+   - Use type assertions to handle TypeScript/Anchor naming mismatches
+   - Convert UI enums to program format before passing to methods
+   - Handle all errors with proper error messages
+
+2. **Component Integration**
+   - Convert string addresses to PublicKey before passing to program
+   - Handle loading states during transactions
+   - Provide clear error messages to users
+   - Update UI state after successful transactions
+
+3. **Error Handling**
+   - Use try-catch blocks for all program interactions
+   - Log errors for debugging
+   - Show user-friendly error messages
+   - Handle edge cases and invalid states
+
+4. **State Management**
+   - Validate state transitions before sending
+   - Update UI immediately after successful transitions
+   - Handle failed transitions gracefully
+   - Maintain consistent state between UI and program
 
 ## UI Data Transformation
 
