@@ -1,3 +1,31 @@
+## File Structure
+
+1. **Core Files**
+   ```
+   src/
+   ├── components/auth/
+   │   ├── auth-guard.tsx      // Protected route wrapper
+   │   └── wallet-button.tsx   // Wallet connection UI
+   ├── hooks/
+   │   ├── use-auth.ts         // Authentication state management
+   │   └── use-wallet.ts       // Wallet connection management
+   ├── lib/
+   │   └── auth/
+   │       ├── provider.tsx    // Auth context provider
+   │       └── utils.ts        // Auth utility functions
+   └── types/
+       └── auth.ts             // Auth-related type definitions
+   ```
+
+2. **File Responsibilities**
+   - `auth-guard.tsx`: Route protection and auth state checks
+   - `wallet-button.tsx`: Wallet connection interface
+   - `use-auth.ts`: Authentication state and methods
+   - `use-wallet.ts`: Wallet connection state and methods
+   - `provider.tsx`: Global auth context and state
+   - `utils.ts`: Helper functions for auth operations
+   - `auth.ts`: Type definitions for auth features
+
 # Authentication Guidelines
 
 ## Core Authentication Rules

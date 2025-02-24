@@ -1,3 +1,29 @@
+## File Structure
+
+1. **Core Files**
+   ```
+   src/
+   ├── components/ui/
+   │   ├── toast.tsx          // Toast component
+   │   └── alert.tsx          // Alert component
+   ├── hooks/
+   │   └── use-toast.ts       // Toast management hook
+   ├── lib/
+   │   └── notifications/
+   │       ├── provider.tsx   // Toast provider setup
+   │       └── utils.ts       // Notification utilities
+   └── types/
+       └── toast.ts           // Notification type definitions
+   ```
+
+2. **File Responsibilities**
+   - `toast.tsx`: Toast notification component
+   - `alert.tsx`: Alert message component
+   - `use-toast.ts`: Hook for managing notifications
+   - `provider.tsx`: Global toast context provider
+   - `utils.ts`: Helper functions for notifications
+   - `toast.ts`: Type definitions for notifications
+
 ## Toast Provider Setup
 
 1. **Global Configuration**

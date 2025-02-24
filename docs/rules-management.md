@@ -1,69 +1,93 @@
 # Rules Management Documentation
 
-## Rule Templates
+## File Structure
 
-1. **Rule File Template (.mdc)**
+1. **Core Files**
+   ```
+   .cursor/
+   └── rules/
+       ├── rules-management-rule.mdc    // Rules management guidelines
+       ├── component-lifecycle-rule.mdc  // Component lifecycle rules
+       └── other-feature-rules.mdc      // Other feature rules
+   docs/
+   ├── rules-management.md             // Rules management docs
+   ├── component-lifecycle.md          // Component lifecycle docs
+   └── other-feature.md               // Other feature docs
+   ```
+
+2. **File Responsibilities**
+   - `rules-management-rule.mdc`: Define rules for managing rules
+   - `rules-management.md`: Implementation details for rules
+   - Each feature rule: Define patterns for specific feature
+   - Each feature doc: Implementation details for feature
+
+## Rule Creation Process
+
+1. **Rule Template**
    ```markdown
    ---
-   description: Brief description of the rule's purpose
-   globs: glob patterns for relevant files
+   description: Brief description
+   globs: file patterns
    version: 1.0.0
    last_updated: YYYY-MM-DD
    ---
    # Rule Name
 
    ## Purpose
-   Clear description of what this rule guides the AI about.
+   Clear description of rule's purpose
 
    ## Documentation Reference
-   - Implementation patterns in [doc-name.md](docs/doc-name.md)
-   - ALWAYS refer to documentation before changes
+   - Implementation in [doc-name.md](docs/doc-name.md)
+   - ALWAYS check documentation first
+
+   ## File Structure
+   1. **Core Files**
+      ```
+      Directory structure
+      ```
+   2. **File Responsibilities**
+      - File descriptions
 
    ## When to Apply
-   1. **Pattern Category**
-      - When to use case 1
-      - When to use case 2
-      - When to use case 3
-      - When to use case 4
+   1. **Category**
+      - Use cases
       → See doc-name.md#section
 
    ## Change Management Process
    1. **Before Changes**
       ```
-      1. Review steps
-      2. Verification steps
-      3. Preparation steps
-      4. Dependency checks
+      Steps to follow
       ```
 
    ## Documentation Rules
-   1. **When to Update**
+   1. **Requirements**
       ```
-      ONLY update when:
-      1. Specific conditions
-      2. User requirements
-      3. Verification steps
-      4. Approval process
+      Required elements
       ```
 
    ## Related Rules
-   - Related rule references
+   - Cross-references
    ```
 
-2. **Documentation Template (.md)**
+2. **Documentation Template**
    ```markdown
    # Feature Documentation
 
+   ## File Structure
+   1. **Core Files**
+      ```
+      Directory structure
+      ```
+
    ## Implementation Patterns
-   1. **Pattern Name**
+   1. **Pattern Category**
       ```typescript
       // Code example
       ```
 
    ## Best Practices
    1. **Category**
-      - Best practice 1
-      - Best practice 2
+      - Best practice items
 
    ## Testing Guidelines
    1. **Test Category**
@@ -73,114 +97,44 @@
 
    ## Common Pitfalls
    1. **What to Avoid**
-      - Pitfall 1
-      - Pitfall 2
+      - Pitfall descriptions
    ```
 
 ## Verification Process
 
-1. **Rule Structure Verification**
+1. **Rule Verification**
    ```typescript
-   function verifyRuleStructure(rulePath: string): VerificationResult {
-     const required = [
-       'description',
-       'globs',
-       'Purpose',
-       'Documentation Reference',
-       'When to Apply',
-       'Change Management Process',
-       'Documentation Rules'
-     ]
-     
-     // Implementation details
-     return {
-       isValid: boolean,
-       missingElements: string[],
-       recommendations: string[]
-     }
+   interface RuleVerification {
+     ruleExists: boolean
+     hasDocumentation: boolean
+     isValid: boolean
+     issues: string[]
+     recommendations: string[]
+   }
+
+   function verifyRule(rulePath: string): RuleVerification {
+     // 1. Check file existence
+     // 2. Validate structure
+     // 3. Check documentation
+     // 4. Return verification result
    }
    ```
 
 2. **Documentation Verification**
    ```typescript
-   function verifyDocumentation(docPath: string): VerificationResult {
-     const required = [
-       'Implementation Patterns',
-       'Best Practices',
-       'Testing Guidelines',
-       'Common Pitfalls'
-     ]
-     
-     // Implementation details
-     return {
-       isValid: boolean,
-       missingElements: string[],
-       recommendations: string[]
-     }
+   interface DocVerification {
+     exists: boolean
+     hasFileStructure: boolean
+     hasPatterns: boolean
+     hasTests: boolean
+     issues: string[]
    }
-   ```
 
-3. **Code Alignment Check**
-   ```typescript
-   function checkCodeAlignment(
-     rulePath: string,
-     docPath: string,
-     codebase: string
-   ): AlignmentResult {
-     // 1. Extract patterns from documentation
-     const patterns = extractPatterns(docPath)
-     
-     // 2. Search codebase for implementations
-     const implementations = searchCodebase(codebase, patterns)
-     
-     // 3. Compare and validate
-     return {
-       isAligned: boolean,
-       mismatches: Mismatch[],
-       recommendations: string[]
-     }
-   }
-   ```
-
-## Response Formats
-
-1. **Alignment Report**
-   ```typescript
-   interface AlignmentReport {
-     ruleStatus: {
-       exists: boolean
-       path?: string
-       isValid: boolean
-       issues?: string[]
-     }
-     documentationStatus: {
-       exists: boolean
-       path?: string
-       isValid: boolean
-       issues?: string[]
-     }
-     codeStatus: {
-       implementationFound: boolean
-       isAligned: boolean
-       issues?: string[]
-     }
-     recommendations: string[]
-   }
-   ```
-
-2. **Creation Report**
-   ```typescript
-   interface CreationReport {
-     ruleCreated: {
-       path: string
-       sections: string[]
-     }
-     documentationCreated: {
-       path: string
-       sections: string[]
-     }
-     nextSteps: string[]
-     reviewPoints: string[]
+   function verifyDocumentation(docPath: string): DocVerification {
+     // 1. Check file existence
+     // 2. Validate sections
+     // 3. Check code examples
+     // 4. Return verification result
    }
    ```
 
@@ -204,19 +158,43 @@
    - Validate cross-references
    - Test code alignment
 
+## Testing Guidelines
+
+1. **Rule Testing**
+   ```typescript
+   describe('Rule Verification', () => {
+     it('should validate rule structure', () => {
+       const result = verifyRule('example-rule.mdc')
+       expect(result.isValid).toBe(true)
+       expect(result.issues).toHaveLength(0)
+     })
+   })
+   ```
+
+2. **Documentation Testing**
+   ```typescript
+   describe('Documentation Verification', () => {
+     it('should validate documentation structure', () => {
+       const result = verifyDocumentation('example.md')
+       expect(result.hasFileStructure).toBe(true)
+       expect(result.hasPatterns).toBe(true)
+     })
+   })
+   ```
+
 ## Common Pitfalls
 
 1. **Rule Creation**
    - Mixing implementation details in rules
-   - Skipping documentation creation
-   - Missing cross-references
+   - Missing documentation reference
    - Incomplete sections
+   - Unclear use cases
 
 2. **Documentation**
-   - Missing code examples
-   - Unclear implementation patterns
+   - Missing file structure
+   - Unclear examples
    - Incomplete testing guidelines
-   - Missing error cases
+   - Missing cross-references
 
 3. **Verification**
    - Incomplete checks

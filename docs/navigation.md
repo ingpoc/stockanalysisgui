@@ -1,3 +1,29 @@
+## File Structure
+
+1. **Core Files**
+   ```
+   src/
+   ├── components/navigation/
+   │   ├── route-guard.tsx       // Route protection
+   │   └── nav-link.tsx         // Navigation component
+   ├── hooks/
+   │   └── use-navigation.ts    // Navigation hook
+   ├── lib/
+   │   └── navigation/
+   │       ├── routes.ts        // Route definitions
+   │       └── utils.ts         // Navigation utilities
+   └── types/
+       └── navigation.ts        // Navigation types
+   ```
+
+2. **File Responsibilities**
+   - `route-guard.tsx`: Route protection and auth
+   - `nav-link.tsx`: Navigation component with active state
+   - `use-navigation.ts`: Navigation state and methods
+   - `routes.ts`: Route configuration and paths
+   - `utils.ts`: Navigation helper functions
+   - `navigation.ts`: Navigation type definitions
+
 # Navigation Guidelines
 
 ## Core Navigation Rules

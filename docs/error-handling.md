@@ -1,3 +1,31 @@
+## File Structure
+
+1. **Core Files**
+   ```
+   src/
+   ├── components/error/
+   │   ├── error-boundary.tsx     // React error boundary
+   │   ├── error-fallback.tsx     // Error display component
+   │   └── error-message.tsx      // Error message component
+   ├── hooks/
+   │   └── use-error-handler.ts   // Error handling hook
+   ├── lib/
+   │   └── errors/
+   │       ├── types.ts           // Error type definitions
+   │       └── utils.ts           // Error handling utilities
+   └── utils/
+       └── error-logger.ts        // Error logging service
+   ```
+
+2. **File Responsibilities**
+   - `error-boundary.tsx`: Global error catching
+   - `error-fallback.tsx`: Error state UI
+   - `error-message.tsx`: Error display component
+   - `use-error-handler.ts`: Error handling logic
+   - `types.ts`: Error type definitions
+   - `utils.ts`: Error handling helpers
+   - `error-logger.ts`: Error logging service
+
 # Error Handling Guidelines
 
 ## Error Boundaries

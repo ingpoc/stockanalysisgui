@@ -1,5 +1,35 @@
 # Data Management Guidelines
 
+## File Structure
+
+1. **Core Files**
+   ```
+   src/
+   ├── hooks/
+   │   ├── use-query.ts          // Data fetching hook
+   │   ├── use-mutation.ts       // Data mutation hook
+   │   └── use-subscription.ts   // Real-time data hook
+   ├── lib/
+   │   └── data/
+   │       ├── cache.ts          // Data caching logic
+   │       ├── fetcher.ts        // Data fetching utilities
+   │       └── subscriptions.ts  // Subscription management
+   ├── utils/
+   │   └── data-transforms.ts    // Data transformation utils
+   └── types/
+       └── data.ts              // Data-related types
+   ```
+
+2. **File Responsibilities**
+   - `use-query.ts`: Data fetching and caching
+   - `use-mutation.ts`: Data updates and mutations
+   - `use-subscription.ts`: Real-time data handling
+   - `cache.ts`: Caching implementation
+   - `fetcher.ts`: API interaction utilities
+   - `subscriptions.ts`: Subscription logic
+   - `data-transforms.ts`: Data conversion utilities
+   - `data.ts`: Type definitions
+
 ## Related Documentation
 - For component lifecycle patterns: See [component-lifecycle.md](component-lifecycle.md)
 - For authentication state: See [authentication.md](authentication.md)

@@ -5,7 +5,7 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 
 # Your rule content
 
-Environment variable is [.env.local](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.env.local)
+Environment variable is [.env.local](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.env.local)
 
 
 ### Information Gathering
