@@ -1,11 +1,12 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { useAuthNavigation, isValidReturnUrl } from '@/lib/navigation'
 
 require('@solana/wallet-adapter-react-ui/styles.css')
 
@@ -26,8 +27,9 @@ const FeatureCards = dynamic(() => import('@/components/auth/feature-cards').the
 })
 
 export default function LoginPage() {
-  const router = useRouter()
   const { connected, connecting } = useWallet()
+  const searchParams = useSearchParams()
+  const navigation = useAuthNavigation()
 
   useEffect(() => {
     if (connecting) {
@@ -35,9 +37,14 @@ export default function LoginPage() {
     }
 
     if (connected) {
-      router.replace('/dashboard')
+      const returnUrl = searchParams.get('returnTo')
+      if (returnUrl && isValidReturnUrl(returnUrl)) {
+        navigation.toProtectedRoute(returnUrl)
+      } else {
+        navigation.toDashboard()
+      }
     }
-  }, [connected, connecting, router])
+  }, [connected, connecting, navigation, searchParams])
 
   if (connecting) {
     return (

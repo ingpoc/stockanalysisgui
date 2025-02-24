@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { LotteryInfo } from '@/types/lottery'
@@ -12,39 +12,42 @@ import { AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { LotteryProgram } from '@/lib/solana/program'
 import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
+import { useLotterySubscriptions } from '@/hooks/use-lottery-subscriptions'
+import { useAuthNavigation } from '@/lib/navigation'
 
 export default function LotteryPage() {
   const [lotteries, setLotteries] = useState<LotteryInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
   const { connection } = useConnection()
-  const { publicKey, wallet } = useWallet()
-  const [subscriptions, setSubscriptions] = useState<number[]>([])
+  const { publicKey, wallet, connected } = useWallet()
+  const navigation = useAuthNavigation()
+  const { subscribe, unsubscribeAll, isReady } = useLotterySubscriptions()
 
+  // Set mounted state
   useEffect(() => {
-    fetchLotteries()
-    return () => {
-      // Cleanup subscriptions on unmount
-      if (connection && publicKey && wallet) {
-        const adapter = wallet.adapter as BaseSignerWalletAdapter
-        const program = new LotteryProgram(connection, {
-          publicKey,
-          signTransaction: adapter.signTransaction.bind(adapter),
-          signAllTransactions: adapter.signAllTransactions.bind(adapter),
-        })
-        subscriptions.forEach(sub => program.unsubscribe(sub))
-      }
-    }
-  }, [connection, publicKey, wallet])
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
 
-  const fetchLotteries = async () => {
+  // Handle wallet disconnection
+  useEffect(() => {
+    if (isMounted && !connected) {
+      navigation.toLogin('/lottery')
+    }
+  }, [connected, navigation, isMounted])
+
+  const fetchLotteries = useCallback(async () => {
+    if (!isMounted || !connection || !publicKey || !wallet) {
+      setError('Please connect your wallet to view lotteries')
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       setError(null)
-      if (!connection || !publicKey || !wallet) {
-        setError('Please connect your wallet to view lotteries')
-        return
-      }
 
       const adapter = wallet.adapter as BaseSignerWalletAdapter
       const program = new LotteryProgram(connection, {
@@ -53,39 +56,56 @@ export default function LotteryPage() {
         signAllTransactions: adapter.signAllTransactions.bind(adapter),
       })
 
-      const lotteries = await program.getLotteries()
-      console.log('Fetched lotteries:', lotteries) // Debug log
-      setLotteries(lotteries)
-
-      // Subscribe to updates for each lottery
-      const newSubscriptions = await Promise.all(
-        lotteries.map(async lottery => {
-          try {
-            return await program.subscribeToLotteryChanges(lottery.address, (updatedLottery) => {
-              console.log('Lottery updated:', updatedLottery) // Debug log
-              setLotteries(current =>
-                current.map(l =>
-                  l.address === updatedLottery.address ? updatedLottery : l
+      const fetchedLotteries = await program.getLotteries()
+      console.log('Fetched lotteries:', fetchedLotteries)
+      
+      if (isMounted) {
+        setLotteries(fetchedLotteries)
+        // Subscribe to updates for each lottery
+        await Promise.all(fetchedLotteries.map(async (lottery) => {
+          if (isMounted) {
+            await subscribe(lottery.address, (updatedLottery) => {
+              if (isMounted) {
+                console.log('Lottery updated:', updatedLottery)
+                setLotteries(current =>
+                  current.map(l =>
+                    l.address === updatedLottery.address ? updatedLottery : l
+                  )
                 )
-              )
+              }
             })
-          } catch (subError) {
-            console.error('Failed to subscribe to lottery:', lottery.address, subError)
-            return -1 // Return invalid subscription ID
           }
-        })
-      )
-      setSubscriptions(newSubscriptions.filter(id => id !== -1))
+        }))
+      }
     } catch (error) {
       console.error('Failed to fetch lotteries:', error)
       const errorMessage = error instanceof Error ? error.message : LotteryProgram.formatError(error)
-      setError(`Failed to fetch lotteries: ${errorMessage}`)
-      toast.error('Failed to fetch lotteries', {
-        description: errorMessage
-      })
+      if (isMounted) {
+        setError(`Failed to fetch lotteries: ${errorMessage}`)
+        toast.error('Failed to fetch lotteries', {
+          description: errorMessage
+        })
+      }
     } finally {
-      setLoading(false)
+      if (isMounted) {
+        setLoading(false)
+      }
     }
+  }, [connection, publicKey, wallet, isMounted, subscribe])
+
+  // Fetch lotteries when wallet is connected and component is mounted
+  useEffect(() => {
+    if (isMounted && isReady && connected) {
+      fetchLotteries()
+    }
+    return () => {
+      unsubscribeAll()
+    }
+  }, [isMounted, isReady, connected, fetchLotteries, unsubscribeAll])
+
+  // Don't render anything until mounted
+  if (!isMounted) {
+    return null
   }
 
   return (

@@ -1,9 +1,10 @@
 'use client'
 
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, memo, useState } from 'react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { useAuthNavigation, isValidReturnUrl } from '@/lib/navigation'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -12,44 +13,40 @@ interface AuthGuardProps {
 
 function AuthGuardComponent({ children, requireAuth = true }: AuthGuardProps) {
   const { connected, connecting } = useWallet()
-  const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [isMounted, setIsMounted] = useState(false)
+  const navigation = useAuthNavigation()
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  const handleNavigation = useCallback((path: string) => {
-    if (typeof window !== 'undefined') {
-      router.replace(path)
-    }
-  }, [router])
-
   const checkAuth = useCallback((): string | null => {
     if (!isMounted) return null
     
     const isAuthPage = pathname === '/auth/login'
+    const returnUrl = searchParams.get('returnTo')
     
     if (requireAuth && !connected && !isAuthPage) {
-      return '/auth/login'
+      return `/auth/login${returnUrl ? `?returnTo=${returnUrl}` : ''}`
     }
     
     if (!requireAuth && connected && isAuthPage) {
-      return '/dashboard'
+      return returnUrl && isValidReturnUrl(returnUrl) ? returnUrl : '/dashboard'
     }
     
     return null
-  }, [connected, requireAuth, pathname, isMounted])
+  }, [connected, requireAuth, pathname, isMounted, searchParams])
 
   useEffect(() => {
     if (isMounted) {
       const redirectPath = checkAuth()
       if (redirectPath) {
-        handleNavigation(redirectPath)
+        navigation.toProtectedRoute(redirectPath)
       }
     }
-  }, [checkAuth, isMounted, handleNavigation])
+  }, [checkAuth, isMounted, navigation])
 
   // Don't render anything until mounted
   if (!isMounted) {

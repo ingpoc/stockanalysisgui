@@ -3,29 +3,21 @@ description: Follow the rules during development
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 ---
 
-# Your rule content
-
 ## Development Workflow
 
-### Before Starting Any Task
-1. **Review Past Lessons**
-   - Get relevant context from [.cursorrules](mdc:.cursorrules)
-   - Check relevant files to gain full context as needed.
-   - Search of github or Web or use mcp as needed
+## Core Principles
 
-### During Development
-
-1. **Code Organization**
-   - Keep components focused and small.
-   - Extract reusable logic to hooks.
-   - Maintain consistent file structure.
-
-2. **Code Generation and Lint Errors**
-   - During code generation, if faced with lint errors use rule [lint-error-fix.mdc](mdc:.cursor/rules/lint-error-fix.mdc)
+- For AI Guidelines use rule @ai-guidelines-rule.mdc
+- For Notification feature rule follow [notification-rules.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/notification-rules.mdc)
+- For Authentication and Refresh Handling feature rule follow [auth-refresh-rules.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/auth-refresh-rules.mdc)
+- For Decentralized Lottery feature rule follow [lottery-system-rules.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/lottery-system-rules.mdc)
 
 
-4. **Error Handling**
-   - Implement proper boundaries.
-   - Provide user feedback.
-   - Log errors appropriately.
-   - Handle recovery gracefully.
+MCP Tools Available
+    - Brave MCP Server
+    - Code Search
+    - Sequential thinking
+    - github
+
+
+
