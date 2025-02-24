@@ -1,0 +1,98 @@
+---
+description: Error Handling Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+ ---
+description: Error Handling Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+version: 1.0.0
+last_updated: 2024-02-24
+---
+# Error Handling Rules
+
+## Purpose
+This document guides the AI on when and how to apply error handling patterns.
+
+## Documentation Reference
+- All implementation patterns are defined in [error-handling.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/error-handling.md)
+- ALWAYS refer to error-handling.md before making any changes
+
+## When to Apply
+
+1. **Component Error Boundaries**
+   - When creating new feature boundaries
+   - When modifying error recovery
+   - When handling component crashes
+   - When implementing fallbacks
+   → See error-handling.md#error-boundaries
+
+2. **API Error Handling**
+   - When adding new API calls
+   - When handling network errors
+   - When implementing retries
+   - When managing timeouts
+   → See error-handling.md#api-errors
+
+3. **State Error Management**
+   - When handling state updates
+   - When managing async errors
+   - When implementing recovery
+   - When handling edge cases
+   → See error-handling.md#state-errors
+
+4. **User Feedback**
+   - When displaying error messages
+   - When implementing recovery UI
+   - When handling user actions
+   - When showing error states
+   → See error-handling.md#user-feedback
+
+## Change Management Process
+
+1. **Before Making Changes**
+   ```
+   1. Review error-handling.md completely
+   2. Identify error scenarios
+   3. Check existing patterns
+   4. Verify dependencies
+   ```
+
+2. **During Implementation**
+   ```
+   1. Follow patterns from error-handling.md exactly
+   2. Do not mix different error patterns
+   3. Maintain consistency with existing code
+   4. Add all required recovery paths
+   ```
+
+3. **After Implementation**
+   ```
+   1. Verify against error-handling.md
+   2. Confirm error handling
+   3. Test error scenarios
+   4. Update docs if needed (with approval)
+   ```
+
+## Documentation Rules
+
+1. **When to Update Docs**
+   ```
+   ONLY update error-handling.md when:
+   1. User explicitly requests doc updates
+   2. New error patterns are approved
+   3. Changes are verified working
+   4. User confirms documentation needs
+   ```
+
+2. **Doc Update Process**
+   ```
+   1. Get explicit user approval
+   2. Update only relevant sections
+   3. Maintain existing structure
+   4. Cross-reference related docs
+   ```
+
+## Related Rules
+- For component lifecycle: See [component-lifecycle-rule.mdc]
+- For data management: See [data-management-rule.mdc]
+- For notifications: See [notification-rule.mdc]

@@ -1,0 +1,91 @@
+---
+description: Data Management Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+ ---
+description: Data Management Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+version: 1.0.0
+last_updated: 2024-02-24
+---
+# Data Management Rules
+
+## Purpose
+This document guides the AI on when and how to apply data management patterns.
+
+## Documentation Reference
+- All implementation patterns are defined in [data-management.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/data-management.md)
+- ALWAYS refer to data-management.md before making any changes
+
+## When to Apply
+
+1. **State Management**
+   - When implementing new state logic
+   - When modifying existing state patterns
+   - When handling component state
+   - When managing global state
+   → See data-management.md#state-management
+
+2. **Data Fetching**
+   - When adding new API calls
+   - When modifying existing fetch logic
+   - When implementing loading states
+   - When handling fetch errors
+   → See data-management.md#data-fetching
+
+3. **Subscription Management**
+   - When adding new subscriptions
+   - When modifying subscription logic
+   - When implementing cleanup
+   - When handling subscription errors
+   → See data-management.md#subscription-management
+
+## Change Management Process
+
+1. **Before Making Changes**
+   ```
+   1. Review data-management.md completely
+   2. Identify relevant patterns
+   3. Check for related components
+   4. Verify dependencies
+   ```
+
+2. **During Implementation**
+   ```
+   1. Follow patterns from data-management.md exactly
+   2. Do not mix different patterns
+   3. Maintain consistency with existing code
+   4. Add all required error handling
+   ```
+
+3. **After Implementation**
+   ```
+   1. Verify against data-management.md
+   2. Confirm pattern compliance
+   3. Test thoroughly
+   4. Update docs if needed (with approval)
+   ```
+
+## Documentation Rules
+
+1. **When to Update Docs**
+   ```
+   ONLY update data-management.md when:
+   1. User explicitly requests doc updates
+   2. New patterns are approved
+   3. Changes are verified working
+   4. User confirms documentation needs
+   ```
+
+2. **Doc Update Process**
+   ```
+   1. Get explicit user approval
+   2. Update only relevant sections
+   3. Maintain existing structure
+   4. Cross-reference related docs
+   ```
+
+## Related Rules
+- For component lifecycle: See [component-lifecycle-rule.mdc]
+- For authentication: See [authentication-rule.mdc]
+- For notifications: See [notification-rule.mdc]

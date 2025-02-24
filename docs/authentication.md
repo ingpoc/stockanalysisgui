@@ -1,47 +1,59 @@
-## Authentication Component Rules
+# Authentication Guidelines
 
-1. **Component Mounting**
-   - Always use `isMounted` state to prevent hydration issues
-   - Initialize mount state in useEffect
-   - Don't render anything until component is mounted
+## Core Authentication Rules
+
+1. **Auth Component Mounting**
+   - Always use `isMounted` state to prevent hydration issues during auth flows
+   - Initialize mount state in useEffect with cleanup
+   - Don't render auth components until mounted
    ```typescript
    const [isMounted, setIsMounted] = useState(false)
-   useEffect(() => { setIsMounted(true) }, [])
+   
+   useEffect(() => {
+     setIsMounted(true)
+     return () => setIsMounted(false)
+   }, [])
+
    if (!isMounted) return null
    ```
 
-2. **State Updates During Render**
-   - Never update state or navigate during render phase
-   - Move all navigation logic to effects
-   - Use callbacks for state updates
+2. **Wallet Connection States**
+   - Handle wallet connection/disconnection gracefully
+   - Show appropriate loading states during connection
+   - Cleanup on wallet state changes
    ```typescript
-   // ❌ Don't do this
-   if (condition) router.replace('/path')
+   const [loading, setLoading] = useState(true)
    
-   // ✅ Do this
    useEffect(() => {
-     if (condition) router.replace('/path')
-   }, [condition])
+     if (isMounted && connecting) {
+       setLoading(true)
+     }
+     return () => {
+       if (isMounted) {
+         setLoading(false)
+       }
+     }
+   }, [connecting, isMounted])
    ```
 
-3. **Navigation Handling**
-   - Wrap navigation in useCallback
-   - Check for window existence
-   - Use router.replace instead of router.push for auth flows
+3. **Auth Navigation**
+   - Use router.replace for auth-related navigation
+   - Handle auth redirects after mount
+   - Check window existence for SSR compatibility
    ```typescript
-   const handleNavigation = useCallback((path: string) => {
-     if (typeof window !== 'undefined') {
+   const handleAuthNavigation = useCallback((path: string) => {
+     if (isMounted && typeof window !== 'undefined') {
        router.replace(path)
      }
-   }, [router])
+   }, [router, isMounted])
    ```
 
-4. **Auth State Checks**
-   - Separate auth checking logic from navigation
-   - Return paths instead of handling navigation directly
-   - Handle all edge cases explicitly
+4. **Auth State Management**
+   - Separate auth state from other application state
+   - Handle auth state changes in effects
+   - Provide clear auth status indicators
    ```typescript
-   const checkAuth = useCallback((): string | null => {
+   const checkAuthState = useCallback((): string | null => {
      if (!isMounted) return null
      if (requireAuth && !connected) return '/auth/login'
      if (!requireAuth && connected) return '/dashboard'
@@ -49,75 +61,87 @@
    }, [connected, requireAuth, isMounted])
    ```
 
-5. **Loading States**
-   - Show loading state during wallet connection
-   - Don't show loading for quick redirects
-   - Use proper loading components
-   ```typescript
-   if (connecting) {
-     return <LoadingSpinner message="Connecting wallet..." />
-   }
-   ```
+## Protected Routes
 
-## Refresh and Route Protection
-
-1. **Protected Routes**
-   - Always wrap protected routes with AuthGuard
-   - Set proper requireAuth prop
-   - Handle loading states consistently
+1. **Auth Guards**
+   - Implement consistent auth guards
+   - Handle loading and error states
+   - Provide clear feedback for unauthorized access
    ```typescript
    <AuthGuard requireAuth={true}>
-     <ProtectedComponent />
+     {isMounted && <ProtectedComponent />}
    </AuthGuard>
    ```
 
 2. **Auth Context**
-   - Use proper auth context providers
-   - Handle wallet connection state changes
+   - Provide wallet connection status
+   - Handle auth state changes
    - Implement proper cleanup
    ```typescript
    useEffect(() => {
-     return () => {
-       // Cleanup subscriptions
+     if (!isMounted) return
+
+     const handleAuthChange = () => {
+       if (isMounted) {
+         // Update auth state
+       }
      }
-   }, [])
+
+     return () => {
+       // Cleanup auth subscriptions
+     }
+   }, [isMounted])
    ```
 
-3. **Error Boundaries**
-   - Implement error boundaries for auth components
-   - Handle common auth errors gracefully
+## Error Handling
+
+1. **Auth Errors**
+   - Handle wallet connection errors
    - Provide user feedback for auth failures
+   - Implement auth-specific error boundaries
+   - Reset error states on auth state changes
 
-## Common Pitfalls to Avoid
+2. **Recovery Flows**
+   - Implement wallet reconnection logic
+   - Handle session expiration
+   - Provide clear recovery paths
 
-1. **State Updates**
-   - Don't update state during render
-   - Don't trigger navigation during render
-   - Don't assume component is mounted
+## Best Practices
 
-2. **Navigation**
-   - Don't use router.push for auth flows
-   - Don't navigate without checking window
-   - Don't skip loading states
+1. **Auth State Updates**
+   - Don't update auth state during render
+   - Always check mount state before auth updates
+   - Keep auth state updates atomic
+   - Handle edge cases explicitly
 
-3. **Auth Checks**
-   - Don't mix auth check logic with navigation
-   - Don't forget to handle edge cases
-   - Don't skip proper type checking
+2. **Auth Navigation**
+   - Use appropriate auth routes
+   - Handle auth redirects consistently
+   - Maintain auth state during navigation
+   - Clear sensitive data on logout
 
-## Testing Guidelines
+3. **Security**
+   - Implement proper wallet disconnect
+   - Clear auth state on unmount
+   - Handle auth token expiration
+   - Protect sensitive routes
 
-1. **Mount Behavior**
-   - Test component behavior before mount
-   - Verify proper loading states
-   - Check navigation triggers
+## Testing Auth Flows
 
-2. **Auth States**
-   - Test connected/disconnected states
-   - Verify proper redirects
-   - Check error handling
+1. **Connection Testing**
+   - Test wallet connection/disconnection
+   - Verify auth state persistence
+   - Check error recovery flows
+   - Test auth guard behavior
 
-3. **Navigation**
-   - Test navigation triggers
-   - Verify proper paths
-   - Check loading states
+2. **Navigation Testing**
+   - Test auth redirects
+   - Verify protected route access
+   - Check unauthorized access handling
+   - Test auth state during navigation
+
+3. **Error Testing**
+   - Test connection failures
+   - Verify error messages
+   - Check recovery procedures
+   - Test boundary conditions

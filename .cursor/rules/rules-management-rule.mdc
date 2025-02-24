@@ -1,0 +1,86 @@
+---
+description: Rules Management Guidelines
+globs: .cursor/rules/*.mdc, docs/*.md
+---
+ ---
+description: Rules Management Guidelines
+globs: .cursor/rules/*.mdc, docs/*.md
+version: 1.0.0
+last_updated: 2024-02-24
+---
+# Rules Management Guidelines
+
+## Purpose
+This document guides the AI on how to manage, verify, and create rules and their documentation.
+
+## When to Apply
+
+1. **Rule Verification**
+   - When user requests a specific rule
+   - When checking rule alignment
+   - When validating documentation
+   - When verifying code implementation
+   → See rules-management.md#verification
+
+2. **Rule Creation**
+   - When new rule is requested
+   - When documentation is missing
+   - When implementing new features
+   - When standardizing patterns
+   → See rules-management.md#creation
+
+3. **Rule Updates**
+   - When updating existing rules
+   - When modifying documentation
+   - When changing implementations
+   - When adding new patterns
+   → See rules-management.md#updates
+
+## Change Management Process
+
+1. **Before Changes**
+   ```
+   1. Check .cursor/rules/ for rule existence
+   2. Check docs/ for documentation
+   3. Search codebase for implementation
+   4. Verify alignment between all three
+   ```
+
+2. **During Verification**
+   ```
+   1. Validate rule structure
+   2. Check documentation completeness
+   3. Verify code alignment
+   4. Report findings to user
+   ```
+
+3. **For Creation/Updates**
+   ```
+   1. Use standard templates
+   2. Ensure all sections present
+   3. Add proper cross-references
+   4. Verify with user
+   ```
+
+## Documentation Rules
+
+1. **When to Update Docs**
+   ```
+   ONLY update or create when:
+   1. User requests new rule
+   2. Documentation is missing
+   3. Implementation changes
+   4. Patterns need standardization
+   ```
+
+2. **Doc Update Process**
+   ```
+   1. Follow standard templates
+   2. Maintain consistency
+   3. Add all required sections
+   4. Cross-reference related docs
+   ```
+
+## Related Rules
+- For development workflow: See [development-rule.mdc]
+- For AI guidelines: See [aiguidelines-rule.mdc]

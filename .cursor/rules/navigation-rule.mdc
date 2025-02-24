@@ -1,0 +1,88 @@
+---
+description: Navigation Change Management Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+# Navigation Change Management Rules
+
+## Purpose
+This document guides the AI on how to handle navigation-related requests and documentation updates.
+
+## Documentation Reference
+- Implementation patterns are defined in [navigation.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/navigation.md)
+- Always refer to navigation.md before making any changes
+
+## Request Handling Rules
+
+1. **For General Navigation Questions**
+   ```
+   1. Reference navigation.md
+   2. Provide guidance based on existing patterns
+   3. DO NOT modify any code or documentation
+   ```
+
+2. **For Change Requests**
+   ```
+   1. Confirm explicit request for navigation system change
+   2. Review navigation.md for current implementation
+   3. Implement requested changes
+   4. Wait for user to confirm functionality
+   5. Only update navigation.md after user confirmation
+   ```
+
+## Change Implementation Process
+
+1. **When User Requests Changes**
+   ```
+   ✅ DO:
+   - Get explicit confirmation that navigation change is needed
+   - Implement changes following navigation.md patterns
+   - Test thoroughly
+   - Ask user to verify functionality
+   - Update docs only after user confirms
+
+   ❌ DON'T:
+   - Modify navigation system without explicit request
+   - Update documentation before user confirmation
+   - Assume changes work without verification
+   ```
+
+2. **Documentation Updates**
+   ```
+   ONLY After User Confirms:
+   1. Update navigation.md with new patterns
+   2. Document any new edge cases
+   3. Update examples if needed
+   ```
+
+## AI Response Guidelines
+
+1. **For Questions About Navigation**
+   - Reference relevant sections from navigation.md
+   - Explain current implementation
+   - Do not suggest changes unless requested
+
+2. **For Change Requests**
+   - Confirm the need for change
+   - Implement requested changes
+   - Get user confirmation
+   - Update documentation last
+
+3. **For Issues/Bugs**
+   - Verify against navigation.md
+   - Propose fixes only if explicitly requested
+   - Follow change request process if fixes needed
+
+## Documentation Update Rules
+
+1. **When to Update**
+   - ONLY after user explicitly confirms functionality
+   - NEVER during implementation phase
+   - NEVER without user verification
+
+2. **Update Process**
+   ```
+   1. Wait for user confirmation
+   2. Update navigation.md
+   3. Ensure consistency with implementation
+   4. Document any new edge cases
+   ```

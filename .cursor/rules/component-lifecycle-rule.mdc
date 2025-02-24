@@ -1,0 +1,98 @@
+---
+description: Component Lifecycle Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+---
+description: Component Lifecycle Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+version: 1.0.0
+last_updated: 2024-02-24
+---
+# Component Lifecycle Rules
+
+## Purpose
+This document guides the AI on when and how to apply React component lifecycle patterns.
+
+## Documentation Reference
+- All implementation patterns are defined in [component-lifecycle.md](mdc:stockanalysisgui/docs/component-lifecycle.md)
+- ALWAYS refer to component-lifecycle.md before making any changes
+
+## When to Apply
+
+1. **Component Mounting**
+   - When creating new components
+   - When modifying component initialization
+   - When handling hydration
+   - When managing mount state
+   → See component-lifecycle.md#component-mounting
+
+2. **Effect Management**
+   - When adding new effects
+   - When modifying effect logic
+   - When implementing cleanup
+   - When handling async effects
+   → See component-lifecycle.md#effect-management
+
+3. **Performance Optimization**
+   - When optimizing render performance
+   - When implementing memoization
+   - When managing re-renders
+   - When profiling is needed
+   → See component-lifecycle.md#performance-optimization
+
+4. **Resource Management**
+   - When managing subscriptions
+   - When handling timeouts/intervals
+   - When dealing with event listeners
+   - When cleanup is needed
+   → See component-lifecycle.md#resource-management
+
+## Change Management Process
+
+1. **Before Making Changes**
+   ```
+   1. Review component-lifecycle.md completely
+   2. Identify relevant patterns
+   3. Check for related components
+   4. Verify dependencies
+   ```
+
+2. **During Implementation**
+   ```
+   1. Follow patterns from component-lifecycle.md exactly
+   2. Do not mix different patterns
+   3. Maintain consistency with existing code
+   4. Add all required cleanup
+   ```
+
+3. **After Implementation**
+   ```
+   1. Verify against component-lifecycle.md
+   2. Confirm pattern compliance
+   3. Test thoroughly
+   4. Update docs if needed (with approval)
+   ```
+
+## Documentation Rules
+
+1. **When to Update Docs**
+   ```
+   ONLY update component-lifecycle.md when:
+   1. User explicitly requests doc updates
+   2. New patterns are approved
+   3. Changes are verified working
+   4. User confirms documentation needs
+   ```
+
+2. **Doc Update Process**
+   ```
+   1. Get explicit user approval
+   2. Update only relevant sections
+   3. Maintain existing structure
+   4. Cross-reference related docs
+   ```
+
+## Related Rules
+- For data management: See [data-management-rule.mdc]
+- For authentication: See [authentication-rule.mdc]
+- For notifications: See [notification-rule.mdc]

@@ -1,0 +1,11 @@
+---
+description: Decentralized Lottery System Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+## Decentralized Lottery Rules
+
+- Refer to [lottery.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/lottery.md) for guidelines on how notifications implemented in the app
+- If user specifically asks for change in Decentralized Lottery system 
+    - Only then make change to the code related to Decentralized Lottery as per user query
+    - Confirm from user if functionality is working as requested.
+    - Only when the user confirms of change in functionality and it to be working completely then make changes to [lottery.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/lottery.md)

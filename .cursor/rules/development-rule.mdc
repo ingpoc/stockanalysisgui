@@ -1,0 +1,23 @@
+---
+description: Follow the rules during development
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+---
+
+## Development Workflow
+
+## Core Principles
+
+- For AI Guidelines use rule @ai-guidelines-rule.mdc
+- For Notification feature rule follow [notification-rules.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/notification-rules.mdc)
+- For Authentication and Refresh Handling feature rule follow [auth-refresh-rules.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/auth-refresh-rules.mdc)
+- For Decentralized Lottery feature rule follow [lottery-system-rules.mdc](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.cursor/rules/lottery-system-rules.mdc)
+
+
+MCP Tools Available
+    - Brave MCP Server
+    - Code Search
+    - Sequential thinking
+    - github
+
+
+
