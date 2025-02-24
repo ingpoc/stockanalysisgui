@@ -1,5 +1,5 @@
 import { Program, AnchorProvider, BN, Idl } from '@coral-xyz/anchor'
-import { Connection, PublicKey, SystemProgram } from '@solana/web3.js'
+import { Connection, PublicKey, SystemProgram, TransactionSignature } from '@solana/web3.js'
 import { AnchorWallet } from '@solana/wallet-adapter-react'
 import { 
   TOKEN_PROGRAM_ID, 
@@ -29,10 +29,12 @@ type ProgramType = Program<ProgramIDL>
 export class LotteryProgram {
   private program: ProgramType
   private connection: Connection
+  private wallet: AnchorWallet
   private subscriptions: number[] = []
 
   constructor(connection: Connection, wallet: AnchorWallet) {
     this.connection = connection
+    this.wallet = wallet
     const provider = new AnchorProvider(
       connection,
       wallet,
@@ -412,6 +414,63 @@ export class LotteryProgram {
     } catch (error) {
       console.error('Error parsing lottery state:', error)
       throw new Error(`Failed to parse lottery state: ${JSON.stringify(state)}`)
+    }
+  }
+
+  private findLotteryTokenAccountPDA(lotteryPubkey: PublicKey): [PublicKey, number] {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from('lottery_token'), lotteryPubkey.toBuffer()],
+      this.program.programId
+    );
+  }
+
+  private findGlobalConfigPDA(): [PublicKey, number] {
+    return PublicKey.findProgramAddressSync(
+      [Buffer.from('global_config')],
+      this.program.programId
+    );
+  }
+
+  async getLotteryAccount(lotteryPubkey: PublicKey) {
+    return await this.program.account.lotteryAccount.fetch(lotteryPubkey);
+  }
+
+  // Convert frontend state enum to program state enum
+  private getProgramLotteryState(state: LotteryState): any {
+    const stateMap = {
+      [LotteryState.Created]: { created: {} },
+      [LotteryState.Open]: { open: {} },
+      [LotteryState.Drawing]: { drawing: {} },
+      [LotteryState.Completed]: { completed: {} },
+      [LotteryState.Expired]: { expired: {} },
+      [LotteryState.Cancelled]: { cancelled: {} },
+    };
+    return stateMap[state];
+  }
+
+  async transitionState(
+    lotteryPubkey: PublicKey,
+    nextState: LotteryState
+  ): Promise<TransactionSignature> {
+    try {
+      const lotteryAccount = await this.getLotteryAccount(lotteryPubkey);
+      const [lotteryTokenAccount] = this.findLotteryTokenAccountPDA(lotteryPubkey);
+      const [globalConfig] = this.findGlobalConfigPDA();
+
+      return await this.program.methods
+        .transitionState(this.getProgramLotteryState(nextState))
+        .accounts({
+          lotteryAccount: lotteryPubkey,
+          globalConfig,
+          lotteryTokenAccount,
+          admin: this.wallet.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        } as any) // Use type assertion to handle Anchor's account naming mismatch
+        .rpc();
+    } catch (error) {
+      console.error('Error transitioning state:', error);
+      throw error;
     }
   }
 } 

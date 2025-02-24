@@ -23,7 +23,8 @@ export enum LotteryState {
   Open = 'open',
   Drawing = 'drawing',
   Completed = 'completed',
-  Expired = 'expired'
+  Expired = 'expired',
+  Cancelled = 'cancelled'
 }
 
 export interface GlobalConfig {
