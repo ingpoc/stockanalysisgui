@@ -218,6 +218,68 @@ enum LotteryError {
 - State validation errors
 - Balance insufficient warnings
 
+### Wallet Error Handling
+
+The lottery system implements comprehensive error handling for wallet-related errors, which is crucial for providing clear feedback to users when transactions fail due to wallet issues.
+
+#### Types of Wallet Errors
+
+1. **Transaction Signing Failures**: Occurs when a user rejects a transaction or when the wallet is locked.
+2. **Insufficient Funds**: Happens when the wallet doesn't have enough SOL for transaction fees or enough USDC for the operation.
+3. **Generic Wallet Errors**: Other wallet-related errors that may occur during transaction signing.
+
+#### Implementation Example
+
+```typescript
+// Error handling utility function
+export function handleProgramError(error: any): string {
+  console.error('Program error details:', error);
+  
+  // Check for wallet errors
+  if (error.name === 'WalletSignTransactionError') {
+    if (error.message.includes('failed to sign transaction')) {
+      return 'Transaction signing failed. You may have rejected the transaction or your wallet is locked.';
+    }
+    if (error.message.includes('insufficient funds')) {
+      return 'Insufficient funds in your wallet to complete this transaction.';
+    }
+    return 'Wallet error: Unable to sign the transaction. Please check your wallet and try again.';
+  }
+  
+  // Other error handling...
+}
+
+// Usage in components
+try {
+  await program.buyTicket(lottery.address, numberOfTickets);
+  toast.success('Tickets purchased successfully!');
+} catch (error) {
+  console.error('Failed to buy tickets:', error);
+  const errorMessage = handleProgramError(error);
+  toast.error(errorMessage);
+}
+```
+
+#### Best Practices
+
+1. **Always log the full error**: Log the complete error object for debugging purposes.
+2. **Provide user-friendly messages**: Convert technical error messages to user-friendly language.
+3. **Handle specific wallet error types**: Check for specific wallet error types and provide targeted messages.
+4. **Display errors in the UI**: Use toast notifications or other UI elements to display error messages.
+5. **Guide users to resolution**: Include suggestions for how to resolve the error when possible.
+
+### Common Error Messages and Solutions
+
+| Error Message | Possible Cause | Solution |
+|---------------|----------------|----------|
+| "Oracle account not provided. This is required for Drawing and Cancelled state transitions." | Attempting to transition to Drawing or Cancelled state without including the oracle account | Ensure the oracle account is included in the transaction |
+| "Insufficient funds in your wallet to complete this transaction." | Wallet doesn't have enough SOL to pay for transaction fees or enough USDC for the operation | Add more funds to your wallet |
+| "Transaction signing failed. You may have rejected the transaction or your wallet is locked." | User rejected the transaction in their wallet or the wallet is locked | Approve the transaction in your wallet or unlock your wallet |
+| "Wallet error: Unable to sign the transaction." | Generic wallet signing error | Check wallet connection and try again |
+| "A lottery of this type already exists for this time period." | Attempting to create a duplicate lottery | Wait for the current lottery to complete or choose a different time period |
+| "Invalid ticket price." | The ticket price is not a valid positive number | Enter a valid positive number for the ticket price |
+| "Lottery is not open for ticket purchases" | Attempting to buy tickets when lottery is not in Open state | Wait for the lottery to be in the Open state |
+
 ## Event Monitoring
 
 ### Events to Monitor

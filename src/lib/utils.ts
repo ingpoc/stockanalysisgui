@@ -8,6 +8,17 @@ export function cn(...inputs: ClassValue[]) {
 export function handleProgramError(error: any): string {
   console.error('Program error details:', error);
   
+  // Check for wallet errors
+  if (error.name === 'WalletSignTransactionError') {
+    if (error.message.includes('failed to sign transaction')) {
+      return 'Transaction signing failed. You may have rejected the transaction or your wallet is locked.';
+    }
+    if (error.message.includes('insufficient funds')) {
+      return 'Insufficient funds in your wallet to complete this transaction.';
+    }
+    return 'Wallet error: Unable to sign the transaction. Please check your wallet and try again.';
+  }
+  
   // Check for specific error messages
   if (error.message) {
     // Check for oracle account not provided error
@@ -33,6 +44,11 @@ export function handleProgramError(error: any): string {
     // Check for insufficient funds
     if (error.message.includes('insufficient funds')) {
       return 'Insufficient funds for this operation. Please check your balance.';
+    }
+    
+    // Check for transaction simulation failures
+    if (error.message.includes('Transaction simulation failed')) {
+      return 'Transaction simulation failed. This could be due to insufficient funds or other program constraints.';
     }
   }
   
@@ -95,7 +111,7 @@ export function handleProgramError(error: any): string {
   }
 
   // Check if it's a simulation error
-  if (error.message?.includes('Simulation failed') || error.message?.includes('Transaction simulation failed')) {
+  if (error.message?.includes('Simulation failed')) {
     return 'Transaction simulation failed. Please check your inputs and try again later.';
   }
 

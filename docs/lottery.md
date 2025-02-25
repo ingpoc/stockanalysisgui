@@ -926,3 +926,165 @@ getLotteryTypeForAccount(lotteryType: LotteryType): LotteryTypeValue {
 8. **Implement manual update triggers** for situations where automatic updates fail.
 9. **Provide clear logging** throughout the process for debugging and monitoring.
 10. **Handle specific error messages** with targeted recovery strategies.
+```
+
+## State Transition Requirements Table
+
+| State Transition | Required Accounts | Special Requirements |
+|------------------|-------------------|----------------------|
+| Created → Open   | admin, lotteryAccount, globalConfig, lotteryTokenAccount | Admin authorization |
+| Open → Drawing   | admin, lotteryAccount, globalConfig, lotteryTokenAccount, oracleAccount | Admin authorization, Oracle account required |
+| Open → Cancelled | admin, lotteryAccount, globalConfig, lotteryTokenAccount, oracleAccount | Admin authorization, Oracle account required |
+| Drawing → Completed | admin, lotteryAccount, globalConfig, lotteryTokenAccount | Admin authorization |
+| Drawing → Expired | admin, lotteryAccount, globalConfig, lotteryTokenAccount | Admin authorization |
+| Drawing → Cancelled | admin, lotteryAccount, globalConfig, lotteryTokenAccount, oracleAccount | Admin authorization, Oracle account required |
+
+## Oracle Account Handling
+
+The oracle account is a critical component for certain state transitions in the lottery system. It is used to generate random numbers for the lottery drawing process and to securely cancel lotteries.
+
+### When Oracle Account is Required
+
+The oracle account is required for the following state transitions:
+- **Open → Drawing**: When transitioning from Open to Drawing state, the oracle account is used to generate random numbers for the lottery.
+- **Open → Cancelled**: When cancelling a lottery from the Open state, the oracle account is required for secure cancellation.
+- **Drawing → Cancelled**: When cancelling a lottery from the Drawing state, the oracle account is required.
+
+### Implementation Example
+
+```typescript
+// In program.ts
+async transitionState(
+  lotteryPubkey: PublicKey,
+  nextState: LotteryState
+): Promise<TransactionSignature> {
+  try {
+    // ... other code ...
+    
+    // Add oracle account for Drawing and Cancelled state transitions
+    if (nextState === LotteryState.Drawing || nextState === LotteryState.Cancelled) {
+      console.log(`Adding oracle account for ${nextState} state transition:`, ORACLE_ACCOUNT.toString());
+      accounts.oracleAccount = ORACLE_ACCOUNT;
+    }
+    
+    // ... rest of the method ...
+  } catch (error) {
+    console.error('Error transitioning state:', error);
+    throw error;
+  }
+}
+```
+
+## Common Error Messages and Solutions
+
+| Error Message | Possible Cause | Solution |
+|---------------|----------------|----------|
+| "Oracle account not provided. This is required for Drawing and Cancelled state transitions." | Attempting to transition to Drawing or Cancelled state without including the oracle account | Ensure the oracle account is included in the transaction |
+| "Insufficient funds in your wallet to complete this transaction." | Wallet doesn't have enough SOL to pay for transaction fees or enough USDC for the operation | Add more funds to your wallet |
+| "Transaction signing failed. You may have rejected the transaction or your wallet is locked." | User rejected the transaction in their wallet or the wallet is locked | Approve the transaction in your wallet or unlock your wallet |
+| "Wallet error: Unable to sign the transaction." | Generic wallet signing error | Check wallet connection and try again |
+| "A lottery of this type already exists for this time period." | Attempting to create a duplicate lottery | Wait for the current lottery to complete or choose a different time period |
+| "Invalid ticket price." | The ticket price is not a valid positive number | Enter a valid positive number for the ticket price |
+| "Lottery is not open for ticket purchases" | Attempting to buy tickets when lottery is not in Open state | Wait for the lottery to be in the Open state |
+
+## UI Feedback for State Transitions
+
+When transitioning lottery states, it's important to provide clear feedback to users about what's happening. Here are examples of how to implement user feedback for different state transitions:
+
+```typescript
+// Example from admin-lottery-controls.tsx
+const handleStateTransition = async () => {
+  if (!wallet.connected || !selectedState) {
+    toast.error('Error', {
+      description: 'Please connect your wallet and select a state.'
+    })
+    return
+  }
+
+  setIsLoading(true)
+  try {
+    // Provide specific feedback based on the state transition
+    if (selectedState === LotteryState.Drawing) {
+      toast.info('Transitioning to Drawing state', {
+        description: 'This will use the oracle account to generate random numbers for the lottery.'
+      })
+    } else if (selectedState === LotteryState.Cancelled) {
+      toast.info('Transitioning to Cancelled state', {
+        description: 'This will use the oracle account to cancel the lottery.'
+      })
+    }
+
+    await program.transitionState(new PublicKey(lottery.address), selectedState)
+    toast.success('State transition successful')
+    onStateChange()
+  } catch (error) {
+    console.error('Failed to transition state:', error)
+    const errorMessage = handleProgramError(error)
+    toast.error('Failed to transition state', {
+      description: errorMessage
+    })
+  } finally {
+    setIsLoading(false)
+  }
+}
+```
+
+## Wallet Error Handling
+
+The lottery system implements comprehensive error handling for wallet-related errors, which is crucial for providing clear feedback to users when transactions fail due to wallet issues.
+
+### Types of Wallet Errors
+
+1. **Transaction Signing Failures**: Occurs when a user rejects a transaction or when the wallet is locked.
+2. **Insufficient Funds**: Happens when the wallet doesn't have enough SOL for transaction fees or enough USDC for the operation.
+3. **Generic Wallet Errors**: Other wallet-related errors that may occur during transaction signing.
+
+### Implementation
+
+The system uses a dedicated error handling function that checks for specific wallet error types:
+
+```typescript
+// From utils.ts
+export function handleProgramError(error: any): string {
+  console.error('Program error details:', error);
+  
+  // Check for wallet errors
+  if (error.name === 'WalletSignTransactionError') {
+    if (error.message.includes('failed to sign transaction')) {
+      return 'Transaction signing failed. You may have rejected the transaction or your wallet is locked.';
+    }
+    if (error.message.includes('insufficient funds')) {
+      return 'Insufficient funds in your wallet to complete this transaction.';
+    }
+    return 'Wallet error: Unable to sign the transaction. Please check your wallet and try again.';
+  }
+  
+  // Other error handling...
+}
+```
+
+### Usage in Components
+
+This error handling is used throughout the application to provide clear feedback to users:
+
+```typescript
+// Example usage in a component
+try {
+  await program.buyTicket(lottery.address, numberOfTickets);
+  toast.success('Tickets purchased successfully!');
+} catch (error) {
+  console.error('Failed to buy tickets:', error);
+  const errorMessage = handleProgramError(error);
+  toast.error(errorMessage);
+}
+```
+
+### Best Practices for Wallet Error Handling
+
+1. **Always log the full error**: Log the complete error object for debugging purposes.
+2. **Provide user-friendly messages**: Convert technical error messages to user-friendly language.
+3. **Handle specific wallet errors**: Check for specific wallet error types and provide targeted messages.
+4. **Display errors in the UI**: Use toast notifications or other UI elements to display error messages.
+5. **Guide users to resolution**: Include suggestions for how to resolve the error when possible.
+
+By implementing comprehensive wallet error handling, the lottery system ensures that users receive clear feedback when transactions fail, improving the overall user experience and reducing support requests.
