@@ -655,3 +655,274 @@ The system follows a client-server architecture where:
    - [Solana Web3.js Documentation](https://solana-labs.github.io/solana-web3.js/)
    - [Anchor Framework Documentation](https://www.anchor-lang.com/)
    - [SPL Token Program Documentation](https://spl.solana.com/token)
+
+## Core Design Patterns
+
+### 1. Account Handling and Error Prevention
+
+The lottery system implements several patterns to handle blockchain account data reliably:
+
+#### Retry Mechanism with Exponential Backoff
+```typescript
+// Example from buyTicket method
+let fetchAttempts = 0;
+const maxFetchAttempts = 5;
+
+while (!updatedLotteryAccount && fetchAttempts < maxFetchAttempts) {
+  try {
+    console.log(`Direct fetch attempt ${fetchAttempts + 1}/${maxFetchAttempts}...`);
+    
+    // Use the program's fetch method which is more reliable than raw decoding
+    updatedLotteryAccount = await this.program.account.lotteryAccount.fetch(
+      lotteryAccountKey
+    ).catch(e => {
+      console.error(`Fetch attempt ${fetchAttempts + 1} failed:`, e);
+      return null;
+    });
+    
+    if (updatedLotteryAccount) {
+      console.log('Successfully fetched lottery account data directly!');
+    } else {
+      console.log(`Account not available yet (attempt ${fetchAttempts + 1}/${maxFetchAttempts}), waiting...`);
+      // Exponential backoff with jitter
+      const baseDelay = 1000; // 1 second
+      const maxDelay = 5000; // 5 seconds
+      const delay = Math.min(baseDelay * Math.pow(1.5, fetchAttempts) + Math.random() * 500, maxDelay);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  } catch (fetchErr) {
+    console.error(`Error in fetch attempt ${fetchAttempts + 1}:`, fetchErr);
+    // Exponential backoff with jitter
+    const baseDelay = 1000; // 1 second
+    const maxDelay = 5000; // 5 seconds
+    const delay = Math.min(baseDelay * Math.pow(1.5, fetchAttempts) + Math.random() * 500, maxDelay);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  fetchAttempts++;
+}
+```
+
+#### Fallback Mechanisms
+```typescript
+// If direct fetch fails, try alternative methods
+if (!lotteryAccount) {
+  console.error('Failed to fetch lottery account after multiple attempts');
+  console.log('Attempting to get lottery from getLotteries() as a fallback...');
+  
+  try {
+    const lotteries = await this.getLotteries();
+    const updatedLottery = lotteries.find(l => l.address === lotteryAddress);
+    
+    if (updatedLottery) {
+      console.log('Successfully found lottery in getLotteries() result');
+      callback(updatedLottery);
+      return;
+    } else {
+      console.warn('Could not find lottery in getLotteries() result either');
+      return;
+    }
+  } catch (fallbackError) {
+    console.error('Error in fallback lottery data fetch:', fallbackError);
+    return;
+  }
+}
+```
+
+#### Manual Update Triggering
+```typescript
+// Method to manually trigger subscription updates
+async triggerManualUpdate(lotteryAddress: string): Promise<void> {
+  console.log('Manually triggering update for lottery:', lotteryAddress);
+  
+  try {
+    const lotteryAccountKey = new PublicKey(lotteryAddress);
+    
+    // Directly fetch the lottery account
+    const lotteryAccount = await this.program.account.lotteryAccount.fetch(
+      lotteryAccountKey
+    ).catch(e => {
+      console.error('Failed to fetch lottery account for manual update:', e);
+      return null;
+    });
+    
+    if (!lotteryAccount) {
+      console.error('Could not fetch lottery account for manual update');
+      return;
+    }
+    
+    // Process the account data to get updated lottery info
+    const lotteryInfo: LotteryInfo = {
+      address: lotteryAddress,
+      lotteryType: this.getLotteryTypeFromAccount(lotteryAccount.lotteryType),
+      ticketPrice: Number(lotteryAccount.ticketPrice),
+      drawTime: Number(lotteryAccount.drawTime),
+      prizePool: Number(lotteryAccount.prizePool),
+      totalTickets: Number(lotteryAccount.totalTickets),
+      state: this.getLotteryStateFromAccount(lotteryAccount.state),
+      createdBy: lotteryAccount.createdBy.toString(),
+      globalConfig: lotteryAccount.globalConfig.toString(),
+      winningNumbers: lotteryAccount.winningNumbers ? 
+        Buffer.from(lotteryAccount.winningNumbers).toString('hex') : null
+    };
+    
+    if ('targetPrizePool' in lotteryAccount) {
+      lotteryInfo.targetPrizePool = Number(lotteryAccount.targetPrizePool);
+    }
+    
+    // Find and trigger all subscriptions for this lottery
+    const matchingSubscriptions = this.subscriptions.filter(
+      sub => sub.lotteryAddress === lotteryAddress
+    );
+    
+    if (matchingSubscriptions.length > 0) {
+      console.log(`Found ${matchingSubscriptions.length} subscriptions to update`);
+      
+      matchingSubscriptions.forEach(sub => {
+        try {
+          sub.callback(lotteryInfo);
+          console.log('Successfully triggered manual subscription update');
+        } catch (callbackError) {
+          console.error('Error in subscription callback during manual update:', callbackError);
+        }
+      });
+    } else {
+      console.log('No matching subscriptions found for manual update');
+    }
+  } catch (error) {
+    console.error('Error in manual subscription update:', error);
+  }
+}
+```
+
+### 2. Subscription Management
+
+The system uses a subscription pattern to provide real-time updates to the UI:
+
+```typescript
+// Subscription interface
+interface LotterySubscription {
+  id: number;
+  lotteryAddress: string;
+  callback: (lotteryInfo: LotteryInfo) => void;
+}
+
+// Subscription methods
+subscribeToLotteryChanges(
+  lotteryAddress: string,
+  callback: (lotteryInfo: LotteryInfo) => void
+): number {
+  // Implementation details...
+  this.subscriptions.push({ id: subscription, lotteryAddress, callback });
+  return subscription;
+}
+
+unsubscribe(subscription: number) {
+  this.connection.removeAccountChangeListener(subscription)
+  this.subscriptions = this.subscriptions.filter(sub => sub.id !== subscription)
+}
+
+unsubscribeAll() {
+  this.subscriptions.forEach(sub => this.connection.removeAccountChangeListener(sub.id))
+  this.subscriptions = []
+}
+```
+
+### 3. Transaction Handling
+
+The system implements robust transaction handling with confirmation and error management:
+
+```typescript
+// Transaction sending with confirmation
+const signedTx = await this.wallet.signTransaction(tx);
+txid = await this.connection.sendRawTransaction(signedTx.serialize());
+
+// Wait for transaction confirmation with timeout
+try {
+  console.log('Waiting for transaction confirmation:', txid);
+  const confirmation = await this.connection.confirmTransaction({
+    blockhash,
+    lastValidBlockHeight,
+    signature: txid
+  }, 'confirmed');
+  
+  if (confirmation.value.err) {
+    console.error('Transaction confirmed but has errors:', confirmation.value.err);
+    throw new Error('Transaction failed. Please try again.');
+  }
+  
+  console.log('Transaction confirmed:', txid);
+  
+  // Add a longer delay to allow the account to be updated
+  console.log('Waiting for account updates to propagate...');
+  await new Promise(resolve => setTimeout(resolve, 5000)); // Increased to 5 seconds
+} catch (error) {
+  // Error handling...
+}
+```
+
+## Important Considerations
+
+### 1. Blockchain State Propagation
+
+When working with blockchain applications, account data updates are not immediately available after a transaction is confirmed. The system implements several strategies to handle this:
+
+- **Delayed Fetching**: Wait for a sufficient period (5 seconds) after transaction confirmation before attempting to fetch updated data.
+- **Retry Mechanisms**: Implement multiple fetch attempts with increasing delays.
+- **Fallback Methods**: Use alternative data sources if primary fetch methods fail.
+- **Manual Update Triggering**: Provide a mechanism to manually trigger UI updates when automatic updates fail.
+
+### 2. Error Handling for Common Blockchain Issues
+
+The system handles common blockchain-related errors:
+
+```typescript
+// Handle duplicate transaction error
+if (error.message && (
+    error.message.includes('already been processed') || 
+    error.message.includes('blockhash not found')
+)) {
+  throw new Error('This transaction was already processed. Please wait a moment before trying again.');
+}
+
+// Handle "Account not found" errors with retry logic
+if (error.message && error.message.includes('Account not found: LotteryAccount')) {
+  console.log('Account not found error detected, implementing special handling...');
+  // Retry logic implementation...
+}
+```
+
+### 3. Type Safety and Data Transformation
+
+The system maintains type safety between on-chain and UI representations:
+
+```typescript
+// Convert on-chain enum to UI enum
+getLotteryTypeFromAccount(lotteryType: LotteryTypeValue): LotteryType {
+  if ('daily' in lotteryType) return LotteryType.Daily
+  if ('weekly' in lotteryType) return LotteryType.Weekly
+  if ('monthly' in lotteryType) return LotteryType.Monthly
+  return LotteryType.Daily // Default fallback
+}
+
+// Convert UI enum to on-chain enum
+getLotteryTypeForAccount(lotteryType: LotteryType): LotteryTypeValue {
+  switch (lotteryType) {
+    case LotteryType.Daily: return { daily: {} }
+    case LotteryType.Weekly: return { weekly: {} }
+    case LotteryType.Monthly: return { monthly: {} }
+  }
+}
+```
+
+## Best Practices
+
+1. **Always implement retry mechanisms** for account data fetching to handle blockchain state propagation delays.
+2. **Use exponential backoff with jitter** for retries to prevent thundering herd problems.
+3. **Provide fallback mechanisms** for critical operations to ensure reliability.
+4. **Implement comprehensive error handling** specific to blockchain errors.
+5. **Maintain proper subscription management** to prevent memory leaks and ensure UI updates.
+6. **Add sufficient delays** after transaction confirmation before attempting to fetch updated data.
+7. **Use direct program fetch methods** rather than raw account data decoding when possible.
+8. **Implement manual update triggers** for situations where automatic updates fail.
+9. **Provide clear logging** throughout the process for debugging and monitoring.
+10. **Handle specific error messages** with targeted recovery strategies.

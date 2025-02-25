@@ -1,6 +1,7 @@
 ---
 description: Decentralized Lottery System Rules
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: false
 ---
 ---
 description: Decentralized Lottery Systobs: src/**/*.ts, src/**/*.js, src/**/*.tsx
@@ -13,7 +14,7 @@ last_updated: 2024-02-24
 This document guides the AI on when and how to apply lottery-related patterns and changes.
 
 ## Documentation Reference
-- All implementation patterns are defined in [lottery.md](mdc:decentralized-lottery/docs/lottery.md)
+- All implementation patterns are defined in [lottery.md](mdc:stockanalysisgui/decentralized-lottery/docs/lottery.md)
 - ALWAYS refer to lottery.md before making any changes
 
 ## When to Apply
