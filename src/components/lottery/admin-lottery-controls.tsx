@@ -53,14 +53,19 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
       const lotteryPubkey = new PublicKey(lottery.address)
       await program.transitionState(lotteryPubkey, selectedState)
       toast.success('State transition successful')
-      onStateChange()
+      
+      // Add a slight delay before refreshing the UI to allow account data to propagate
+      setTimeout(() => {
+        onStateChange()
+        setLoading(false)
+        setSelectedState('')
+      }, 2000) // 2 second delay
     } catch (error) {
       console.error('State transition failed:', error)
       const errorMessage = handleProgramError(error)
       toast.error('State transition failed', {
         description: errorMessage
       })
-    } finally {
       setLoading(false)
       setSelectedState('')
     }

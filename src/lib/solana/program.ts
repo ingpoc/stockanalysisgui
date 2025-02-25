@@ -298,59 +298,249 @@ export class LotteryProgram {
       throw new Error("Wallet not connected")
     }
 
-    const lotteryAccountKey = new PublicKey(lotteryAddress)
-    const lotteryAccount = await this.program.account.lotteryAccount.fetch(
-      lotteryAccountKey
-    ) as unknown as LotteryAccount
-
-    const globalConfig = await this.program.account.globalConfig.fetch(
-      lotteryAccount.globalConfig
-    ) as unknown as GlobalConfig
-
-    // Get user's USDC token account
-    const userTokenAccount = await getAssociatedTokenAddress(
-      globalConfig.usdcMint,
-      this.program.provider.publicKey
-    )
-
-    // Get lottery's token account PDA
-    const [lotteryTokenAccount] = this.findLotteryTokenAccountPDA(lotteryAccountKey)
-    console.log('Lottery token account:', lotteryTokenAccount.toString())
-
-    // Check if user's token account exists, if not create it
     try {
-      await getAccount(this.connection, userTokenAccount)
-    } catch (error) {
-      const createAtaIx = createAssociatedTokenAccountInstruction(
-        this.program.provider.publicKey,
-        userTokenAccount,
-        this.program.provider.publicKey,
-        globalConfig.usdcMint
-      )
-      const tx = await this.program.methods
-        .buyTicket(new BN(numberOfTickets))
-        .accounts({
-          lotteryAccount: lotteryAccount,
-          userTokenAccount: userTokenAccount,
-          lotteryTokenAccount: lotteryTokenAccount,
-          buyer: this.program.provider.publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        } as any)
-        .preInstructions([createAtaIx])
-        .rpc()
-      return tx
-    }
+      const lotteryAccountKey = new PublicKey(lotteryAddress)
+      
+      // Fetch the lottery account with better error handling
+      let lotteryAccount;
+      try {
+        lotteryAccount = await this.program.account.lotteryAccount.fetch(
+          lotteryAccountKey
+        ) as unknown as LotteryAccount
+      } catch (error) {
+        console.error('Failed to fetch lottery account:', error);
+        throw new Error('Lottery not found or has been removed. Please refresh the page and try again.');
+      }
 
-    return await this.program.methods
-      .buyTicket(new BN(numberOfTickets))
-      .accounts({
-        lotteryAccount: lotteryAccountKey,
-        userTokenAccount: userTokenAccount,
-        lotteryTokenAccount: lotteryTokenAccount,
-        buyer: this.program.provider.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      } as any)
-      .rpc()
+      // Fetch the global config
+      let globalConfig;
+      try {
+        globalConfig = await this.program.account.globalConfig.fetch(
+          lotteryAccount.globalConfig
+        ) as unknown as GlobalConfig
+      } catch (error) {
+        console.error('Failed to fetch global config:', error);
+        throw new Error('Program configuration not found. Please initialize the program first.');
+      }
+
+      // Get user's USDC token account
+      const userTokenAccount = await getAssociatedTokenAddress(
+        globalConfig.usdcMint,
+        this.program.provider.publicKey
+      )
+
+      // Get lottery's token account PDA
+      const [lotteryTokenAccount] = this.findLotteryTokenAccountPDA(lotteryAccountKey)
+      console.log('Lottery token account:', lotteryTokenAccount.toString())
+
+      // Check if user's token account exists, if not create it
+      let userTokenAccountExists = false;
+      try {
+        await getAccount(this.connection, userTokenAccount)
+        userTokenAccountExists = true;
+      } catch (error) {
+        if (!(error instanceof TokenAccountNotFoundError || error instanceof TokenInvalidAccountOwnerError)) {
+          console.error('Unexpected error checking token account:', error);
+          throw error;
+        }
+        // We'll create the account below
+      }
+
+      let txid: string;
+      
+      // Add a unique blockhash to prevent duplicate transactions
+      const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash('confirmed');
+      
+      try {
+        if (!userTokenAccountExists) {
+          const createAtaIx = createAssociatedTokenAccountInstruction(
+            this.program.provider.publicKey,
+            userTokenAccount,
+            this.program.provider.publicKey,
+            globalConfig.usdcMint
+          )
+          
+          try {
+            const tx = await this.program.methods
+              .buyTicket(new BN(numberOfTickets))
+              .accounts({
+                lotteryAccount: lotteryAccountKey,
+                userTokenAccount: userTokenAccount,
+                lotteryTokenAccount: lotteryTokenAccount,
+                buyer: this.program.provider.publicKey,
+                tokenProgram: TOKEN_PROGRAM_ID,
+              } as any)
+              .preInstructions([createAtaIx])
+              .transaction();
+              
+            // Set the recent blockhash and fee payer
+            tx.recentBlockhash = blockhash;
+            tx.feePayer = this.program.provider.publicKey;
+            
+            // Sign and send the transaction
+            const signedTx = await this.wallet.signTransaction(tx);
+            txid = await this.connection.sendRawTransaction(signedTx.serialize());
+          } catch (error: any) {
+            console.error('Failed to buy ticket with new token account:', error);
+            
+            // Handle duplicate transaction error
+            if (error.message && (
+                error.message.includes('already been processed') || 
+                error.message.includes('blockhash not found')
+            )) {
+              throw new Error('This transaction was already processed. Please wait a moment before trying again.');
+            }
+            
+            throw error;
+          }
+        } else {
+          try {
+            const tx = await this.program.methods
+              .buyTicket(new BN(numberOfTickets))
+              .accounts({
+                lotteryAccount: lotteryAccountKey,
+                userTokenAccount: userTokenAccount,
+                lotteryTokenAccount: lotteryTokenAccount,
+                buyer: this.program.provider.publicKey,
+                tokenProgram: TOKEN_PROGRAM_ID,
+              } as any)
+              .transaction();
+              
+            // Set the recent blockhash and fee payer
+            tx.recentBlockhash = blockhash;
+            tx.feePayer = this.program.provider.publicKey;
+            
+            // Sign and send the transaction
+            const signedTx = await this.wallet.signTransaction(tx);
+            txid = await this.connection.sendRawTransaction(signedTx.serialize());
+          } catch (error: any) {
+            console.error('Failed to buy ticket:', error);
+            
+            // Handle duplicate transaction error
+            if (error.message && (
+                error.message.includes('already been processed') || 
+                error.message.includes('blockhash not found')
+            )) {
+              throw new Error('This transaction was already processed. Please wait a moment before trying again.');
+            }
+            
+            throw error;
+          }
+        }
+        
+        // Wait for transaction confirmation with timeout
+        try {
+          console.log('Waiting for transaction confirmation:', txid);
+          const confirmation = await this.connection.confirmTransaction({
+            blockhash,
+            lastValidBlockHeight,
+            signature: txid
+          }, 'confirmed');
+          
+          if (confirmation.value.err) {
+            console.error('Transaction confirmed but has errors:', confirmation.value.err);
+            throw new Error('Transaction failed. Please try again.');
+          }
+          
+          console.log('Transaction confirmed:', txid);
+          
+          // Add a longer delay to allow the account to be updated
+          console.log('Waiting for account updates to propagate...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Manually fetch the updated lottery account to ensure we have the latest data
+          try {
+            console.log('Fetching updated lottery account data...');
+            const updatedAccountInfo = await this.connection.getAccountInfo(lotteryAccountKey);
+            
+            if (!updatedAccountInfo) {
+              console.error('Updated lottery account not found after transaction');
+            } else {
+              console.log('Updated lottery account data received, length:', updatedAccountInfo.data.length);
+              
+              // Try to decode the account data directly
+              try {
+                const decodedAccount = this.program.coder.accounts.decode(
+                  'LotteryAccount',
+                  updatedAccountInfo.data
+                ) as unknown as LotteryAccount;
+                
+                console.log('Successfully decoded updated lottery account');
+                
+                // Process the decoded account to get updated lottery info
+                const updatedLotteryInfo: LotteryInfo = {
+                  address: lotteryAddress,
+                  lotteryType: this.getLotteryTypeFromAccount(decodedAccount.lotteryType),
+                  ticketPrice: Number(decodedAccount.ticketPrice),
+                  drawTime: Number(decodedAccount.drawTime),
+                  prizePool: Number(decodedAccount.prizePool),
+                  totalTickets: Number(decodedAccount.totalTickets),
+                  state: this.getLotteryStateFromAccount(decodedAccount.state),
+                  createdBy: decodedAccount.createdBy.toString(),
+                  globalConfig: decodedAccount.globalConfig.toString(),
+                  winningNumbers: decodedAccount.winningNumbers ? 
+                    Buffer.from(decodedAccount.winningNumbers).toString('hex') : null
+                };
+                
+                if ('targetPrizePool' in decodedAccount) {
+                  updatedLotteryInfo.targetPrizePool = Number(decodedAccount.targetPrizePool);
+                }
+                
+                // Manually trigger any subscription callbacks with the updated data
+                this.subscriptions.forEach(async (sub) => {
+                  try {
+                    // This is a hack to manually trigger the subscription callback
+                    // with the updated lottery data
+                    this.connection.getAccountInfo(lotteryAccountKey);
+                  } catch (e) {
+                    console.error('Error triggering subscription update:', e);
+                  }
+                });
+              } catch (decodeError) {
+                console.error('Failed to decode updated lottery account:', decodeError);
+              }
+            }
+          } catch (fetchError) {
+            console.error('Error fetching updated lottery account:', fetchError);
+          }
+          
+          // Fetch all lotteries to ensure we have the latest state
+          const lotteries = await this.getLotteries();
+          const updatedLottery = lotteries.find(l => l.address === lotteryAddress);
+          
+          if (updatedLottery) {
+            console.log('Updated lottery data after purchase:', updatedLottery);
+          } else {
+            console.warn('Could not find updated lottery in getLotteries() result');
+          }
+        } catch (error: any) {
+          console.error('Error confirming transaction:', error);
+          
+          // Check if it's a timeout error
+          if (error.message && error.message.includes('timed out')) {
+            console.log('Transaction may still be processing. Check your wallet for confirmation.');
+          }
+          
+          // We still return the txid even if confirmation fails
+        }
+      } catch (error: any) {
+        // Handle SendTransactionError specifically
+        if (error.name === 'SendTransactionError') {
+          console.error('SendTransactionError details:', error.logs);
+          
+          if (error.message && error.message.includes('already been processed')) {
+            throw new Error('This transaction was already processed. Please wait a moment before trying again.');
+          }
+        }
+        
+        throw error;
+      }
+      
+      return txid;
+    } catch (error) {
+      console.error('Error in buyTicket:', error);
+      throw error;
+    }
   }
 
   async getLotteries(): Promise<LotteryInfo[]> {
@@ -428,14 +618,86 @@ export class LotteryProgram {
     lotteryAddress: string,
     callback: (lottery: LotteryInfo) => void
   ): Promise<number> {
+    // Keep track of retry attempts for this subscription
+    let retryCount = 0;
+    const maxRetries = 5;
+    const initialBackoff = 500; // ms
+    
     const subscription = this.connection.onAccountChange(
       new PublicKey(lotteryAddress),
       async (accountInfo) => {
         try {
-          const decodedAccount = this.program.coder.accounts.decode(
-            'LotteryAccount',
-            accountInfo.data
-          ) as unknown as LotteryAccount
+          // Check if account data is valid
+          if (!accountInfo || !accountInfo.data || accountInfo.data.length === 0) {
+            console.error('Invalid account data received for lottery:', lotteryAddress);
+            return;
+          }
+          
+          // Try to decode the account data
+          let decodedAccount;
+          try {
+            // Calculate backoff time based on retry count (exponential backoff)
+            const backoffTime = retryCount === 0 ? 
+              initialBackoff : 
+              Math.min(initialBackoff * Math.pow(2, retryCount), 5000); // Max 5 seconds
+            
+            // Add a delay before attempting to decode
+            await new Promise(resolve => setTimeout(resolve, backoffTime));
+            
+            decodedAccount = this.program.coder.accounts.decode(
+              'LotteryAccount',
+              accountInfo.data
+            ) as unknown as LotteryAccount;
+            
+            // Reset retry count on successful decode
+            retryCount = 0;
+          } catch (decodeError: any) {
+            console.error(`Failed to decode lottery account (attempt ${retryCount + 1}/${maxRetries}):`, 
+              lotteryAddress, decodeError);
+            
+            // Increment retry count
+            retryCount++;
+            
+            // If we've reached max retries, try to fetch the lottery directly
+            if (retryCount >= maxRetries) {
+              console.log(`Max retries (${maxRetries}) reached, fetching lottery data directly`);
+              retryCount = 0; // Reset for next time
+              
+              try {
+                // Add a longer delay before fetching
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const lotteries = await this.getLotteries();
+                const updatedLottery = lotteries.find(l => l.address === lotteryAddress);
+                if (updatedLottery) {
+                  console.log('Successfully fetched updated lottery data after decode failures');
+                  callback(updatedLottery);
+                } else {
+                  console.error('Could not find updated lottery data for address:', lotteryAddress);
+                  
+                  // As a last resort, try to fetch the account directly and manually construct the lottery info
+                  try {
+                    const accountData = await this.connection.getAccountInfo(new PublicKey(lotteryAddress));
+                    if (accountData && accountData.data.length > 0) {
+                      console.log('Account exists but could not be decoded as LotteryAccount. This may be a temporary issue.');
+                    } else {
+                      console.error('Account does not exist or has no data');
+                    }
+                  } catch (e) {
+                    console.error('Error fetching account directly:', e);
+                  }
+                }
+              } catch (fetchError) {
+                console.error('Failed to fetch updated lottery data:', fetchError);
+              }
+            } else {
+              // If we haven't reached max retries, we'll try again on the next account change
+              console.log(`Will retry decoding on next account change (attempt ${retryCount}/${maxRetries})`);
+            }
+            return;
+          }
+          
+          // Process the decoded account
           const lotteryInfo: LotteryInfo = {
             address: lotteryAddress,
             lotteryType: this.getLotteryTypeFromAccount(decodedAccount.lotteryType),
@@ -449,19 +711,22 @@ export class LotteryProgram {
             winningNumbers: decodedAccount.winningNumbers ? Buffer.from(decodedAccount.winningNumbers).toString('hex') : null
           }
           
-          // Add targetPrizePool if it exists in the account data
+          // Add targetPrizePool if it exists
           if ('targetPrizePool' in decodedAccount) {
-            lotteryInfo.targetPrizePool = Number(decodedAccount.targetPrizePool)
+            lotteryInfo.targetPrizePool = Number(decodedAccount.targetPrizePool);
           }
           
-          callback(lotteryInfo)
-        } catch (error) {
-          console.error('Error decoding lottery account:', error)
+          console.log('Successfully processed lottery account update:', lotteryAddress);
+          callback(lotteryInfo);
+        } catch (error: any) {
+          console.error('Error processing lottery account update:', lotteryAddress, error);
         }
-      }
-    )
-    this.subscriptions.push(subscription)
-    return subscription
+      },
+      'confirmed'
+    );
+    
+    this.subscriptions.push(subscription);
+    return subscription;
   }
 
   unsubscribe(subscription: number) {

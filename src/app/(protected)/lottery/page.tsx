@@ -5,7 +5,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { LotteryInfo } from '@/types/lottery'
 import { PageContainer } from '@/components/layout/page-container'
-import { LotteryCard } from '@/components/lottery/lottery-card'
+import { EnhancedLotteryCard } from '@/components/lottery/enhanced-lottery-card'
 import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
@@ -72,8 +72,13 @@ export default function LotteryPage() {
       
       if (isMounted) {
         setLotteries(fetchedLotteries)
+        
+        // Use a more efficient way to subscribe to updates
+        // Only subscribe if not already subscribed
+        const lotteryAddresses = new Set(fetchedLotteries.map(l => l.address))
+        
         // Subscribe to updates for each lottery
-        await Promise.all(fetchedLotteries.map(async (lottery) => {
+        for (const lottery of fetchedLotteries) {
           if (isMounted) {
             await subscribe(lottery.address, (updatedLottery) => {
               if (isMounted) {
@@ -86,7 +91,7 @@ export default function LotteryPage() {
               }
             })
           }
-        }))
+        }
       }
     } catch (error) {
       console.error('Failed to fetch lotteries:', error)
@@ -104,15 +109,26 @@ export default function LotteryPage() {
     }
   }, [connection, publicKey, wallet, isMounted, subscribe])
 
-  // Fetch lotteries when wallet is connected and component is mounted
+  // Fetch lotteries when wallet is connected
   useEffect(() => {
-    if (isMounted && isReady && connected) {
+    if (isMounted && connected && isReady) {
       fetchLotteries()
     }
+    
+    // Clean up subscriptions when component unmounts
     return () => {
-      unsubscribeAll()
+      if (isMounted) {
+        unsubscribeAll()
+      }
     }
-  }, [isMounted, isReady, connected, fetchLotteries, unsubscribeAll])
+  }, [isMounted, connected, isReady, fetchLotteries, unsubscribeAll])
+
+  // Handle lottery refresh
+  const handleLotteryRefresh = useCallback(() => {
+    if (isMounted && connected) {
+      fetchLotteries()
+    }
+  }, [isMounted, connected, fetchLotteries])
 
   // Don't render anything until mounted
   if (!isMounted) {
@@ -148,7 +164,7 @@ export default function LotteryPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {lotteries.map((lottery) => (
-            <LotteryCard
+            <EnhancedLotteryCard
               key={lottery.address}
               lottery={lottery}
               onParticipate={fetchLotteries}

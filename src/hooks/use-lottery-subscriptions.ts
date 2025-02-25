@@ -8,11 +8,15 @@ export function useLotterySubscriptions() {
   const subscriptionsRef = useRef<Map<string, number>>(new Map())
   const { connection } = useConnection()
   const program = useLotteryProgram()
+  const mountedRef = useRef(false)
 
   // Initialize subscriptions
   useEffect(() => {
+    mountedRef.current = true;
     setIsReady(true)
+    
     return () => {
+      mountedRef.current = false;
       setIsReady(false)
       // Cleanup all subscriptions on unmount
       unsubscribeAll()
@@ -23,15 +27,25 @@ export function useLotterySubscriptions() {
     lotteryAddress: string,
     callback: (lottery: LotteryInfo) => void
   ) => {
+    if (!mountedRef.current) return null;
+    
     try {
-      // Unsubscribe from existing subscription if any
+      // Check if we already have a subscription for this lottery
       if (subscriptionsRef.current.has(lotteryAddress)) {
-        program.unsubscribe(subscriptionsRef.current.get(lotteryAddress)!)
+        // If we do, just return the existing subscription ID
+        return subscriptionsRef.current.get(lotteryAddress)!;
       }
 
       // Create new subscription
-      const subscriptionId = await program.subscribeToLotteryChanges(lotteryAddress, callback)
-      subscriptionsRef.current.set(lotteryAddress, subscriptionId)
+      const subscriptionId = await program.subscribeToLotteryChanges(lotteryAddress, (updatedLottery) => {
+        if (mountedRef.current) {
+          callback(updatedLottery);
+        }
+      });
+      
+      if (mountedRef.current) {
+        subscriptionsRef.current.set(lotteryAddress, subscriptionId)
+      }
 
       return subscriptionId
     } catch (error) {
