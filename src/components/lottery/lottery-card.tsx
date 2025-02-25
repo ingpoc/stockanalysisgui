@@ -15,7 +15,9 @@ import { Badge } from '@/components/ui/badge'
 import { Ticket, Trophy, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
-import { handleProgramError } from '@/lib/utils'
+import { handleProgramError, formatUSDC } from '@/lib/utils'
+import { AdminLotteryControls } from './admin-lottery-controls'
+import { ADMIN_WALLET } from '@/lib/constants'
 
 interface LotteryCardProps {
   lottery: LotteryInfo
@@ -30,6 +32,13 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
   const isActive = lottery.state === LotteryState.Open
   const isEnded = new Date(lottery.drawTime * 1000) < new Date()
   const isWinner = lottery.winningNumbers && publicKey?.toBase58() === lottery.createdBy
+  const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
+
+  // Helper function to format USDC values
+  const formatUSDCValue = (value: number): string => {
+    // USDC has 6 decimal places
+    return formatUSDC(value);
+  }
 
   const handleBuyTickets = async () => {
     if (!publicKey || !connection || !wallet) {
@@ -50,6 +59,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
       toast.success('Tickets purchased successfully!')
       onParticipate()
     } catch (error) {
+      console.error('Failed to buy tickets:', error)
       const errorMessage = handleProgramError(error)
       toast.error(errorMessage)
     } finally {
@@ -79,17 +89,33 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium">Ticket Price</p>
-            <p className="text-2xl font-bold">{lottery.ticketPrice} USDC</p>
+            <p className="text-2xl font-bold">{formatUSDCValue(lottery.ticketPrice)}</p>
           </div>
           <div>
             <p className="text-sm font-medium">Prize Pool</p>
-            <p className="text-2xl font-bold">{lottery.prizePool} USDC</p>
+            <p className="text-2xl font-bold">{formatUSDCValue(lottery.prizePool)}</p>
+            {lottery.targetPrizePool && lottery.targetPrizePool > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Target: {formatUSDCValue(lottery.targetPrizePool)}
+              </p>
+            )}
           </div>
         </div>
         <div>
           <p className="text-sm font-medium">Total Tickets</p>
           <p className="text-lg">{lottery.totalTickets}</p>
         </div>
+        {lottery.targetPrizePool && lottery.targetPrizePool > 0 && lottery.prizePool < lottery.targetPrizePool && (
+          <div className="w-full bg-muted rounded-full h-2.5">
+            <div 
+              className="bg-primary h-2.5 rounded-full" 
+              style={{ width: `${Math.min(100, (lottery.prizePool / lottery.targetPrizePool) * 100)}%` }}
+            ></div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {Math.round((lottery.prizePool / lottery.targetPrizePool) * 100)}% of target reached
+            </p>
+          </div>
+        )}
         {isOpen && (
           <div className="flex gap-4">
             <Input
@@ -124,6 +150,17 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
                 {lottery.createdBy}
               </span>
             </div>
+          </div>
+        )}
+        
+        {/* Admin Controls */}
+        {isAdmin && (
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-sm font-medium mb-2">Admin Controls</p>
+            <AdminLotteryControls 
+              lottery={lottery} 
+              onStateChange={onParticipate} 
+            />
           </div>
         )}
       </CardContent>

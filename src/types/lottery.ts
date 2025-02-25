@@ -44,6 +44,7 @@ export interface LotteryAccount {
   state: LotteryStateValue
   createdBy: PublicKey
   globalConfig: PublicKey
+  targetPrizePool?: bigint
 }
 
 export interface LotteryInfo {
@@ -57,4 +58,5 @@ export interface LotteryInfo {
   createdBy: string
   globalConfig: string
   winningNumbers: string | null
+  targetPrizePool?: number
 } 

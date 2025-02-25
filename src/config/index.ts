@@ -4,13 +4,14 @@ import { PhantomWalletAdapter, SolflareWalletAdapter, TorusWalletAdapter } from 
 import { clusterApiUrl } from '@solana/web3.js'
 import { useMemo, type ReactNode, createElement } from 'react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
+import { SOLANA_NETWORK, SOLANA_RPC_URL } from '@/lib/constants'
 
 // Load styles
 require('@solana/wallet-adapter-react-ui/styles.css')
 
-// Get environment variables with fallbacks
-const NETWORK = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet') as WalletAdapterNetwork
-const RPC_ENDPOINT = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl(NETWORK)
+// Get network and RPC endpoint from constants
+const NETWORK = SOLANA_NETWORK as WalletAdapterNetwork
+const RPC_ENDPOINT = SOLANA_RPC_URL || clusterApiUrl(NETWORK)
 
 export function WalletConnectionProvider({ children }: { children: ReactNode }) {
   // Initialize wallets for the provider

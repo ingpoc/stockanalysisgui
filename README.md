@@ -36,9 +36,24 @@ src/
 1. Clone the repository
 2. Copy `.env.example` to `.env.local` and fill in your environment variables:
    ```
-   # Required environment variables
-   NEXT_PUBLIC_API_KEY=your_api_key
-   NEXT_PUBLIC_SOLANA_RPC_URL=your_solana_rpc_url
+   # App Configuration
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+
+   # Authentication & Project ID
+   NEXT_PUBLIC_PROJECT_ID=your_project_id_here
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_nextauth_secret_here
+
+   # Blockchain Configuration
+   NEXT_PUBLIC_SOLANA_NETWORK=devnet
+   NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
+
+   # Lottery Program Configuration
+   NEXT_PUBLIC_ADMIN_WALLET=your_admin_wallet_address_here
+   NEXT_PUBLIC_TREASURY_WALLET=your_treasury_wallet_address_here
+   NEXT_PUBLIC_LOTTERY_PROGRAM_ID=your_program_id_here
+   NEXT_PUBLIC_USDC_MINT=your_usdc_mint_address_here
    ```
 
 3. Install dependencies:
@@ -56,6 +71,35 @@ src/
    ```
 
 5. Open [http://localhost:3000](http://localhost:3000) with your browser
+
+## Environment Variables
+
+### App Configuration
+- `NEXT_PUBLIC_APP_URL`: Base URL of the application
+- `NEXT_PUBLIC_API_URL`: URL of the backend API
+
+### Authentication
+- `NEXT_PUBLIC_PROJECT_ID`: Project ID for authentication
+- `NEXTAUTH_URL`: URL for NextAuth.js
+- `NEXTAUTH_SECRET`: Secret for NextAuth.js
+
+### Blockchain Configuration
+- `NEXT_PUBLIC_SOLANA_NETWORK`: Solana network to use (devnet, testnet, mainnet)
+- `NEXT_PUBLIC_SOLANA_RPC_URL`: URL of the Solana RPC endpoint
+- `NEXT_PUBLIC_SOLANA_DEVNET_RPC_URL`: URL of the Solana devnet RPC endpoint
+- `NEXT_PUBLIC_SOLANA_MAINNET_RPC_URL`: URL of the Solana mainnet RPC endpoint
+
+### Lottery Program Configuration
+- `NEXT_PUBLIC_ADMIN_WALLET`: Admin wallet address for the lottery program
+- `NEXT_PUBLIC_TREASURY_WALLET`: Treasury wallet address for receiving lottery fees and funds
+- `NEXT_PUBLIC_LOTTERY_PROGRAM_ID`: Program ID of the lottery program
+- `NEXT_PUBLIC_USDC_MINT`: USDC mint address for the lottery program
+- `NEXT_PUBLIC_GLOBAL_CONFIG_SEED`: Seed for the global config PDA
+- `NEXT_PUBLIC_LOTTERY_SEED`: Seed for the lottery PDA
+- `NEXT_PUBLIC_LOTTERY_TOKEN_SEED`: Seed for the lottery token PDA
+
+### Feature Flags
+- `NEXT_PUBLIC_ENABLE_CRYPTO_LOTTERY`: Enable/disable the crypto lottery feature
 
 ## Key Components
 

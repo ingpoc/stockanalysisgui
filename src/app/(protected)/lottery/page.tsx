@@ -56,6 +56,17 @@ export default function LotteryPage() {
         signAllTransactions: adapter.signAllTransactions.bind(adapter),
       })
 
+      // Check if the program is initialized
+      const isInitialized = await program.isProgramInitialized()
+      if (!isInitialized) {
+        if (isMounted) {
+          setError('Program not initialized. Please initialize the program first.')
+          setLotteries([])
+          setLoading(false)
+        }
+        return
+      }
+
       const fetchedLotteries = await program.getLotteries()
       console.log('Fetched lotteries:', fetchedLotteries)
       

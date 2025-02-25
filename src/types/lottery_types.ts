@@ -4,6 +4,12 @@
  * Note that this is only a type helper and is not the actual IDL. The original
  * IDL can be found at `target/idl/decentralized_lottery.json`.
  */
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/decentralized_lottery.json`.
+ */
 export type DecentralizedLottery = {
   "address": "F1pffGp4n5qyNRcCnpoTH5CEfVKQEGxAxmRuRScUw4tz",
   "metadata": {
@@ -237,9 +243,8 @@ export type DecentralizedLottery = {
         {
           "name": "creatorTokenAccount",
           "docs": [
-            "The creator's token account to fund the prize pool"
-          ],
-          "writable": true
+            "The creator's token account (no longer needed for funding, but kept for consistency)"
+          ]
         },
         {
           "name": "lotteryTokenAccount",
@@ -305,7 +310,7 @@ export type DecentralizedLottery = {
           "type": "i64"
         },
         {
-          "name": "prizePool",
+          "name": "targetPrizePool",
           "type": "u64"
         }
       ]
@@ -471,6 +476,59 @@ export type DecentralizedLottery = {
           }
         }
       ]
+    },
+    {
+      "name": "updateConfig",
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "globalConfig",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "globalConfig"
+          ]
+        },
+        {
+          "name": "usdcMint"
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -772,6 +830,10 @@ export type DecentralizedLottery = {
           {
             "name": "isPrizePoolLocked",
             "type": "bool"
+          },
+          {
+            "name": "targetPrizePool",
+            "type": "u64"
           }
         ]
       }
@@ -798,7 +860,7 @@ export type DecentralizedLottery = {
             "type": "i64"
           },
           {
-            "name": "prizePool",
+            "name": "targetPrizePool",
             "type": "u64"
           }
         ]

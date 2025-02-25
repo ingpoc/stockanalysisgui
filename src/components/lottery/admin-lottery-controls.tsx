@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { handleProgramError } from '@/lib/utils'
+import { handleProgramError, formatUSDC } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
 interface AdminLotteryControlsProps {
@@ -55,6 +55,7 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
       toast.success('State transition successful')
       onStateChange()
     } catch (error) {
+      console.error('State transition failed:', error)
       const errorMessage = handleProgramError(error)
       toast.error('State transition failed', {
         description: errorMessage
