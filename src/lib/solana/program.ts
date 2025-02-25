@@ -763,6 +763,8 @@ export class LotteryProgram {
           callback(lotteryInfo);
         } catch (error) {
           console.error('Error processing lottery account update:', lotteryAddress, error);
+          // We don't call the callback with an error to avoid breaking the UI
+          // The error is logged for debugging purposes
         }
       },
       'confirmed'
@@ -882,6 +884,7 @@ export class LotteryProgram {
       if (state.drawing) return LotteryState.Drawing
       if (state.completed) return LotteryState.Completed
       if (state.expired) return LotteryState.Expired
+      if (state.cancelled) return LotteryState.Cancelled
 
       // Try to parse the Anchor format
       const stateValue = state.toString()
@@ -890,6 +893,7 @@ export class LotteryProgram {
       if (stateValue.includes('drawing')) return LotteryState.Drawing
       if (stateValue.includes('completed')) return LotteryState.Completed
       if (stateValue.includes('expired')) return LotteryState.Expired
+      if (stateValue.includes('cancelled')) return LotteryState.Cancelled
 
       throw new Error(`Invalid lottery state format: ${JSON.stringify(state)}`)
     } catch (error) {
@@ -948,8 +952,9 @@ export class LotteryProgram {
         systemProgram: SystemProgram.programId,
       };
 
-      // Add oracle account when transitioning to Open state
-      if (nextState === LotteryState.Open) {
+      // Add oracle account when transitioning to Drawing state or Cancelled state
+      if (nextState === LotteryState.Drawing || nextState === LotteryState.Cancelled) {
+        console.log(`Adding oracle account for ${nextState} state transition:`, ORACLE_ACCOUNT.toString());
         accounts.oracleAccount = ORACLE_ACCOUNT;
       }
 

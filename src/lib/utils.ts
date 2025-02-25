@@ -7,17 +7,35 @@ export function cn(...inputs: ClassValue[]) {
 
 export function handleProgramError(error: any): string {
   console.error('Program error details:', error);
-
-  // Check if it's an account allocation error (duplicate lottery)
-  if (error.message?.includes('already in use')) {
-    return 'A lottery of this type already exists for this time period. Please wait for the current one to complete.';
+  
+  // Check for specific error messages
+  if (error.message) {
+    // Check for oracle account not provided error
+    if (error.message.includes("Account 'oracleAccount' not provided")) {
+      return "Oracle account not provided. This is required for Drawing and Cancelled state transitions.";
+    }
+    
+    // Check if it's an account allocation error (duplicate lottery)
+    if (error.message.includes('already in use')) {
+      return 'A lottery of this type already exists for this time period. Please wait for the current one to complete.';
+    }
+    
+    // Check if it's a global config initialization error
+    if (error.message.includes('Global config account already initialized')) {
+      return 'The program is already initialized. You can proceed to create lotteries.';
+    }
+    
+    // Check if it's an account not found error
+    if (error.message.includes('Account not found')) {
+      return 'Required account not found. Please check your wallet connection and try again.';
+    }
+    
+    // Check for insufficient funds
+    if (error.message.includes('insufficient funds')) {
+      return 'Insufficient funds for this operation. Please check your balance.';
+    }
   }
-
-  // Check if it's a global config initialization error
-  if (error.message?.includes('Global config account already initialized')) {
-    return 'The program is already initialized. You can proceed to create lotteries.';
-  }
-
+  
   // Check if it's an Anchor error with specific lottery error codes
   if (error.code) {
     // Handle Anchor system error codes
@@ -77,8 +95,8 @@ export function handleProgramError(error: any): string {
   }
 
   // Check if it's a simulation error
-  if (error.message?.includes('Simulation failed')) {
-    return 'Transaction simulation failed. Please check your inputs';
+  if (error.message?.includes('Simulation failed') || error.message?.includes('Transaction simulation failed')) {
+    return 'Transaction simulation failed. Please check your inputs and try again later.';
   }
 
   // Check if it's a network error

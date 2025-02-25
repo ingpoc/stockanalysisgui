@@ -51,6 +51,20 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
     try {
       setLoading(true)
       const lotteryPubkey = new PublicKey(lottery.address)
+      
+      // Show a specific message for Drawing state transition
+      if (selectedState === LotteryState.Drawing) {
+        toast.info('Transitioning to Drawing state', {
+          description: 'This will use the oracle account to generate random numbers for the lottery.'
+        })
+      }
+      // Show a specific message for Cancelled state transition
+      else if (selectedState === LotteryState.Cancelled) {
+        toast.info('Transitioning to Cancelled state', {
+          description: 'This will use the oracle account to cancel the lottery.'
+        })
+      }
+      
       await program.transitionState(lotteryPubkey, selectedState)
       toast.success('State transition successful')
       

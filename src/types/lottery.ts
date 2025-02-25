@@ -11,6 +11,7 @@ export type LotteryStateValue =
   | { drawing: Record<string, never> }
   | { completed: Record<string, never> }
   | { expired: Record<string, never> }
+  | { cancelled: Record<string, never> }
 
 export enum LotteryType {
   Daily = 'daily',
