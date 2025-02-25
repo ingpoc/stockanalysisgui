@@ -37,11 +37,18 @@ const PROGRAM_ID = new PublicKey(LOTTERY_PROGRAM_ID)
 
 type ProgramType = Program<ProgramIDL>
 
+// Define the subscription type
+interface LotterySubscription {
+  id: number;
+  lotteryAddress: string;
+  callback: (lotteryInfo: LotteryInfo) => void;
+}
+
 export class LotteryProgram {
   private program: ProgramType
   private connection: Connection
   private wallet: AnchorWallet
-  private subscriptions: number[] = []
+  private subscriptions: LotterySubscription[] = []
 
   constructor(connection: Connection, wallet: AnchorWallet) {
     this.connection = connection
@@ -446,62 +453,98 @@ export class LotteryProgram {
           
           // Add a longer delay to allow the account to be updated
           console.log('Waiting for account updates to propagate...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 5000)); // Increased to 5 seconds
           
           // Manually fetch the updated lottery account to ensure we have the latest data
           try {
             console.log('Fetching updated lottery account data...');
-            const updatedAccountInfo = await this.connection.getAccountInfo(lotteryAccountKey);
             
-            if (!updatedAccountInfo) {
-              console.error('Updated lottery account not found after transaction');
-            } else {
-              console.log('Updated lottery account data received, length:', updatedAccountInfo.data.length);
-              
-              // Try to decode the account data directly
+            // Instead of trying to decode raw account data, use a more reliable approach
+            // by directly fetching the account through the program's fetch method
+            let updatedLotteryAccount = null;
+            let fetchAttempts = 0;
+            const maxFetchAttempts = 5;
+            
+            while (!updatedLotteryAccount && fetchAttempts < maxFetchAttempts) {
               try {
-                const decodedAccount = this.program.coder.accounts.decode(
-                  'LotteryAccount',
-                  updatedAccountInfo.data
-                ) as unknown as LotteryAccount;
+                console.log(`Direct fetch attempt ${fetchAttempts + 1}/${maxFetchAttempts}...`);
                 
-                console.log('Successfully decoded updated lottery account');
-                
-                // Process the decoded account to get updated lottery info
-                const updatedLotteryInfo: LotteryInfo = {
-                  address: lotteryAddress,
-                  lotteryType: this.getLotteryTypeFromAccount(decodedAccount.lotteryType),
-                  ticketPrice: Number(decodedAccount.ticketPrice),
-                  drawTime: Number(decodedAccount.drawTime),
-                  prizePool: Number(decodedAccount.prizePool),
-                  totalTickets: Number(decodedAccount.totalTickets),
-                  state: this.getLotteryStateFromAccount(decodedAccount.state),
-                  createdBy: decodedAccount.createdBy.toString(),
-                  globalConfig: decodedAccount.globalConfig.toString(),
-                  winningNumbers: decodedAccount.winningNumbers ? 
-                    Buffer.from(decodedAccount.winningNumbers).toString('hex') : null
-                };
-                
-                if ('targetPrizePool' in decodedAccount) {
-                  updatedLotteryInfo.targetPrizePool = Number(decodedAccount.targetPrizePool);
-                }
-                
-                // Manually trigger any subscription callbacks with the updated data
-                this.subscriptions.forEach(async (sub) => {
-                  try {
-                    // This is a hack to manually trigger the subscription callback
-                    // with the updated lottery data
-                    this.connection.getAccountInfo(lotteryAccountKey);
-                  } catch (e) {
-                    console.error('Error triggering subscription update:', e);
-                  }
+                // Use the program's fetch method which is more reliable than raw decoding
+                updatedLotteryAccount = await this.program.account.lotteryAccount.fetch(
+                  lotteryAccountKey
+                ).catch(e => {
+                  console.error(`Fetch attempt ${fetchAttempts + 1} failed:`, e);
+                  return null;
                 });
-              } catch (decodeError) {
-                console.error('Failed to decode updated lottery account:', decodeError);
+                
+                if (updatedLotteryAccount) {
+                  console.log('Successfully fetched lottery account data directly!');
+                } else {
+                  console.log(`Account not available yet (attempt ${fetchAttempts + 1}/${maxFetchAttempts}), waiting...`);
+                  // Exponential backoff with jitter
+                  const baseDelay = 1000; // 1 second
+                  const maxDelay = 5000; // 5 seconds
+                  const delay = Math.min(baseDelay * Math.pow(1.5, fetchAttempts) + Math.random() * 500, maxDelay);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                }
+              } catch (fetchErr) {
+                console.error(`Error in fetch attempt ${fetchAttempts + 1}:`, fetchErr);
+                // Exponential backoff with jitter
+                const baseDelay = 1000; // 1 second
+                const maxDelay = 5000; // 5 seconds
+                const delay = Math.min(baseDelay * Math.pow(1.5, fetchAttempts) + Math.random() * 500, maxDelay);
+                await new Promise(resolve => setTimeout(resolve, delay));
               }
+              fetchAttempts++;
+            }
+            
+            if (!updatedLotteryAccount) {
+              console.error('Failed to fetch updated lottery account after multiple attempts');
+              
+              // As a last resort, try to get the lottery from getLotteries()
+              console.log('Attempting to get lottery from getLotteries() as a last resort...');
+              const lotteries = await this.getLotteries();
+              const updatedLottery = lotteries.find(l => l.address === lotteryAddress);
+              
+              if (updatedLottery) {
+                console.log('Successfully found lottery in getLotteries() result');
+              } else {
+                console.warn('Could not find lottery in getLotteries() result either');
+              }
+            } else {
+              console.log('Successfully processed updated lottery account');
+              
+              // Process the account data to get updated lottery info
+              const updatedLotteryInfo: LotteryInfo = {
+                address: lotteryAddress,
+                lotteryType: this.getLotteryTypeFromAccount(updatedLotteryAccount.lotteryType),
+                ticketPrice: Number(updatedLotteryAccount.ticketPrice),
+                drawTime: Number(updatedLotteryAccount.drawTime),
+                prizePool: Number(updatedLotteryAccount.prizePool),
+                totalTickets: Number(updatedLotteryAccount.totalTickets),
+                state: this.getLotteryStateFromAccount(updatedLotteryAccount.state),
+                createdBy: updatedLotteryAccount.createdBy.toString(),
+                globalConfig: updatedLotteryAccount.globalConfig.toString(),
+                winningNumbers: updatedLotteryAccount.winningNumbers ? 
+                  Buffer.from(updatedLotteryAccount.winningNumbers).toString('hex') : null
+              };
+              
+              if ('targetPrizePool' in updatedLotteryAccount) {
+                updatedLotteryInfo.targetPrizePool = Number(updatedLotteryAccount.targetPrizePool);
+              }
+              
+              // Manually trigger any subscription callbacks with the updated data
+              this.subscriptions.forEach(async (sub) => {
+                try {
+                  // This is a hack to manually trigger the subscription callback
+                  this.connection.getAccountInfo(lotteryAccountKey);
+                } catch (e) {
+                  console.error('Error triggering subscription update:', e);
+                }
+              });
             }
           } catch (fetchError) {
-            console.error('Error fetching updated lottery account:', fetchError);
+            console.error('Error in account update process:', fetchError);
           }
           
           // Fetch all lotteries to ensure we have the latest state
@@ -510,6 +553,9 @@ export class LotteryProgram {
           
           if (updatedLottery) {
             console.log('Updated lottery data after purchase:', updatedLottery);
+            
+            // Manually trigger subscription updates to ensure UI gets updated
+            await this.triggerManualUpdate(lotteryAddress);
           } else {
             console.warn('Could not find updated lottery in getLotteries() result');
           }
@@ -618,124 +664,121 @@ export class LotteryProgram {
     lotteryAddress: string,
     callback: (lottery: LotteryInfo) => void
   ): Promise<number> {
-    // Keep track of retry attempts for this subscription
-    let retryCount = 0;
-    const maxRetries = 5;
-    const initialBackoff = 500; // ms
+    console.log('Setting up subscription for lottery:', lotteryAddress);
+    
+    const lotteryAccountKey = new PublicKey(lotteryAddress);
     
     const subscription = this.connection.onAccountChange(
-      new PublicKey(lotteryAddress),
+      lotteryAccountKey,
       async (accountInfo) => {
         try {
-          // Check if account data is valid
-          if (!accountInfo || !accountInfo.data || accountInfo.data.length === 0) {
-            console.error('Invalid account data received for lottery:', lotteryAddress);
-            return;
-          }
+          console.log('Lottery account change detected for:', lotteryAddress);
           
-          // Try to decode the account data
-          let decodedAccount;
-          try {
-            // Calculate backoff time based on retry count (exponential backoff)
-            const backoffTime = retryCount === 0 ? 
-              initialBackoff : 
-              Math.min(initialBackoff * Math.pow(2, retryCount), 5000); // Max 5 seconds
-            
-            // Add a delay before attempting to decode
-            await new Promise(resolve => setTimeout(resolve, backoffTime));
-            
-            decodedAccount = this.program.coder.accounts.decode(
-              'LotteryAccount',
-              accountInfo.data
-            ) as unknown as LotteryAccount;
-            
-            // Reset retry count on successful decode
-            retryCount = 0;
-          } catch (decodeError: any) {
-            console.error(`Failed to decode lottery account (attempt ${retryCount + 1}/${maxRetries}):`, 
-              lotteryAddress, decodeError);
-            
-            // Increment retry count
-            retryCount++;
-            
-            // If we've reached max retries, try to fetch the lottery directly
-            if (retryCount >= maxRetries) {
-              console.log(`Max retries (${maxRetries}) reached, fetching lottery data directly`);
-              retryCount = 0; // Reset for next time
+          // Add an initial delay before any processing to allow blockchain state to settle
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Instead of trying to decode raw account data, use a more reliable approach
+          // by directly fetching the account through the program's fetch method
+          let lotteryAccount = null;
+          let fetchAttempts = 0;
+          const maxFetchAttempts = 5;
+          
+          while (!lotteryAccount && fetchAttempts < maxFetchAttempts) {
+            try {
+              console.log(`Direct fetch attempt ${fetchAttempts + 1}/${maxFetchAttempts}...`);
               
-              try {
-                // Add a longer delay before fetching
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                const lotteries = await this.getLotteries();
-                const updatedLottery = lotteries.find(l => l.address === lotteryAddress);
-                if (updatedLottery) {
-                  console.log('Successfully fetched updated lottery data after decode failures');
-                  callback(updatedLottery);
-                } else {
-                  console.error('Could not find updated lottery data for address:', lotteryAddress);
-                  
-                  // As a last resort, try to fetch the account directly and manually construct the lottery info
-                  try {
-                    const accountData = await this.connection.getAccountInfo(new PublicKey(lotteryAddress));
-                    if (accountData && accountData.data.length > 0) {
-                      console.log('Account exists but could not be decoded as LotteryAccount. This may be a temporary issue.');
-                    } else {
-                      console.error('Account does not exist or has no data');
-                    }
-                  } catch (e) {
-                    console.error('Error fetching account directly:', e);
-                  }
-                }
-              } catch (fetchError) {
-                console.error('Failed to fetch updated lottery data:', fetchError);
+              // Use the program's fetch method which is more reliable than raw decoding
+              lotteryAccount = await this.program.account.lotteryAccount.fetch(
+                lotteryAccountKey
+              ).catch(e => {
+                console.error(`Fetch attempt ${fetchAttempts + 1} failed:`, e);
+                return null;
+              });
+              
+              if (lotteryAccount) {
+                console.log('Successfully fetched lottery account data directly!');
+                break;
+              } else {
+                console.log(`Account not available yet (attempt ${fetchAttempts + 1}/${maxFetchAttempts}), waiting...`);
+                // Exponential backoff with jitter
+                const baseDelay = 1000; // 1 second
+                const maxDelay = 5000; // 5 seconds
+                const delay = Math.min(baseDelay * Math.pow(1.5, fetchAttempts) + Math.random() * 500, maxDelay);
+                await new Promise(resolve => setTimeout(resolve, delay));
               }
-            } else {
-              // If we haven't reached max retries, we'll try again on the next account change
-              console.log(`Will retry decoding on next account change (attempt ${retryCount}/${maxRetries})`);
+            } catch (fetchErr) {
+              console.error(`Error in fetch attempt ${fetchAttempts + 1}:`, fetchErr);
+              // Exponential backoff with jitter
+              const baseDelay = 1000; // 1 second
+              const maxDelay = 5000; // 5 seconds
+              const delay = Math.min(baseDelay * Math.pow(1.5, fetchAttempts) + Math.random() * 500, maxDelay);
+              await new Promise(resolve => setTimeout(resolve, delay));
             }
-            return;
+            fetchAttempts++;
           }
           
-          // Process the decoded account
+          // If we couldn't fetch the account directly, try to get it from getLotteries()
+          if (!lotteryAccount) {
+            console.error('Failed to fetch lottery account after multiple attempts');
+            console.log('Attempting to get lottery from getLotteries() as a fallback...');
+            
+            try {
+              const lotteries = await this.getLotteries();
+              const updatedLottery = lotteries.find(l => l.address === lotteryAddress);
+              
+              if (updatedLottery) {
+                console.log('Successfully found lottery in getLotteries() result');
+                callback(updatedLottery);
+                return;
+              } else {
+                console.warn('Could not find lottery in getLotteries() result either');
+                return;
+              }
+            } catch (fallbackError) {
+              console.error('Error in fallback lottery data fetch:', fallbackError);
+              return;
+            }
+          }
+          
+          // Process the account data to get updated lottery info
           const lotteryInfo: LotteryInfo = {
             address: lotteryAddress,
-            lotteryType: this.getLotteryTypeFromAccount(decodedAccount.lotteryType),
-            ticketPrice: Number(decodedAccount.ticketPrice),
-            drawTime: Number(decodedAccount.drawTime),
-            prizePool: Number(decodedAccount.prizePool),
-            totalTickets: Number(decodedAccount.totalTickets),
-            state: this.getLotteryStateFromAccount(decodedAccount.state),
-            createdBy: decodedAccount.createdBy.toString(),
-            globalConfig: decodedAccount.globalConfig.toString(),
-            winningNumbers: decodedAccount.winningNumbers ? Buffer.from(decodedAccount.winningNumbers).toString('hex') : null
-          }
+            lotteryType: this.getLotteryTypeFromAccount(lotteryAccount.lotteryType),
+            ticketPrice: Number(lotteryAccount.ticketPrice),
+            drawTime: Number(lotteryAccount.drawTime),
+            prizePool: Number(lotteryAccount.prizePool),
+            totalTickets: Number(lotteryAccount.totalTickets),
+            state: this.getLotteryStateFromAccount(lotteryAccount.state),
+            createdBy: lotteryAccount.createdBy.toString(),
+            globalConfig: lotteryAccount.globalConfig.toString(),
+            winningNumbers: lotteryAccount.winningNumbers ? 
+              Buffer.from(lotteryAccount.winningNumbers).toString('hex') : null
+          };
           
-          // Add targetPrizePool if it exists
-          if ('targetPrizePool' in decodedAccount) {
-            lotteryInfo.targetPrizePool = Number(decodedAccount.targetPrizePool);
+          if ('targetPrizePool' in lotteryAccount) {
+            lotteryInfo.targetPrizePool = Number(lotteryAccount.targetPrizePool);
           }
           
           console.log('Successfully processed lottery account update:', lotteryAddress);
           callback(lotteryInfo);
-        } catch (error: any) {
+        } catch (error) {
           console.error('Error processing lottery account update:', lotteryAddress, error);
         }
       },
       'confirmed'
     );
     
-    this.subscriptions.push(subscription);
+    this.subscriptions.push({ id: subscription, lotteryAddress, callback });
     return subscription;
   }
 
   unsubscribe(subscription: number) {
     this.connection.removeAccountChangeListener(subscription)
-    this.subscriptions = this.subscriptions.filter(sub => sub !== subscription)
+    this.subscriptions = this.subscriptions.filter(sub => sub.id !== subscription)
   }
 
   unsubscribeAll() {
-    this.subscriptions.forEach(sub => this.connection.removeAccountChangeListener(sub))
+    this.subscriptions.forEach(sub => this.connection.removeAccountChangeListener(sub.id))
     this.subscriptions = []
   }
 
@@ -1002,6 +1045,69 @@ export class LotteryProgram {
     } catch (error) {
       console.error('Error checking if lottery exists:', error);
       return false;
+    }
+  }
+
+  // Add a new method to manually trigger subscription updates
+  async triggerManualUpdate(lotteryAddress: string): Promise<void> {
+    console.log('Manually triggering update for lottery:', lotteryAddress);
+    
+    try {
+      const lotteryAccountKey = new PublicKey(lotteryAddress);
+      
+      // Directly fetch the lottery account
+      const lotteryAccount = await this.program.account.lotteryAccount.fetch(
+        lotteryAccountKey
+      ).catch(e => {
+        console.error('Failed to fetch lottery account for manual update:', e);
+        return null;
+      });
+      
+      if (!lotteryAccount) {
+        console.error('Could not fetch lottery account for manual update');
+        return;
+      }
+      
+      // Process the account data to get updated lottery info
+      const lotteryInfo: LotteryInfo = {
+        address: lotteryAddress,
+        lotteryType: this.getLotteryTypeFromAccount(lotteryAccount.lotteryType),
+        ticketPrice: Number(lotteryAccount.ticketPrice),
+        drawTime: Number(lotteryAccount.drawTime),
+        prizePool: Number(lotteryAccount.prizePool),
+        totalTickets: Number(lotteryAccount.totalTickets),
+        state: this.getLotteryStateFromAccount(lotteryAccount.state),
+        createdBy: lotteryAccount.createdBy.toString(),
+        globalConfig: lotteryAccount.globalConfig.toString(),
+        winningNumbers: lotteryAccount.winningNumbers ? 
+          Buffer.from(lotteryAccount.winningNumbers).toString('hex') : null
+      };
+      
+      if ('targetPrizePool' in lotteryAccount) {
+        lotteryInfo.targetPrizePool = Number(lotteryAccount.targetPrizePool);
+      }
+      
+      // Find and trigger all subscriptions for this lottery
+      const matchingSubscriptions = this.subscriptions.filter(
+        sub => sub.lotteryAddress === lotteryAddress
+      );
+      
+      if (matchingSubscriptions.length > 0) {
+        console.log(`Found ${matchingSubscriptions.length} subscriptions to update`);
+        
+        matchingSubscriptions.forEach(sub => {
+          try {
+            sub.callback(lotteryInfo);
+            console.log('Successfully triggered manual subscription update');
+          } catch (callbackError) {
+            console.error('Error in subscription callback during manual update:', callbackError);
+          }
+        });
+      } else {
+        console.log('No matching subscriptions found for manual update');
+      }
+    } catch (error) {
+      console.error('Error in manual subscription update:', error);
     }
   }
 } 
