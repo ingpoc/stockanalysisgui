@@ -1,18 +1,19 @@
 ---
 description: AI guidelines to follow
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: false
 ---
 
 # Your rule content
 
-Environment variable is [.env.local](mdc:decentralized-lottery/decentralized-lottery/decentralized-lottery/decentralized-lottery/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.env.local)
+Environment variable is [.env.local](mdc:stockanalysisgui/stockanalysisgui/decentralized-lottery/decentralized-lottery/decentralized-lottery/decentralized-lottery/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.env.local)
 
 
 ### Information Gathering
 1. **Search Strategy**
    - Start with codebase search for context.
    - Use `grep` for exact matches.
-   - Check documentation before making changes.
+   - Check relevant documentation before making changes.
    - Verify assumptions with multiple tools.
    - **For third-party libraries, always check the official documentation and GitHub repository (README, examples, and issues) for usage examples, common pitfalls, and reported bugs.**
 
