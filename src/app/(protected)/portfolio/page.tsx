@@ -2,32 +2,24 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PortfolioTable } from '@/components/portfolio/portfolio-table'
-import { HoldingForm } from '@/components/portfolio/holding-form'
 import { CSVUpload } from '@/components/portfolio/csv-upload'
 import { PortfolioSummaryComponent } from '@/components/portfolio/portfolio-summary'
-import { Holding, HoldingWithCurrentPrice } from '@/types/portfolio'
+import { HoldingWithCurrentPrice } from '@/types/portfolio'
 import {
   fetchHoldings,
   fetchEnrichedHoldings,
-  addHolding,
-  updateHolding,
   deleteHolding,
-  getStockDetails,
-  getBatchStockDetails,
 } from '@/lib/api'
-import { Plus } from 'lucide-react'
 import { PageContainer } from '@/components/layout/page-container'
 
 export default function PortfolioPage() {
-  const [holdings, setHoldings] = useState<HoldingWithCurrentPrice[]>([])
+  const [stockHoldings, setStockHoldings] = useState<HoldingWithCurrentPrice[]>([])
+  const [cryptoHoldings, setCryptoHoldings] = useState<HoldingWithCurrentPrice[]>([])
+  const [mutualFundHoldings, setMutualFundHoldings] = useState<HoldingWithCurrentPrice[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [formOpen, setFormOpen] = useState(false)
-  const [selectedHolding, setSelectedHolding] = useState<Holding | undefined>(
-    undefined
-  )
+  const [activeTab, setActiveTab] = useState('stocks')
 
   // Fetch holdings on component mount
   useEffect(() => {
@@ -42,10 +34,17 @@ export default function PortfolioPage() {
       const enrichedHoldings = await fetchEnrichedHoldings()
       
       if (enrichedHoldings.length === 0) {
-        setHoldings([])
+        setStockHoldings([])
+        setCryptoHoldings([])
+        setMutualFundHoldings([])
         setIsLoading(false)
         return
       }
+      
+      // Separate holdings by asset type
+      const stocks = enrichedHoldings.filter(h => !h.asset_type || h.asset_type === 'stock')
+      const crypto = enrichedHoldings.filter(h => h.asset_type === 'crypto')
+      const mutualFunds = enrichedHoldings.filter(h => h.asset_type === 'mutual_fund')
       
       // Check if any holdings had errors and notify the user
       const holdingsWithErrors = enrichedHoldings.filter(h => h.hasError)
@@ -59,7 +58,9 @@ export default function PortfolioPage() {
         toast.success(`Loaded ${enrichedHoldings.length} holdings with current prices`)
       }
       
-      setHoldings(enrichedHoldings)
+      setStockHoldings(stocks)
+      setCryptoHoldings(crypto)
+      setMutualFundHoldings(mutualFunds)
     } catch (error) {
       console.error('Error loading holdings:', error)
       toast.error('Failed to load portfolio holdings')
@@ -67,8 +68,19 @@ export default function PortfolioPage() {
       // Try fallback to basic holdings if enriched holdings failed
       try {
         const basicHoldings = await fetchHoldings()
-        const fallbackHoldings = basicHoldings.map(holding => createFallbackHolding(holding))
-        setHoldings(fallbackHoldings)
+        
+        // Separate holdings by asset type
+        const stocks = basicHoldings.filter(h => !h.asset_type || h.asset_type === 'stock')
+          .map(holding => createFallbackHolding(holding))
+        const crypto = basicHoldings.filter(h => h.asset_type === 'crypto')
+          .map(holding => createFallbackHolding(holding))
+        const mutualFunds = basicHoldings.filter(h => h.asset_type === 'mutual_fund')
+          .map(holding => createFallbackHolding(holding))
+        
+        setStockHoldings(stocks)
+        setCryptoHoldings(crypto)
+        setMutualFundHoldings(mutualFunds)
+        
         toast.warning('Using basic holdings without current prices', {
           description: 'Could not fetch enriched holdings with pricing data'
         })
@@ -81,7 +93,7 @@ export default function PortfolioPage() {
   }
   
   // Helper function to create a fallback holding when price data can't be fetched
-  const createFallbackHolding = (holding: Holding, errorMessage?: string): HoldingWithCurrentPrice => {
+  const createFallbackHolding = (holding: any, errorMessage?: string): HoldingWithCurrentPrice => {
     const investmentValue = holding.average_price * holding.quantity
     return {
       ...holding,
@@ -91,40 +103,6 @@ export default function PortfolioPage() {
       gainLossPercentage: 0,
       hasError: true, // Mark this holding as having an error
       errorMessage: errorMessage || `Could not fetch current price for ${holding.symbol}. Symbol may not exist in database.`
-    }
-  }
-
-  // Handle adding a new holding
-  const handleAddHolding = async (holding: Holding) => {
-    try {
-      const newHolding = await addHolding(holding)
-      toast.success('Holding added successfully', {
-        description: `Added ${holding.symbol} to your portfolio`
-      })
-      await loadHoldings()
-    } catch (error) {
-      console.error('Error adding holding:', error)
-      toast.error('Failed to add holding', {
-        description: 'Please check your input and try again'
-      })
-    }
-  }
-
-  // Handle updating an existing holding
-  const handleUpdateHolding = async (holding: Holding) => {
-    if (!holding.id) return
-    
-    try {
-      await updateHolding(holding.id, holding)
-      toast.success('Holding updated successfully', {
-        description: `Updated ${holding.symbol} in your portfolio`
-      })
-      await loadHoldings()
-    } catch (error) {
-      console.error('Error updating holding:', error)
-      toast.error('Failed to update holding', {
-        description: 'Please check your input and try again'
-      })
     }
   }
 
@@ -141,21 +119,6 @@ export default function PortfolioPage() {
       toast.error('Failed to delete holding', {
         description: 'An error occurred while deleting the holding'
       })
-    }
-  }
-
-  // Handle opening the form for editing
-  const handleEditHolding = (holding: HoldingWithCurrentPrice) => {
-    setSelectedHolding(holding)
-    setFormOpen(true)
-  }
-
-  // Handle form submission
-  const handleFormSubmit = (holding: Holding) => {
-    if (holding.id) {
-      handleUpdateHolding(holding)
-    } else {
-      handleAddHolding(holding)
     }
   }
 
@@ -179,56 +142,127 @@ export default function PortfolioPage() {
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Portfolio</h1>
-          <Button onClick={() => {
-            setSelectedHolding(undefined)
-            setFormOpen(true)
-          }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Holding
-          </Button>
         </div>
 
         {/* Portfolio Summary */}
-        <PortfolioSummaryComponent holdings={holdings} />
+        <PortfolioSummaryComponent 
+          holdings={[...stockHoldings, ...cryptoHoldings, ...mutualFundHoldings]} 
+        />
 
-        {/* Tabs for Holdings and Import */}
-        <Tabs defaultValue="holdings" className="w-full">
-          <TabsList>
-            <TabsTrigger value="holdings">Holdings</TabsTrigger>
-            <TabsTrigger value="import">Import CSV</TabsTrigger>
+        {/* Main Tabs for Asset Types */}
+        <Tabs 
+          defaultValue="stocks" 
+          className="w-full"
+          onValueChange={(value) => setActiveTab(value)}
+        >
+          <TabsList className="grid grid-cols-3">
+            <TabsTrigger value="stocks">Stocks</TabsTrigger>
+            <TabsTrigger value="crypto">Crypto</TabsTrigger>
+            <TabsTrigger value="mutual-funds">Mutual Funds</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="holdings" className="space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              </div>
-            ) : (
-              <PortfolioTable
-                holdings={holdings}
-                onEdit={handleEditHolding}
-                onDelete={handleDeleteHolding}
-              />
-            )}
+          {/* Stocks Tab */}
+          <TabsContent value="stocks" className="space-y-4">
+            <Tabs defaultValue="holdings" className="w-full">
+              <TabsList>
+                <TabsTrigger value="holdings">Holdings</TabsTrigger>
+                <TabsTrigger value="import">Import CSV</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="holdings" className="space-y-4">
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  </div>
+                ) : (
+                  <PortfolioTable
+                    holdings={stockHoldings}
+                    onDelete={handleDeleteHolding}
+                    assetType="stock"
+                  />
+                )}
+              </TabsContent>
+              
+              <TabsContent value="import" className="space-y-4">
+                <div className="max-w-md mx-auto">
+                  <CSVUpload
+                    onSuccess={handleUploadSuccess}
+                    onError={handleUploadError}
+                    assetType="stock"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
           
-          <TabsContent value="import" className="space-y-4">
-            <div className="max-w-md mx-auto">
-              <CSVUpload
-                onSuccess={handleUploadSuccess}
-                onError={handleUploadError}
-              />
-            </div>
+          {/* Crypto Tab */}
+          <TabsContent value="crypto" className="space-y-4">
+            <Tabs defaultValue="holdings" className="w-full">
+              <TabsList>
+                <TabsTrigger value="holdings">Holdings</TabsTrigger>
+                <TabsTrigger value="import">Import CSV</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="holdings" className="space-y-4">
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  </div>
+                ) : (
+                  <PortfolioTable
+                    holdings={cryptoHoldings}
+                    onDelete={handleDeleteHolding}
+                    assetType="crypto"
+                  />
+                )}
+              </TabsContent>
+              
+              <TabsContent value="import" className="space-y-4">
+                <div className="max-w-md mx-auto">
+                  <CSVUpload
+                    onSuccess={handleUploadSuccess}
+                    onError={handleUploadError}
+                    assetType="crypto"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+          
+          {/* Mutual Funds Tab */}
+          <TabsContent value="mutual-funds" className="space-y-4">
+            <Tabs defaultValue="holdings" className="w-full">
+              <TabsList>
+                <TabsTrigger value="holdings">Holdings</TabsTrigger>
+                <TabsTrigger value="import">Import CSV</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="holdings" className="space-y-4">
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  </div>
+                ) : (
+                  <PortfolioTable
+                    holdings={mutualFundHoldings}
+                    onDelete={handleDeleteHolding}
+                    assetType="mutual_fund"
+                  />
+                )}
+              </TabsContent>
+              
+              <TabsContent value="import" className="space-y-4">
+                <div className="max-w-md mx-auto">
+                  <CSVUpload
+                    onSuccess={handleUploadSuccess}
+                    onError={handleUploadError}
+                    assetType="mutual_fund"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
-
-        {/* Add/Edit Holding Form Dialog */}
-        <HoldingForm
-          holding={selectedHolding}
-          open={formOpen}
-          onClose={() => setFormOpen(false)}
-          onSubmit={handleFormSubmit}
-        />
       </div>
     </PageContainer>
   )

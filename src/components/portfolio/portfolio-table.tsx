@@ -24,11 +24,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface PortfolioTableProps {
   holdings: HoldingWithCurrentPrice[]
-  onEdit: (holding: HoldingWithCurrentPrice) => void
   onDelete: (id: string) => void
+  assetType?: 'stock' | 'crypto' | 'mutual_fund'
 }
 
-export function PortfolioTable({ holdings, onEdit, onDelete }: PortfolioTableProps) {
+export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: PortfolioTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
   
   const filteredHoldings = holdings.filter(holding => 
@@ -41,39 +41,86 @@ export function PortfolioTable({ holdings, onEdit, onDelete }: PortfolioTablePro
   const totalGainLoss = totalCurrentValue - totalInvestment
   const totalGainLossPercentage = totalInvestment > 0 ? (totalGainLoss / totalInvestment) * 100 : 0
   
+  const getTableHeaders = () => {
+    switch (assetType) {
+      case 'crypto':
+        return (
+          <TableRow>
+            <TableHead>Coin</TableHead>
+            <TableHead>Quantity</TableHead>
+            <TableHead>Avg. Price</TableHead>
+            <TableHead>Current Price</TableHead>
+            <TableHead>Total Value</TableHead>
+            <TableHead>Gain/Loss</TableHead>
+            <TableHead>%</TableHead>
+            <TableHead className="w-[80px]">Actions</TableHead>
+          </TableRow>
+        );
+      case 'mutual_fund':
+        return (
+          <TableRow>
+            <TableHead>Scheme Name</TableHead>
+            <TableHead>Folio No.</TableHead>
+            <TableHead>Units</TableHead>
+            <TableHead>Avg. NAV</TableHead>
+            <TableHead>Current NAV</TableHead>
+            <TableHead>Total Value</TableHead>
+            <TableHead>Gain/Loss</TableHead>
+            <TableHead>%</TableHead>
+            <TableHead className="w-[80px]">Actions</TableHead>
+          </TableRow>
+        );
+      default: // stock
+        return (
+          <TableRow>
+            <TableHead>Symbol</TableHead>
+            <TableHead>Quantity</TableHead>
+            <TableHead>Avg. Price</TableHead>
+            <TableHead>Current Price</TableHead>
+            <TableHead>Total Value</TableHead>
+            <TableHead>Gain/Loss</TableHead>
+            <TableHead>%</TableHead>
+            <TableHead className="w-[80px]">Actions</TableHead>
+          </TableRow>
+        );
+    }
+  };
+
+  const getSearchPlaceholder = () => {
+    switch (assetType) {
+      case 'crypto':
+        return 'Search coins...';
+      case 'mutual_fund':
+        return 'Search schemes...';
+      default:
+        return 'Search holdings...';
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <Input
-          placeholder="Search holdings..."
+          placeholder={getSearchPlaceholder()}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
         <div className="text-sm text-muted-foreground">
-          {filteredHoldings.length} of {holdings.length} holdings
+          {filteredHoldings.length} of {holdings.length} {assetType === 'mutual_fund' ? 'schemes' : assetType === 'crypto' ? 'coins' : 'holdings'}
         </div>
       </div>
       
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Symbol</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Avg. Price</TableHead>
-              <TableHead>Current Price</TableHead>
-              <TableHead>Total Value</TableHead>
-              <TableHead>Gain/Loss</TableHead>
-              <TableHead>%</TableHead>
-              <TableHead className="w-[80px]">Actions</TableHead>
-            </TableRow>
+            {getTableHeaders()}
           </TableHeader>
           <TableBody>
             {filteredHoldings.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center">
-                  No holdings found
+                <TableCell colSpan={assetType === 'mutual_fund' ? 9 : 8} className="text-center">
+                  No {assetType === 'mutual_fund' ? 'schemes' : assetType === 'crypto' ? 'coins' : 'holdings'} found
                 </TableCell>
               </TableRow>
             ) : (
@@ -97,6 +144,9 @@ export function PortfolioTable({ holdings, onEdit, onDelete }: PortfolioTablePro
                         )}
                       </div>
                     </TableCell>
+                    {assetType === 'mutual_fund' && (
+                      <TableCell>{(holding as any).folio_number || 'N/A'}</TableCell>
+                    )}
                     <TableCell>{holding.quantity.toLocaleString()}</TableCell>
                     <TableCell>{formatCurrency(holding.average_price)}</TableCell>
                     <TableCell>
@@ -138,9 +188,6 @@ export function PortfolioTable({ holdings, onEdit, onDelete }: PortfolioTablePro
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEdit(holding)}>
-                            Edit
-                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
                               if (window.confirm(`Are you sure you want to delete ${holding.symbol}?`)) {
@@ -158,7 +205,7 @@ export function PortfolioTable({ holdings, onEdit, onDelete }: PortfolioTablePro
                 ))}
                 {/* Summary row */}
                 <TableRow className="bg-muted/50 font-semibold">
-                  <TableCell colSpan={4} className="text-right">Total:</TableCell>
+                  <TableCell colSpan={assetType === 'mutual_fund' ? 5 : 4} className="text-right">Total:</TableCell>
                   <TableCell>{formatCurrency(totalCurrentValue)}</TableCell>
                   <TableCell>
                     <div className="flex items-center">

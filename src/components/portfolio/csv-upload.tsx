@@ -12,9 +12,10 @@ import { toast } from 'sonner'
 interface CSVUploadProps {
   onSuccess: () => void
   onError: (error: string) => void
+  assetType: 'stock' | 'crypto' | 'mutual_fund'
 }
 
-export function CSVUpload({ onSuccess, onError }: CSVUploadProps) {
+export function CSVUpload({ onSuccess, onError, assetType }: CSVUploadProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,9 +49,9 @@ export function CSVUpload({ onSuccess, onError }: CSVUploadProps) {
     setError(null)
 
     try {
-      await importHoldingsFromCSV(file)
+      await importHoldingsFromCSV(file, assetType)
       setFile(null)
-      toast.success('Holdings imported successfully', {
+      toast.success(`${getAssetTypeLabel(assetType)} imported successfully`, {
         description: 'Your portfolio has been updated with the imported holdings'
       })
       onSuccess()
@@ -66,10 +67,59 @@ export function CSVUpload({ onSuccess, onError }: CSVUploadProps) {
     }
   }
 
+  const getAssetTypeLabel = (type: 'stock' | 'crypto' | 'mutual_fund') => {
+    switch (type) {
+      case 'stock':
+        return 'Stock holdings';
+      case 'crypto':
+        return 'Crypto holdings';
+      case 'mutual_fund':
+        return 'Mutual fund holdings';
+    }
+  }
+
+  const getCSVFormatHelp = (type: 'stock' | 'crypto' | 'mutual_fund') => {
+    switch (type) {
+      case 'stock':
+        return (
+          <>
+            <p className="text-sm text-muted-foreground">
+              CSV should have columns: "Instrument", "Qty.", "Avg. cost", "LTP", "Invested", "Cur. val", "P&L", "Net chg.", "Day chg."
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              <strong>Note:</strong> The CSV format should match the export from Zerodha or similar Indian brokers.
+            </p>
+          </>
+        );
+      case 'crypto':
+        return (
+          <>
+            <p className="text-sm text-muted-foreground">
+              CSV should have columns: "Coin", "Quantity", "Avg. Buy Price", "Current Price", "Investment", "Current Value", "P&L"
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              <strong>Note:</strong> The CSV format should match the export from WazirX, CoinDCX or similar crypto exchanges.
+            </p>
+          </>
+        );
+      case 'mutual_fund':
+        return (
+          <>
+            <p className="text-sm text-muted-foreground">
+              CSV should have columns: "Scheme Name", "Folio No.", "Units", "Avg. NAV", "Current NAV", "Investment", "Current Value", "P&L"
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              <strong>Note:</strong> The CSV format should match the export from Kuvera, Groww or similar mutual fund platforms.
+            </p>
+          </>
+        );
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="csv-file">Upload Holdings CSV</Label>
+        <Label htmlFor="csv-file">Upload {getAssetTypeLabel(assetType)} CSV</Label>
         <Input
           id="csv-file"
           type="file"
@@ -77,12 +127,7 @@ export function CSVUpload({ onSuccess, onError }: CSVUploadProps) {
           onChange={handleFileChange}
           disabled={isUploading}
         />
-        <p className="text-sm text-muted-foreground">
-          CSV should have columns: "Instrument", "Qty.", "Avg. cost", "LTP", "Invested", "Cur. val", "P&L", "Net chg.", "Day chg."
-        </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          <strong>Note:</strong> The CSV format should match the export from Zerodha or similar Indian brokers.
-        </p>
+        {getCSVFormatHelp(assetType)}
       </div>
 
       {error && (

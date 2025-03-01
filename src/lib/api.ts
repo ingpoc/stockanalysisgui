@@ -431,10 +431,11 @@ export async function clearHoldings(): Promise<void> {
   }
 }
 
-export async function importHoldingsFromCSV(file: File): Promise<Holding[]> {
+export async function importHoldingsFromCSV(file: File, assetType: 'stock' | 'crypto' | 'mutual_fund' = 'stock'): Promise<Holding[]> {
   try {
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('asset_type', assetType)
     
     const response = await fetch(`${API_BASE_URL}/portfolio/holdings/import`, {
       method: 'POST',
@@ -456,13 +457,13 @@ export async function importHoldingsFromCSV(file: File): Promise<Holding[]> {
     }
     
     const data = await response.json()
-    console.log('Successfully imported holdings:', data.length)
+    console.log(`Successfully imported ${assetType} holdings:`, data.length)
     return data
   } catch (error) {
-    console.error('Error importing holdings:', error)
+    console.error(`Error importing ${assetType} holdings:`, error)
     // Rethrow with more context if it's not already an Error object
     throw error instanceof Error 
       ? error 
-      : new Error('Failed to import holdings from CSV')
+      : new Error(`Failed to import ${assetType} holdings from CSV`)
   }
 } 
