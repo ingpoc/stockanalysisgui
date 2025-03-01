@@ -147,3 +147,26 @@ export function formatUSDC(value: number | undefined, decimals: number = 2): str
     maximumFractionDigits: decimals
   })} USDC`;
 }
+
+/**
+ * Format a number as currency (USD)
+ */
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+/**
+ * Format a number as percentage
+ */
+export function formatPercentage(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value / 100);
+}

@@ -211,3 +211,123 @@
    - Use appropriate toast types
    - Handle all error cases
    - Provide actionable information
+
+## Implementation Changes (November 2024)
+
+1. **Important Update: Standardized on Sonner**
+   - All components now use Sonner directly
+   - The custom `useToast` hook from Shadcn UI has been deprecated
+   - Import patterns have been standardized:
+   ```typescript
+   import { toast } from 'sonner'
+   ```
+
+2. **Migration Guide**
+   - Replace `useToast` hook usage:
+   ```typescript
+   // OLD (deprecated)
+   const { toast } = useToast()
+   toast({
+     title: 'Success',
+     description: 'Action completed',
+   })
+   
+   // NEW
+   import { toast } from 'sonner'
+   toast.success('Action completed', {
+     description: 'Your action was successful'
+   })
+   ```
+
+3. **Standard Duration Guidelines**
+   - Success: 3000ms (default)
+   - Error: 5000ms
+   - Critical error: 7000ms
+   - Info: 3000ms
+   - Warning: 4000ms
+   ```typescript
+   // Example with custom duration
+   toast.error('Error occurred', {
+     description: 'Please try again later',
+     duration: 5000
+   })
+   ```
+
+4. **Async Operation Pattern**
+   - Use `toast.promise` for async operations:
+   ```typescript
+   toast.promise(
+     asyncOperation(),
+     {
+       loading: 'Processing...',
+       success: 'Operation completed successfully',
+       error: 'Operation failed. Please try again.'
+     }
+   )
+   ```
+
+## Technical Implementation
+
+1. **Root Configuration**
+   ```tsx
+   // src/context/index.tsx
+   import { Toaster } from 'sonner'
+   
+   export default function ContextProvider({ children }) {
+     return (
+       <>
+         {children}
+         <Toaster richColors position="top-right" />
+       </>
+     )
+   }
+   ```
+
+2. **Component Imports**
+   ```tsx
+   import { toast } from 'sonner'
+   ```
+
+3. **Success Example**
+   ```tsx
+   function handleSubmit() {
+     try {
+       // Process form
+       toast.success('Form submitted', {
+         description: 'Your data has been saved'
+       })
+     } catch (error) {
+       toast.error('Submission failed', {
+         description: error.message
+       })
+     }
+   }
+   ```
+
+4. **Error Example**
+   ```tsx
+   function handleDelete(id) {
+     try {
+       await deleteItem(id)
+       toast.success('Item deleted')
+     } catch (error) {
+       toast.error('Delete failed', {
+         description: 'The item could not be deleted'
+       })
+     }
+   }
+   ```
+
+5. **Promise Example**
+   ```tsx
+   async function handleUpload() {
+     toast.promise(
+       uploadFile(),
+       {
+         loading: 'Uploading file...',
+         success: 'File uploaded successfully',
+         error: 'Upload failed'
+       }
+     )
+   }
+   ```

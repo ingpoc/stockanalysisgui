@@ -117,7 +117,9 @@ export function StockDashboard() {
 
   const handleRefresh = async () => {
     if (!selectedStock) {
-      toast.error('Please select a stock to refresh')
+      toast.error('Please select a stock to refresh', {
+        description: 'You must select a stock before refreshing analysis'
+      })
       return
     }
 
@@ -132,7 +134,7 @@ export function StockDashboard() {
         {
           loading: 'Refreshing analysis...',
           success: 'Analysis refreshed successfully',
-          error: 'Failed to refresh analysis. Please try again.',
+          error: 'Failed to refresh analysis. Please try again.'
         }
       )
     } catch (error) {

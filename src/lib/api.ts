@@ -1,3 +1,5 @@
+import { Holding, HoldingWithCurrentPrice } from '@/types/portfolio'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
 export interface Stock {
@@ -149,24 +151,80 @@ export async function refreshStockAnalysis(symbol: string): Promise<void> {
 
 export async function getStockDetails(symbol: string): Promise<StockDetailsResponse> {
   try {
-    const url = `${API_BASE_URL}/stock/${symbol}`
-    console.log('Fetching from URL:', url)
-    const response = await fetch(url)
+    console.log(`Fetching stock details for ${symbol} from ${API_BASE_URL}/stock/${symbol}`)
+    const response = await fetch(`${API_BASE_URL}/stock/${symbol}`)
     
     if (!response.ok) {
-      console.error('API Error:', {
-        status: response.status,
-        statusText: response.statusText
-      })
-      throw new Error('Failed to fetch stock details')
+      const errorText = await response.text()
+      console.error(`Error fetching stock details: ${response.status} - ${errorText}`)
+      
+      // Check if the error is a "not found" error
+      const notFoundPattern = /Stock with symbol .* not found/i
+      if (response.status === 500 && notFoundPattern.test(errorText)) {
+        throw new Error(`Stock symbol "${symbol}" not found in the database. Please check the symbol and try again.`)
+      }
+      
+      // Throw a more specific error with status code
+      throw new Error(`Failed to fetch stock details: ${response.status} ${response.statusText}. Ensure the symbol exists in the database.`)
     }
     
     const data = await response.json()
-    console.log('API Success:', data)
+    
+    // Format currency values to show INR
+    if (data.formatted_metrics && data.formatted_metrics.cmp) {
+      // Add INR prefix if it doesn't already have currency symbol
+      if (!data.formatted_metrics.cmp.includes('₹') && !data.formatted_metrics.cmp.includes('$')) {
+        data.formatted_metrics.cmp = `₹${data.formatted_metrics.cmp}`
+      }
+    }
+    
+    console.log('Stock details data:', data)
     return data
   } catch (error) {
     console.error('Error fetching stock details:', error)
-    throw error
+    // Rethrow the error with additional context
+    throw error instanceof Error 
+      ? error 
+      : new Error(`Unknown error fetching stock details for ${symbol}`)
+  }
+}
+
+export async function getBatchStockDetails(symbols: string[]): Promise<Record<string, StockDetailsResponse>> {
+  try {
+    console.log(`Fetching batch stock details for ${symbols.length} symbols`)
+    
+    const response = await fetch(`${API_BASE_URL}/stock/batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(symbols),
+    })
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Error fetching batch stock details: ${response.status} - ${errorText}`)
+      throw new Error(`Failed to fetch batch stock details: ${response.status} ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    
+    // Format currency values to show INR for all stocks
+    for (const symbol in data) {
+      if (data[symbol] && data[symbol].formatted_metrics && data[symbol].formatted_metrics.cmp) {
+        // Add INR prefix if it doesn't already have currency symbol
+        if (!data[symbol].formatted_metrics.cmp.includes('₹') && !data[symbol].formatted_metrics.cmp.includes('$')) {
+          data[symbol].formatted_metrics.cmp = `₹${data[symbol].formatted_metrics.cmp}`
+        }
+      }
+    }
+    
+    return data
+  } catch (error) {
+    console.error('Error fetching batch stock details:', error)
+    throw error instanceof Error
+      ? error
+      : new Error('Unknown error fetching batch stock details')
   }
 }
 
@@ -253,4 +311,158 @@ export async function refreshAnalysis(symbol: string): Promise<{
   }
   
   return response.json()
+}
+
+// Portfolio API functions
+
+export async function fetchHoldings(): Promise<Holding[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/portfolio/holdings`)
+    if (!response.ok) {
+      throw new Error('Failed to fetch holdings')
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching holdings:', error)
+    throw error
+  }
+}
+
+export async function fetchEnrichedHoldings(): Promise<HoldingWithCurrentPrice[]> {
+  try {
+    console.log('Fetching enriched holdings from backend...')
+    const response = await fetch(`${API_BASE_URL}/portfolio/holdings/enriched`)
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Error fetching enriched holdings: ${response.status} - ${errorText}`)
+      throw new Error('Failed to fetch enriched holdings')
+    }
+    
+    const data = await response.json()
+    
+    // Convert snake_case properties from backend to camelCase for frontend
+    return data.map((holding: any) => {
+      return {
+        id: holding.id,
+        symbol: holding.symbol,
+        company_name: holding.company_name,
+        quantity: holding.quantity,
+        average_price: holding.average_price,
+        purchase_date: holding.purchase_date,
+        notes: holding.notes,
+        timestamp: holding.timestamp,
+        currentPrice: holding.current_price || 0,
+        currentValue: holding.current_value || 0,
+        gainLoss: holding.gain_loss || 0,
+        gainLossPercentage: holding.gain_loss_percentage || 0,
+        hasError: holding.has_error || false,
+        errorMessage: holding.error_message || ''
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching enriched holdings:', error)
+    throw error
+  }
+}
+
+export async function addHolding(holding: Holding): Promise<Holding> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/portfolio/holdings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(holding),
+    })
+    if (!response.ok) {
+      throw new Error(`Error adding holding: ${response.statusText}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Error adding holding:', error)
+    throw error
+  }
+}
+
+export async function updateHolding(id: string, holding: Holding): Promise<Holding> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/portfolio/holdings/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(holding),
+    })
+    if (!response.ok) {
+      throw new Error(`Error updating holding: ${response.statusText}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Error updating holding:', error)
+    throw error
+  }
+}
+
+export async function deleteHolding(id: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/portfolio/holdings/${id}`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) {
+      throw new Error(`Error deleting holding: ${response.statusText}`)
+    }
+  } catch (error) {
+    console.error('Error deleting holding:', error)
+    throw error
+  }
+}
+
+export async function clearHoldings(): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/portfolio/holdings`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) {
+      throw new Error(`Error clearing holdings: ${response.statusText}`)
+    }
+  } catch (error) {
+    console.error('Error clearing holdings:', error)
+    throw error
+  }
+}
+
+export async function importHoldingsFromCSV(file: File): Promise<Holding[]> {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await fetch(`${API_BASE_URL}/portfolio/holdings/import`, {
+      method: 'POST',
+      body: formData,
+    })
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Error importing holdings: ${response.status} - ${errorText}`)
+      
+      // Provide more specific error messages based on status code
+      if (response.status === 400) {
+        throw new Error(`CSV format error: ${errorText || 'Invalid CSV format'}`)
+      } else if (response.status === 413) {
+        throw new Error('File too large. Please upload a smaller CSV file.')
+      } else {
+        throw new Error(`Error importing holdings: ${response.status} ${response.statusText}`)
+      }
+    }
+    
+    const data = await response.json()
+    console.log('Successfully imported holdings:', data.length)
+    return data
+  } catch (error) {
+    console.error('Error importing holdings:', error)
+    // Rethrow with more context if it's not already an Error object
+    throw error instanceof Error 
+      ? error 
+      : new Error('Failed to import holdings from CSV')
+  }
 } 
