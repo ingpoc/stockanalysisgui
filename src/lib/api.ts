@@ -173,7 +173,7 @@ export async function getStockDetails(symbol: string): Promise<StockDetailsRespo
     // Format currency values to show INR
     if (data.formatted_metrics && data.formatted_metrics.cmp) {
       // Add INR prefix if it doesn't already have currency symbol
-      if (!data.formatted_metrics.cmp.includes('₹') && !data.formatted_metrics.cmp.includes('$')) {
+      if (!data.formatted_metrics.cmp.includes('₹')) {
         data.formatted_metrics.cmp = `₹${data.formatted_metrics.cmp}`
       }
     }
@@ -213,7 +213,7 @@ export async function getBatchStockDetails(symbols: string[]): Promise<Record<st
     for (const symbol in data) {
       if (data[symbol] && data[symbol].formatted_metrics && data[symbol].formatted_metrics.cmp) {
         // Add INR prefix if it doesn't already have currency symbol
-        if (!data[symbol].formatted_metrics.cmp.includes('₹') && !data[symbol].formatted_metrics.cmp.includes('$')) {
+        if (!data[symbol].formatted_metrics.cmp.includes('₹')) {
           data[symbol].formatted_metrics.cmp = `₹${data[symbol].formatted_metrics.cmp}`
         }
       }

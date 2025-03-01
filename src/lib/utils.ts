@@ -128,33 +128,33 @@ export function shortenAddress(address: string, chars = 4): string {
 }
 
 /**
- * Formats a number from the smallest USDC unit (6 decimals) to a human-readable USDC value
+ * Formats a number from the smallest USDC unit (6 decimals) to a human-readable INR value
  * @param value The value in the smallest USDC unit
  * @param decimals The number of decimal places to show (default: 2)
- * @returns Formatted USDC value as a string
+ * @returns Formatted INR value as a string
  */
 export function formatUSDC(value: number | undefined, decimals: number = 2): string {
   if (value === undefined || value === null) {
-    return '0 USDC';
+    return '0 ₹';
   }
   
   // USDC has 6 decimal places
   const usdcValue = value / 1_000_000;
   
   // Format with the specified number of decimal places
-  return `${usdcValue.toLocaleString('en-US', {
+  return `${usdcValue.toLocaleString('en-IN', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals
-  })} USDC`;
+  })} ₹`;
 }
 
 /**
- * Format a number as currency (USD)
+ * Format a number as currency (INR)
  */
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);

@@ -5,11 +5,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { WalletButton } from "@/components/auth/wallet-button"
 import { 
   LayoutGrid, 
-  LineChart, 
-  Brain, 
   Search, 
-  BarChart3, 
-  TrendingUp, 
   Menu,
   ChevronRight,
   ChevronLeft,
@@ -130,10 +126,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col flex-1 overflow-y-auto duration-300 ease-linear">
           <nav className="mt-2 px-3 space-y-1">
             <SidebarItem icon={LayoutGrid} label="Market Overview" href="/dashboard" isCollapsed={isCollapsed} />
-            <SidebarItem icon={BarChart3} label="Stock Analysis" href="/analysis" isCollapsed={isCollapsed} />
             <SidebarItem icon={Briefcase} label="Portfolio" href="/portfolio" isCollapsed={isCollapsed} />
-            <SidebarItem icon={TrendingUp} label="Technical Analysis" href="/technical-analysis" isCollapsed={isCollapsed} />
-            <SidebarItem icon={Brain} label="AI Insights" href="/ai-insights" isCollapsed={isCollapsed} />
             <SidebarItem icon={Ticket} label="Crypto Lottery" href="/lottery" isCollapsed={isCollapsed} />
           </nav>
 
