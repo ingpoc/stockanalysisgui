@@ -6,17 +6,35 @@ alwaysApply: false
 ---
 description: Backend Integration Rules and Guidelines
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx, pages/api/**/*
+alwaysApply: false
 version: 1.0.0
 last_updated: 2024-02-26
 ---
-# Backend Integration Change Management Rules
+# Backend Integration Rules
 
 ## Purpose
 This document guides the AI on how to handle backend integration-related requests and documentation updates.
 
 ## Documentation Reference
-- Implementation patterns are defined in [[backend-integration.md](mdc:stockanalysisgui/stockanalysisgui/docs/backend-integration.md)]
+- Implementation patterns are defined in](/docs/backend-integration.md)
 - Always refer to backend-integration.md before making any changes
+
+## Primary API Endpoints
+
+1. **Market Data Endpoints**
+   - `/api/v1/market-data` - Market overview
+   - `/api/v1/stock/{symbol}` - Stock details
+   - `/api/v1/quarters` - Available quarters
+
+2. **Analysis Endpoints**
+   - `/api/v1/stock/{symbol}/analysis-history` - Analysis history
+   - `/api/v1/analysis/{analysis_id}` - Analysis content
+   - `/api/v1/stock/{symbol}/refresh-analysis` - Generate new analysis
+
+3. **Portfolio Endpoints**
+   - `/api/v1/portfolios` - List user portfolios
+   - `/api/v1/portfolios/{id}` - Specific portfolio
+   - `/api/v1/holdings` - User holdings
 
 ## Request Handling Rules
 
@@ -24,7 +42,7 @@ This document guides the AI on how to handle backend integration-related request
    ```
    1. Reference backend-integration.md
    2. Provide guidance based on existing patterns
-   3. DO NOT modify any code or documentation
+   3. DO NOT modify any code or documentation without permission
    ```
 
 2. **For Change Requests**
@@ -48,92 +66,67 @@ This document guides the AI on how to handle backend integration-related request
    - Update docs only after user confirms
 
    ❌ DON'T:
-   - Modify backend systems without explicit request
-   - Update documentation before user confirmation
-   - Assume integrations work without verification
-   - Skip security measures or testing
+   - Change API endpoints without user confirmation
+   - Modify authentication mechanisms without approval
+   - Change data structures without understanding impact
+   - Create new endpoints that deviate from patterns
    ```
 
-2. **Documentation Updates**
+2. **Best Practices for API Calls**
    ```
-   ONLY After User Confirms:
-   1. Update backend-integration.md with new patterns
-   2. Document any new integration points
-   3. Update examples and security measures
-   ```
+   ✅ DO:
+   - Use React Query for data fetching
+   - Implement proper loading states
+   - Handle errors gracefully with user feedback
+   - Use TypeScript interfaces for API responses
+   - Follow RESTful patterns from documentation
 
-## AI Response Guidelines
-
-1. **For Questions About Backend Integration**
-   - Reference relevant sections from backend-integration.md
-   - Explain current implementation
-   - Do not suggest changes unless requested
-   - Highlight security considerations
-
-2. **For Change Requests**
-   - Confirm the need for change
-   - Verify security implications
-   - Implement requested changes
-   - Get user confirmation
-   - Update documentation last
-
-3. **For Issues/Bugs**
-   - Verify against backend-integration.md
-   - Check security implications
-   - Propose fixes only if explicitly requested
-   - Follow change request process if fixes needed
-
-## Documentation Update Rules
-
-1. **When to Update**
-   ```
-   ONLY after:
-   - User explicitly confirms functionality
-   - Integration tests pass
-   - Security measures are verified
-   - Performance is validated
+   ❌ DON'T:
+   - Use direct fetch without error handling
+   - Ignore response types
+   - Mix different API calling patterns
+   - Handle retries inconsistently
    ```
 
-2. **Update Process**
-   ```
-   1. Wait for user confirmation
-   2. Update backend-integration.md
-   3. Ensure consistency with implementation
-   4. Document security measures
-   5. Update integration examples
-   6. Cross-reference related documentation
+## Implementation Examples
+
+1. **Fetching Market Data**
+   ```typescript
+   // Example pattern for fetching market data
+   const fetchMarketData = async (quarter?: string) => {
+     const queryParams = new URLSearchParams();
+     if (quarter) queryParams.append('quarter', quarter);
+     
+     try {
+       const response = await fetch(`/api/v1/market-data?${queryParams}`);
+       if (!response.ok) {
+         throw new Error(`Error: ${response.status}`);
+       }
+       return await response.json();
+     } catch (error) {
+       console.error('Failed to fetch market data:', error);
+       throw error;
+     }
+   };
    ```
 
-## Integration Verification Rules
-
-1. **Before Implementation**
-   ```
-   MUST check:
-   - Security requirements
-   - Authentication needs
-   - Rate limiting requirements
-   - Data validation rules
-   ```
-
-2. **During Implementation**
-   ```
-   MUST verify:
-   - API endpoint security
-   - Data sanitization
-   - Error handling
-   - Performance impact
+2. **React Query Implementation**
+   ```typescript
+   // Example pattern for React Query implementation
+   import { useQuery } from '@tanstack/react-query';
+   
+   export function useMarketData(quarter?: string) {
+     return useQuery({
+       queryKey: ['marketData', quarter],
+       queryFn: () => fetchMarketData(quarter),
+       staleTime: 60 * 60 * 1000, // 1 hour
+     });
+   }
    ```
 
-3. **After Implementation**
-   ```
-   MUST confirm:
-   - Integration tests pass
-   - Security measures work
-   - Performance meets requirements
-   - Documentation is updated
-   ```
+## Documentation Update Process
 
-## Related Rules
-- For authentication: See [authentication-rule.mdc]
-- For error handling: See [error-handling-rule.mdc]
-- For data management: See [data-management-rule.mdc]
+1. Always get user confirmation before updating documentation
+2. Ensure any documentation updates match implemented functionality
+3. Follow the format and structure of existing documentation
+4. Include code examples for new functionality

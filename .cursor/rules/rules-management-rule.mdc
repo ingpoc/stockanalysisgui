@@ -1,6 +1,7 @@
 ---
 description: Rules Management Guidelines
 globs: .cursor/rules/*.mdc, docs/*.md
+alwaysApply: false
 ---
  ---
 description: Rules Management Guidelines

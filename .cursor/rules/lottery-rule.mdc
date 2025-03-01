@@ -4,22 +4,25 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 alwaysApply: false
 ---
 ---
-description: Decentralized Lottery Systobs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+description: Decentralized Lottery System Rules
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: false
 version: 1.0.0
 last_updated: 2024-02-24
 ---
+
 # Decentralized Lottery Rules
 
 ## Purpose
 This document guides the AI on when and how to apply lottery-related patterns and changes.
 
 ## Documentation Reference
-- All implementation patterns are defined in [lottery.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/decentralized-lottery/docs/lottery.md)
+- All implementation patterns are defined in [lottery.md](/docs/lottery.md)
 - ALWAYS refer to lottery.md before making any changes
 
 ## When to Apply
 
-1. **ation**
+1. **Program Integration**
    - When adding new lottery types
    - When modifying lottery initialization
    - When handling lottery states
@@ -49,51 +52,53 @@ This document guides the AI on when and how to apply lottery-related patterns an
 
 ## Change Management Process
 
-1. **Before Changes**
+1. **Adding New Lottery Features**
    ```
-   1. Review lottery.md completely
-   2. Check existing patterns
-   3. Verify account structures
-   4. Validate type mappings
+   ✅ DO:
+   - Verify the request with the user
+   - Check existing patterns in lottery.md
+   - Implement consistent with current architecture
+   - Test all interactions
+   - Update documentation if confirmed working
+
+   ❌ DON'T:
+   - Create new lottery types without thorough understanding
+   - Modify account structures without checking program compatibility
+   - Introduce inconsistent naming conventions
+   - Skip validation checks
    ```
 
-2. **During Implementation**
+2. **Modifying Lottery UI Components**
    ```
-   1. Follow patterns from lottery.md
-   2. Maintain type consistency
-   3. Handle all error cases
-   4. Verify account handling
+   ✅ DO:
+   - Follow component patterns in /src/components/lottery
+   - Maintain consistent styling with design system
+   - Handle loading and error states
+   - Ensure mobile responsiveness
+   - Validate all inputs
+
+   ❌ DON'T:
+   - Use deprecated Solana APIs
+   - Mix UI component styles
+   - Hardcode values that should be configurable
+   - Ignore transaction state management
    ```
 
-3. **After Implementation**
-   ```
-   1. Test functionality thoroughly
-   2. Verify type conversions
-   3. Check error handling
-   4. Update docs if needed (with approval)
-   ```
+## Implementation References
 
-## Documentation Rules
+1. **Key Files**
+   - `/src/components/lottery/` - UI components
+   - `/src/hooks/use-lottery-program.ts` - Program interaction hook
+   - `/src/lib/solana/program.ts` - Solana program utilities
+   - `/src/types/lottery.ts` - Type definitions
 
-1. **When to Update Docs**
-   ```
-   ONLY update lottery.md when:
-   1. User explicitly requests changes
-   2. New patterns are approved
-   3. Changes are verified working
-   4. User confirms documentation needs
-   ```
+2. **Required Libraries**
+   - @solana/web3.js
+   - @project-serum/anchor 
+   - @solana/spl-token
 
-2. **Doc Update Process**
-   ```
-   1. Get explicit user approval
-   2. Update only relevant sections
-   3. Maintain existing structure
-   4. Cross-reference related docs
-   ```
-
-## Related Rules
-- For component lifecycle: See [component-lifecycle-rule.mdc]
-- For data management: See [data-management-rule.mdc]
-- For error handling: See [error-handling-rule.mdc]
-
+3. **Error Handling Guidelines**
+   - Provide clear user feedback for transactions
+   - Handle wallet connection errors gracefully
+   - Implement proper transaction confirmation states
+   - Log detailed errors on the console for debugging

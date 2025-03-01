@@ -1,6 +1,7 @@
 ---
 description: Navigation Change Management Rules
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: false
 ---
 # Navigation Change Management Rules
 
@@ -8,7 +9,7 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 This document guides the AI on how to handle navigation-related requests and documentation updates.
 
 ## Documentation Reference
-- Implementation patterns are defined in [navigation.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/navigation.md)
+- Implementation patterns are defined in ](/docs/navigation.md)
 - Always refer to navigation.md before making any changes
 
 ## Request Handling Rules

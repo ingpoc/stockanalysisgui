@@ -1,6 +1,7 @@
 ---
 description: Component Lifecycle Rules
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: false
 ---
 ---
 description: Component Lifecycle Rules
@@ -14,7 +15,7 @@ last_updated: 2024-02-24
 This document guides the AI on when and how to apply React component lifecycle patterns.
 
 ## Documentation Reference
-- All implementation patterns are defined in [component-lifecycle.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/component-lifecycle.md)
+- All implementation patterns are defined in [component-lifecycle.md](/docs/component-lifecycle.md)
 - ALWAYS refer to component-lifecycle.md before making any changes
 
 ## When to Apply

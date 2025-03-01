@@ -1,6 +1,7 @@
 ---
 description: Data Management Rules
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: false
 ---
  ---
 description: Data Management Rules
@@ -14,7 +15,7 @@ last_updated: 2024-02-24
 This document guides the AI on when and how to apply data management patterns.
 
 ## Documentation Reference
-- All implementation patterns are defined in [data-management.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/data-management.md)
+- All implementation patterns are defined in ](/docs/data-management.md)
 - ALWAYS refer to data-management.md before making any changes
 
 ## When to Apply

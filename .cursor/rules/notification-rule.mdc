@@ -1,6 +1,7 @@
 ---
 description: Notification Change Management Rules
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: false
 ---
 # Notification Change Management Rules
 
@@ -8,7 +9,7 @@ globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
 This document guides the AI on how to handle notification-related requests and documentation updates.
 
 ## Documentation Reference
-- Implementation patterns are defined in [notification.md](mdc:stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/docs/notification.md)
+- Implementation patterns are defined in ](/docs/notification.md)
 - Always refer to notification.md before making any changes
 
 ## Request Handling Rules
@@ -16,7 +17,7 @@ This document guides the AI on how to handle notification-related requests and d
 1. **For General Notification Questions**
    ```
    1. Reference notification.md
-   2. based on existing patterns
+   2. Provide guidance based on existing patterns
    3. DO NOT modify any code or documentation
    ```
 

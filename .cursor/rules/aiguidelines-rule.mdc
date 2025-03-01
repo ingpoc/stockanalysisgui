@@ -1,29 +1,62 @@
 ---
-description: AI guidelines to follow
+description: AI guidelines for frontend dessistance
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
-alwaysApply: false
+alwaysApply: true
+---
+---
+description: AI guidelines for frontend assistance
+globs: src/**/*.ts, src/**/*.js, src/**/*.tsx
+alwaysApply: true
 ---
 
-# Your rule content
+# AI Guidelines for Stock Analysis GUI
 
-Environment variable is [.env.local](mdc:stockanalysisgui/stockanalysisgui/decentralized-lottery/decentralized-lottery/decentralized-lottery/decentralized-lottery/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/stockanalysisgui/.env.local)
+Environment variables are defined in [.env.local](/.env.local)
 
+## Information Gathering Process
 
-### Information Gathering
-1. **Search Strategy**
-   - Start with codebase search for context.
-   - Use `grep` for exact matches.
-   - Check relevant documentation before making changes.
-   - Verify assumptions with multiple tools.
-   - **For third-party libraries, always check the official documentation and GitHub repository (README, examples, and issues) for usage examples, common pitfalls, and reported bugs.**
+### 1. Search Strategy
+   - Start with codebase search for context before making recommendations
+   - Use `grep` for exact matches when looking for specific implementations
+   - Check relevant documentation in `/docs` directory before making changes
+   - Verify assumptions with multiple tools (search, file read, etc.)
+   - For third-party libraries, always check the official documentation and GitHub repository (README, examples, and issues) for usage examples, common pitfalls, and reported bugs
 
-2. **Code Understanding**
-   - Read related files completely.
-   - Check for dependencies and imports.
-   - Verify type definitions.
-   - Understand the component hierarchy.
+### 2. Code Understanding
+   - Read related files completely before proposing changes
+   - Check for dependencies and imports to understand the component ecosystem
+   - Verify type definitions and interfaces to ensure type safety
+   - Understand the component hierarchy and data flow
+   - Pay attention to Next.js app router conventions and patterns
 
-3. **Error Analysis**
-   - Check terminal logs first.
-   - Review the error provided by the user
-  
+### 3. Error Analysis
+   - Check terminal logs first for error details
+   - Review the error provided by the user in detail
+   - Look for related errors in similar components
+   - Check for type mismatches, undefined values, and async/await issues
+
+## Frontend Development Guidelines
+
+### 1. Component Structure
+   - Follow existing component patterns in `/src/components`
+   - Use TypeScript interfaces for props
+   - Implement proper error boundaries and loading states
+   - Use appropriate UI components from the design system
+
+### 2. Data Management
+   - Follow the data-management-rule.mdc patterns
+   - Use React Query for backend data fetching
+   - Implement proper error handling and loading states
+   - Follow RESTful API integration patterns from backend-integration.md
+
+### 3. Feature Implementation 
+   - Reference existing implementation patterns before creating new ones
+   - Consider mobile responsiveness for all UI components
+   - Follow accessibility best practices (ARIA attributes, keyboard navigation)
+   - Ensure proper error handling and user feedback
+
+### 4. Integration with Backend and Blockchain
+   - Follow API patterns defined in backend-integration.md
+   - For lottery features, reference lottery.md and follow lottery-rule.mdc
+   - Ensure proper error handling for API calls and blockchain interactions
+   - Implement loading states and user feedback for async operations
