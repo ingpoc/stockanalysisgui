@@ -6,22 +6,22 @@ export async function POST(request: Request) {
   try {
     // Parse the request body
     const body = await request.json()
-    const { result_type } = body
+    const { quarter } = body
     
-    if (!result_type) {
+    if (!quarter) {
       return NextResponse.json(
-        { success: false, message: 'Result type is required' },
+        { success: false, message: 'Quarter parameter is required' },
         { status: 400 }
       )
     }
     
     // Forward the request to the Python backend
-    const response = await fetch(`${API_BASE_URL}/scraper/scrape`, {
+    const response = await fetch(`${API_BASE_URL}/scraper/remove-quarter`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ result_type }),
+      body: JSON.stringify({ quarter }),
     })
     
     if (!response.ok) {
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { 
           success: false, 
-          message: errorData.detail || 'Error triggering scraper',
+          message: errorData.detail || 'Error removing quarterly data',
         },
         { status: response.status }
       )
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Error in scraper trigger API:', error)
+    console.error('Error in remove quarter API:', error)
     return NextResponse.json(
       { 
         success: false, 
