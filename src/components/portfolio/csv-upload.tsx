@@ -78,10 +78,10 @@ export function CSVUpload({ onSuccess, onError }: CSVUploadProps) {
           disabled={isUploading}
         />
         <p className="text-sm text-muted-foreground">
-          CSV should have columns: symbol, company_name, quantity, average_price, purchase_date (optional), notes (optional)
+          CSV should have columns: "Instrument", "Qty.", "Avg. cost", "LTP", "Invested", "Cur. val", "P&L", "Net chg.", "Day chg."
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          <strong>Note:</strong> Use valid Indian stock symbols like "SHAKTIPUMP" or "JUBLPHARMA". International symbols like AAPL or MSFT may not be available.
+          <strong>Note:</strong> The CSV format should match the export from Zerodha or similar Indian brokers.
         </p>
       </div>
 

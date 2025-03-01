@@ -78,8 +78,8 @@ export function PortfolioTable({ holdings, onEdit, onDelete }: PortfolioTablePro
               </TableRow>
             ) : (
               <>
-                {filteredHoldings.map((holding) => (
-                  <TableRow key={holding.id || `row-${holding.symbol}-${holding.quantity}`} className={holding.hasError ? "bg-red-50 dark:bg-red-900/10" : ""}>
+                {filteredHoldings.map((holding, index) => (
+                  <TableRow key={holding.id || `row-${holding.symbol}-${holding.quantity}-${index}`} className={holding.hasError ? "bg-red-50 dark:bg-red-900/10" : ""}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-1">
                         {holding.symbol}
