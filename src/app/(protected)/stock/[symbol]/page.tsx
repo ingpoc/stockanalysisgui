@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
-import { getStockDetails, type StockDetailsResponse } from "@/lib/api"
+import { useParams, useSearchParams } from "next/navigation"
+import { getStockDetails, getQuarters, type StockDetailsResponse } from "@/lib/api"
 import { ArrowLeft, TrendingUp, TrendingDown, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { PageContainer } from "@/components/layout/page-container"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Dynamically import heavy components
 const StockChart = dynamic(() => import("@/components/stock-chart").then(mod => mod.StockChart), {
@@ -54,9 +55,14 @@ function GrowthIndicator({ value }: { value: string }) {
 
 export default function StockDetailsPage() {
   const params = useParams<{ symbol: string }>()
+  const searchParams = useSearchParams()
   const symbol = params?.symbol
+  const initialQuarter = searchParams.get('quarter') || ''
+  
   const [stockDetails, setStockDetails] = useState<StockDetailsResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [selectedQuarter, setSelectedQuarter] = useState<string>(initialQuarter)
+  const [availableQuarters, setAvailableQuarters] = useState<string[]>([])
 
   useEffect(() => {
     async function loadStockDetails() {
@@ -67,6 +73,20 @@ export default function StockDetailsPage() {
         const data = await getStockDetails(symbol)
         console.log('API Response:', JSON.stringify(data, null, 2))
         setStockDetails(data)
+        
+        // Extract available quarters from the stock details
+        const quarters = data.stock.financial_metrics.map(metric => metric.quarter).filter(Boolean) as string[]
+        setAvailableQuarters(quarters)
+        
+        // If no quarter is selected or the selected quarter is not available,
+        // default to the quarter from the URL or the most recent quarter
+        if (!selectedQuarter || !quarters.includes(selectedQuarter)) {
+          if (initialQuarter && quarters.includes(initialQuarter)) {
+            setSelectedQuarter(initialQuarter)
+          } else {
+            setSelectedQuarter(quarters[0] || '')
+          }
+        }
       } catch (error) {
         console.error('Failed to fetch stock details:', error)
         toast.error('Failed to fetch stock details. Please try again later.')
@@ -76,7 +96,7 @@ export default function StockDetailsPage() {
     }
 
     loadStockDetails()
-  }, [symbol])
+  }, [symbol, initialQuarter])
 
   if (loading) {
     return (
@@ -110,7 +130,13 @@ export default function StockDetailsPage() {
   }
 
   const { stock, formatted_metrics } = stockDetails
-  const metrics = stock.financial_metrics[0] || {}
+  
+  // Find the metrics for the selected quarter
+  const metrics = stock.financial_metrics.find(m => m.quarter === selectedQuarter) || stock.financial_metrics[0] || {}
+
+  const handleQuarterChange = (quarter: string) => {
+    setSelectedQuarter(quarter)
+  }
 
   return (
     <PageContainer>
@@ -125,6 +151,25 @@ export default function StockDetailsPage() {
         <div className="flex items-baseline gap-4">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{stock.company_name}</h1>
           <span className="text-lg text-gray-500 dark:text-gray-400">{symbol}</span>
+        </div>
+      </div>
+
+      {/* Quarter Selector */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Quarter:</span>
+          <Select value={selectedQuarter} onValueChange={handleQuarterChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Quarter" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableQuarters.map((quarter) => (
+                <SelectItem key={quarter} value={quarter}>
+                  {quarter}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

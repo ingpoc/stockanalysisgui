@@ -260,6 +260,7 @@ export function StockDashboard() {
           onStockSelect={setSelectedStock} 
           selectedStock={selectedStock}
           stocks={getCurrentStocks()}
+          currentQuarter={selectedQuarter}
         />
       </div>
     </PageContainer>

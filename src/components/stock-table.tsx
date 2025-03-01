@@ -9,6 +9,7 @@ interface StockTableProps {
   onStockSelect?: (symbol: string | null) => void
   selectedStock?: string | null
   stocks: Stock[]
+  currentQuarter?: string
 }
 
 type SortConfig = {
@@ -42,7 +43,7 @@ function generatePageNumbers(currentPage: number, totalPages: number) {
   ]
 }
 
-export function StockTable({ onStockSelect, selectedStock, stocks }: StockTableProps) {
+export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarter }: StockTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [sortConfig, setSortConfig] = useState<SortConfig>(null)
   const router = useRouter()
@@ -119,7 +120,11 @@ export function StockTable({ onStockSelect, selectedStock, stocks }: StockTableP
   const currentStocks = sortedStocks.slice(startIndex, endIndex)
 
   const handleDoubleClick = (symbol: string) => {
-    router.push(`/stock/${symbol}`)
+    // Use the provided currentQuarter prop if available
+    const quarter = currentQuarter || '';
+    
+    // Navigate to stock details with quarter parameter
+    router.push(`/stock/${symbol}?quarter=${encodeURIComponent(quarter)}`);
   }
 
   const renderSortIcon = (key: keyof Stock) => {
