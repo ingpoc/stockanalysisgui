@@ -164,12 +164,12 @@ export default function MoneyControlScraperSettings() {
         body: JSON.stringify({ quarter: selectedQuarter }),
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to remove quarterly data')
+        throw new Error(result.message || 'Failed to remove quarterly data')
       }
 
-      const result = await response.json()
       setLastRemoveResult(result)
       
       if (result.success) {
@@ -178,8 +178,8 @@ export default function MoneyControlScraperSettings() {
         toast.warning(result.message || 'Operation completed with warnings')
       }
     } catch (error) {
-      console.error('Error removing quarterly data:', error)
-      toast.error(`Error: ${error instanceof Error ? error.message : 'Failed to remove quarterly data'}`)
+      console.error('Error removing quarter data:', error)
+      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {
       setIsRemovingQuarter(false)
     }

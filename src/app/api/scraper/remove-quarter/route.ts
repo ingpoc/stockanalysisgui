@@ -15,6 +15,8 @@ export async function POST(request: Request) {
       )
     }
     
+    console.log(`Removing quarter data for: ${quarter}`)
+    
     // Forward the request to the Python backend
     const response = await fetch(`${API_BASE_URL}/scraper/remove-quarter`, {
       method: 'POST',
@@ -24,19 +26,21 @@ export async function POST(request: Request) {
       body: JSON.stringify({ quarter }),
     })
     
+    // Parse the response JSON regardless of status
+    const data = await response.json()
+    
+    // If response is not OK, return a proper error
     if (!response.ok) {
-      const errorData = await response.json()
       return NextResponse.json(
         { 
           success: false, 
-          message: errorData.detail || 'Error removing quarterly data',
+          message: data.message || 'Error removing quarterly data',
         },
         { status: response.status }
       )
     }
     
-    // Return the response from the backend
-    const data = await response.json()
+    // Return the successful response from the backend
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error in remove quarter API:', error)
