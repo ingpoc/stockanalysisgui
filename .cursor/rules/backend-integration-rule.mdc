@@ -1,5 +1,5 @@
 ---
-description: 
+description: Backend Integration Rules and Guidelines
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx, pages/api/**/*
 alwaysApply: false
 ---
@@ -7,8 +7,8 @@ alwaysApply: false
 description: Backend Integration Rules and Guidelines
 globs: src/**/*.ts, src/**/*.js, src/**/*.tsx, pages/api/**/*
 alwaysApply: false
-version: 1.0.0
-last_updated: 2024-02-26
+version: 1.1.0
+last_updated: 2024-03-02
 ---
 # Backend Integration Rules
 
@@ -16,8 +16,9 @@ last_updated: 2024-02-26
 This document guides the AI on how to handle backend integration-related requests and documentation updates.
 
 ## Documentation Reference
-- Implementation patterns are defined in](/docs/backend-integration.md)
-- Always refer to backend-integration.md before making any changes
+- Implementation patterns are defined in [backend-integration.md](mdc:docs/backend-integration.md)
+- API contract consistency is defined in [api-contract-rule.mdc](mdc:stockanalysisgui/.cursor/rules/api-contract-rule.mdc)
+- Always refer to both documents before making any changes
 
 ## Primary API Endpoints
 
@@ -36,11 +37,17 @@ This document guides the AI on how to handle backend integration-related request
    - `/api/v1/portfolios/{id}` - Specific portfolio
    - `/api/v1/holdings` - User holdings
 
+4. **Scraper Endpoints**
+   - `/api/v1/scraper/scrape` - Trigger scraping
+   - `/api/v1/scraper/companies` - List companies
+   - `/api/v1/scraper/company/{company_name}` - Get company data
+   - `/api/v1/scraper/remove-quarter` - Remove quarter data
+
 ## Request Handling Rules
 
 1. **For General Backend Integration Questions**
    ```
-   1. Reference backend-integration.md
+   1. Reference backend-integration.md and api-contract-rule.mdc
    2. Provide guidance based on existing patterns
    3. DO NOT modify any code or documentation without permission
    ```
@@ -49,7 +56,7 @@ This document guides the AI on how to handle backend integration-related request
    ```
    1. Confirm explicit request for backend system change
    2. Review backend-integration.md for current implementation
-   3. Implement requested changes
+   3. Implement requested changes following api-contract-rule.mdc standards
    4. Wait for user to confirm functionality
    5. Only update backend-integration.md after user confirmation
    ```
@@ -61,6 +68,7 @@ This document guides the AI on how to handle backend integration-related request
    ✅ DO:
    - Get explicit confirmation that backend change is needed
    - Implement changes following backend-integration.md patterns
+   - Ensure consistency with api-contract-rule.mdc guidelines
    - Test integration points thoroughly
    - Ask user to verify functionality
    - Update docs only after user confirms
@@ -79,6 +87,7 @@ This document guides the AI on how to handle backend integration-related request
    - Implement proper loading states
    - Handle errors gracefully with user feedback
    - Use TypeScript interfaces for API responses
+   - Always parse the response body regardless of status
    - Follow RESTful patterns from documentation
 
    ❌ DON'T:
@@ -86,6 +95,7 @@ This document guides the AI on how to handle backend integration-related request
    - Ignore response types
    - Mix different API calling patterns
    - Handle retries inconsistently
+   - Assume response body is available only on successful responses
    ```
 
 ## Implementation Examples
@@ -93,16 +103,21 @@ This document guides the AI on how to handle backend integration-related request
 1. **Fetching Market Data**
    ```typescript
    // Example pattern for fetching market data
-   const fetchMarketData = async (quarter?: string) => {
+   const fetchMarketData = async (quarter?: string): Promise<MarketDataResponse> => {
      const queryParams = new URLSearchParams();
      if (quarter) queryParams.append('quarter', quarter);
      
      try {
        const response = await fetch(`/api/v1/market-data?${queryParams}`);
+       
+       // Always parse the response JSON regardless of status
+       const data = await response.json();
+       
        if (!response.ok) {
-         throw new Error(`Error: ${response.status}`);
+         throw new Error(data.message || `Error: ${response.status}`);
        }
-       return await response.json();
+       
+       return data;
      } catch (error) {
        console.error('Failed to fetch market data:', error);
        throw error;
@@ -124,9 +139,105 @@ This document guides the AI on how to handle backend integration-related request
    }
    ```
 
+3. **API POST Request with Error Handling**
+   ```typescript
+   // Example of POST request with proper error handling
+   const removeQuarterData = async (quarter: string): Promise<RemoveQuarterResponse> => {
+     if (!quarter) {
+       throw new Error('Quarter parameter is required');
+     }
+     
+     try {
+       const response = await fetch('/api/scraper/remove-quarter', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({ quarter }),
+       });
+       
+       // Parse the response regardless of status
+       const data = await response.json();
+       
+       // Handle error responses
+       if (!response.ok) {
+         throw new Error(data.message || `Error ${response.status}`);
+       }
+       
+       return data;
+     } catch (error) {
+       console.error('Error removing quarter data:', error);
+       throw error;
+     }
+   };
+   ```
+
+## NextJS API Routes Implementation
+
+1. **Standard API Route Pattern**
+   ```typescript
+   // Example of standard NextJS API route implementation
+   import { NextResponse } from 'next/server';
+   
+   export async function POST(request: Request) {
+     try {
+       // Parse the request body
+       const body = await request.json();
+       
+       // Validate required parameters
+       if (!body.required_param) {
+         return NextResponse.json(
+           { success: false, message: 'Required parameter is missing' },
+           { status: 400 }
+         );
+       }
+       
+       // Forward the request to the Python backend
+       const response = await fetch(`${API_BASE_URL}/endpoint`, {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify(body),
+       });
+       
+       // Parse the response regardless of status
+       const data = await response.json();
+       
+       // Return appropriate response based on status
+       if (!response.ok) {
+         return NextResponse.json(
+           { 
+             success: false, 
+             message: data.message || 'Backend error',
+           },
+           { status: response.status }
+         );
+       }
+       
+       // Return successful response
+       return NextResponse.json(data);
+     } catch (error) {
+       console.error('Error in API route:', error);
+       return NextResponse.json(
+         { 
+           success: false, 
+           message: error instanceof Error ? error.message : 'An unexpected error occurred',
+         },
+         { status: 500 }
+       );
+     }
+   }
+   ```
+
 ## Documentation Update Process
 
 1. Always get user confirmation before updating documentation
 2. Ensure any documentation updates match implemented functionality
 3. Follow the format and structure of existing documentation
 4. Include code examples for new functionality
+
+## Related Rules
+- For API contract consistency: See [api-contract-rule.mdc]
+- For error handling: See [error-handling-rule.mdc]
+- For component lifecycle: See [component-lifecycle-rule.mdc]

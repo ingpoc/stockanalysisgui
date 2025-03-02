@@ -1,0 +1,399 @@
+---
+description: Frontend Integration Testing Guidelines
+globs: src/**/*.test.ts, src/**/*.test.tsx
+alwaysApply: false
+---
+ ---
+description: Frontend Integration Testing Guidelines
+globs: src/**/*.test.ts, src/**/*.test.tsx
+alwaysApply: false
+version: 1.0.0
+last_updated: 2024-03-02
+---
+
+# Frontend Integration Testing Guidelines
+
+## Purpose
+This document provides guidelines for implementing integration tests in the frontend to ensure proper communication with the backend API and handling of responses.
+
+## Key Principles
+- ✓ Test all API interactions with proper mocking
+- ✓ Validate request formats match API contracts
+- ✓ Test handling of success and error responses
+- ✓ Test UI behavior based on API responses
+- ✓ Use MSW (Mock Service Worker) for API mocking
+- ✓ Test with realistic data matching backend formats
+
+## Setting Up MSW for API Mocking
+
+```typescript
+// src/mocks/handlers.ts
+import { rest } from 'msw'
+
+export const handlers = [
+  // Define handlers for all API endpoints
+  rest.get('/api/v1/endpoint', (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: 'Success message',
+        data: [
+          { id: 1, name: 'Item 1' },
+          { id: 2, name: 'Item 2' },
+        ]
+      })
+    )
+  }),
+  
+  // Error response handler
+  rest.post('/api/v1/endpoint-with-error', (req, res, ctx) => {
+    return res(
+      ctx.status(400),
+      ctx.json({
+        success: false,
+        message: 'Validation error message',
+        data: null
+      })
+    )
+  })
+]
+```
+
+## Component Testing with MSW
+
+```typescript
+// Example component test with MSW
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { setupServer } from 'msw/node'
+import { handlers } from '../mocks/handlers'
+import DataFetchingComponent from './DataFetchingComponent'
+
+// Setup MSW server
+const server = setupServer(...handlers)
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+test('fetches and displays data successfully', async () => {
+  // Render the component
+  render(<DataFetchingComponent />)
+  
+  // Find and click the fetch button
+  const fetchButton = screen.getByRole('button', { name: /fetch data/i })
+  userEvent.click(fetchButton)
+  
+  // Wait for the loading state
+  expect(screen.getByText(/loading/i)).toBeInTheDocument()
+  
+  // Wait for data to be displayed
+  await waitFor(() => {
+    expect(screen.getByText('Item 1')).toBeInTheDocument()
+    expect(screen.getByText('Item 2')).toBeInTheDocument()
+  })
+  
+  // Verify loading state is removed
+  expect(screen.queryByText(/loading/i)).not.toBeInTheDocument()
+})
+```
+
+## Testing Error Scenarios
+
+```typescript
+test('handles error responses correctly', async () => {
+  // Override the default handler for this test
+  server.use(
+    rest.get('/api/v1/endpoint', (req, res, ctx) => {
+      return res(
+        ctx.status(500),
+        ctx.json({
+          success: false,
+          message: 'Server error occurred',
+          data: null
+        })
+      )
+    })
+  )
+  
+  // Render the component
+  render(<DataFetchingComponent />)
+  
+  // Trigger the fetch
+  const fetchButton = screen.getByRole('button', { name: /fetch data/i })
+  userEvent.click(fetchButton)
+  
+  // Wait for the error to be displayed
+  await waitFor(() => {
+    expect(screen.getByText(/server error occurred/i)).toBeInTheDocument()
+  })
+  
+  // Verify that error UI is shown correctly
+  expect(screen.getByRole('alert')).toHaveClass('error')
+})
+```
+
+## Testing Form Submissions
+
+```typescript
+test('submits form data correctly', async () => {
+  // Create a mock handler that verifies the request format
+  let requestData = null
+  server.use(
+    rest.post('/api/v1/submit-form', (req, res, ctx) => {
+      requestData = req.body
+      return res(
+        ctx.status(200),
+        ctx.json({
+          success: true,
+          message: 'Form submitted successfully',
+          data: { id: 1 }
+        })
+      )
+    })
+  )
+  
+  // Render the form component
+  render(<FormComponent />)
+  
+  // Fill out the form
+  userEvent.type(screen.getByLabelText(/name/i), 'Test User')
+  userEvent.type(screen.getByLabelText(/email/i), 'test@example.com')
+  userEvent.click(screen.getByRole('button', { name: /submit/i }))
+  
+  // Wait for submission success message
+  await waitFor(() => {
+    expect(screen.getByText(/submitted successfully/i)).toBeInTheDocument()
+  })
+  
+  // Verify the format of the sent data
+  expect(requestData).toEqual({
+    name: 'Test User',
+    email: 'test@example.com'
+  })
+})
+```
+
+## Testing Response Processing
+
+```typescript
+test('processes and displays API response data correctly', async () => {
+  // Mock the API response with specific data for this test
+  server.use(
+    rest.get('/api/v1/specific-data', (req, res, ctx) => {
+      return res(
+        ctx.status(200),
+        ctx.json({
+          success: true,
+          message: 'Data retrieved',
+          data: {
+            items: [
+              { id: 1, status: 'active', value: 100 },
+              { id: 2, status: 'inactive', value: 200 },
+              { id: 3, status: 'active', value: 300 }
+            ],
+            summary: {
+              total: 600,
+              average: 200
+            }
+          }
+        })
+      )
+    })
+  )
+  
+  // Render component that processes this data
+  render(<DataProcessingComponent endpoint="/api/v1/specific-data" />)
+  
+  // Wait for the data to be processed and displayed
+  await waitFor(() => {
+    // Check that active items are displayed correctly
+    expect(screen.getByText('Active Items: 2')).toBeInTheDocument()
+    
+    // Check that the summary calculation is displayed
+    expect(screen.getByText('Total Value: 600')).toBeInTheDocument()
+    expect(screen.getByText('Average Value: 200')).toBeInTheDocument()
+    
+    // Check that only active items are in the active list
+    const activeItems = screen.getAllByTestId('active-item')
+    expect(activeItems).toHaveLength(2)
+  })
+})
+```
+
+## Testing Authenticated Requests
+
+```typescript
+test('sends authentication token with requests', async () => {
+  // Mock auth state
+  const mockToken = 'test-auth-token'
+  jest.spyOn(AuthContext, 'useAuth').mockReturnValue({
+    isAuthenticated: true,
+    token: mockToken,
+    login: jest.fn(),
+    logout: jest.fn()
+  })
+  
+  // Setup request verification
+  let authHeader = null
+  server.use(
+    rest.get('/api/v1/protected-resource', (req, res, ctx) => {
+      authHeader = req.headers.get('Authorization')
+      return res(
+        ctx.status(200),
+        ctx.json({
+          success: true,
+          message: 'Protected data',
+          data: { secret: 'protected-content' }
+        })
+      )
+    })
+  )
+  
+  // Render component that makes authenticated requests
+  render(<AuthenticatedComponent />)
+  
+  // Trigger the request
+  userEvent.click(screen.getByRole('button', { name: /fetch protected/i }))
+  
+  // Wait for the request to complete
+  await waitFor(() => {
+    expect(screen.getByText('protected-content')).toBeInTheDocument()
+  })
+  
+  // Verify the auth header was set correctly
+  expect(authHeader).toBe(`Bearer ${mockToken}`)
+})
+```
+
+## Testing API Error Handling UI
+
+```typescript
+test('displays toast notification on API error', async () => {
+  // Mock toast functionality
+  const mockShowToast = jest.fn()
+  jest.spyOn(ToastContext, 'useToast').mockReturnValue({
+    showToast: mockShowToast
+  })
+  
+  // Setup error response
+  server.use(
+    rest.get('/api/v1/data', (req, res, ctx) => {
+      return res(
+        ctx.status(500),
+        ctx.json({
+          success: false,
+          message: 'Internal server error',
+          data: null
+        })
+      )
+    })
+  )
+  
+  // Render component
+  render(<DataComponent />)
+  
+  // Trigger the request
+  userEvent.click(screen.getByRole('button', { name: /load data/i }))
+  
+  // Verify toast was called with error message
+  await waitFor(() => {
+    expect(mockShowToast).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Internal server error'
+    })
+  })
+})
+```
+
+## Testing Complete User Flows
+
+```typescript
+test('complete user flow with multiple API interactions', async () => {
+  // Setup handlers for the flow
+  server.use(
+    // Step 1: Login
+    rest.post('/api/v1/auth/login', (req, res, ctx) => {
+      return res(
+        ctx.status(200),
+        ctx.json({
+          success: true,
+          message: 'Login successful',
+          data: { token: 'test-token', user: { id: 1, name: 'Test User' } }
+        })
+      )
+    }),
+    
+    // Step 2: Fetch user data
+    rest.get('/api/v1/user-data', (req, res, ctx) => {
+      // Verify auth header is present
+      const authHeader = req.headers.get('Authorization')
+      if (authHeader !== 'Bearer test-token') {
+        return res(ctx.status(401))
+      }
+      
+      return res(
+        ctx.status(200),
+        ctx.json({
+          success: true,
+          message: 'User data retrieved',
+          data: { preferences: { theme: 'dark' } }
+        })
+      )
+    }),
+    
+    // Step 3: Update preferences
+    rest.post('/api/v1/user-data/preferences', (req, res, ctx) => {
+      return res(
+        ctx.status(200),
+        ctx.json({
+          success: true,
+          message: 'Preferences updated',
+          data: { updated: true }
+        })
+      )
+    })
+  )
+  
+  // Start the flow - render login
+  render(<AppWithRouting initialRoute="/login" />)
+  
+  // Step 1: Perform login
+  userEvent.type(screen.getByLabelText(/username/i), 'testuser')
+  userEvent.type(screen.getByLabelText(/password/i), 'password')
+  userEvent.click(screen.getByRole('button', { name: /login/i }))
+  
+  // Wait for redirect to dashboard after login
+  await waitFor(() => {
+    expect(screen.getByText(/welcome, test user/i)).toBeInTheDocument()
+  })
+  
+  // Step 2: Verify user preference loaded
+  expect(screen.getByText(/dark theme/i)).toBeInTheDocument()
+  
+  // Step 3: Change preference
+  userEvent.click(screen.getByRole('switch', { name: /theme/i }))
+  
+  // Verify update request was successful
+  await waitFor(() => {
+    expect(screen.getByText(/preferences updated/i)).toBeInTheDocument()
+  })
+})
+```
+
+## Testing Best Practices
+
+1. **Test Complete Flows**: Test entire user flows from start to finish
+2. **Realistic Data**: Use realistic data structures that match backend responses
+3. **Test Error States**: Always test how components handle error responses
+4. **Verify Request Format**: Verify outgoing requests match backend expectations
+5. **Test Loading States**: Verify UI shows appropriate loading indicators
+6. **Isolate Tests**: Reset API mocks between tests to avoid interference
+7. **Test Authentication**: Verify auth tokens are properly included and handled
+8. **Maintain Contract**: Keep tests in sync with backend API contracts
+
+## Related Rules
+- See [api-contract-rule.mdc] for details on the API contract
+- See [error-handling-rule.mdc] for error handling guidelines
+- See [component-lifecycle-rule.mdc] for component testing best practices

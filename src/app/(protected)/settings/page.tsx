@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import MoneyControlScraperSettings from './moneycontrol-scraper/moneycontrol-settings'
+import DatabaseManagementSettings from './database-management/database-management'
 
 export default function SettingsPage() {
   return (
@@ -14,8 +15,9 @@ export default function SettingsPage() {
       </div>
       
       <Tabs defaultValue="integrations">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
@@ -55,34 +57,19 @@ export default function SettingsPage() {
           </div>
         </TabsContent>
         
-        <TabsContent value="appearance" className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Appearance Settings</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Theme</CardTitle>
-              <CardDescription>
-                Customize the look and feel of the application
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Theme settings will be implemented in a future update.</p>
-            </CardContent>
-          </Card>
+        <TabsContent value="database" className="space-y-4 mt-4">
+          <h2 className="text-xl font-semibold mb-4">Database Management</h2>
+          <DatabaseManagementSettings />
         </TabsContent>
         
-        <TabsContent value="account" className="space-y-4">
+        <TabsContent value="appearance" className="space-y-4 mt-4">
+          <h2 className="text-xl font-semibold mb-4">Appearance Settings</h2>
+          <p>Appearance settings coming soon...</p>
+        </TabsContent>
+        
+        <TabsContent value="account" className="space-y-4 mt-4">
           <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Manage your account details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Account settings will be implemented in a future update.</p>
-            </CardContent>
-          </Card>
+          <p>Account settings coming soon...</p>
         </TabsContent>
       </Tabs>
     </div>

@@ -1,0 +1,239 @@
+---
+description: API Contract Rules for Frontend
+globs: src/app/api/**/*.ts, src/lib/**/*.ts
+alwaysApply: false
+---
+ ---
+description: API Contract Rules
+globs: src/app/api/**/*.ts, src/lib/**/*.ts
+alwaysApply: true
+version: 1.0.0
+last_updated: 2024-03-02
+---
+
+# API Contract Rules for Frontend
+
+## Purpose
+This document defines rules for API contract consistency between the frontend and backend to prevent integration issues.
+
+## Key Principles
+- ✓ Use consistent naming conventions across frontend and backend
+- ✓ Define TypeScript interfaces for all API requests and responses
+- ✓ Implement thorough validation before sending requests
+- ✓ Handle all possible response scenarios, including errors
+- ✓ Parse response bodies consistently, regardless of status code
+- ✓ Maintain backward compatibility when changing API interactions
+
+## API Request Implementation
+
+### Type Definitions
+```typescript
+// Always define types for request and response data
+interface RemoveQuarterRequest {
+  quarter: string;
+}
+
+interface RemoveQuarterResponse {
+  success: boolean;
+  message: string;
+  documents_updated: number;
+}
+```
+
+### Request Handling
+```typescript
+// Example pattern for making API requests
+export async function removeQuarterData(quarter: string): Promise<RemoveQuarterResponse> {
+  // Validate input before sending
+  if (!quarter) {
+    throw new Error("Quarter parameter is required");
+  }
+  
+  // Make the request
+  try {
+    const response = await fetch(`/api/scraper/remove-quarter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ quarter }),
+    });
+    
+    // Always parse the response body regardless of status
+    const data = await response.json();
+    
+    // Check status and handle accordingly
+    if (!response.ok) {
+      // Use the error message from the response if available
+      throw new Error(data.message || `Error: ${response.status}`);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error removing quarter data:', error);
+    throw error;
+  }
+}
+```
+
+## Response Handling Standards
+
+### Success Handling
+```typescript
+try {
+  const result = await removeQuarterData(selectedQuarter);
+  
+  if (result.success) {
+    toast.success(`Successfully removed ${result.documents_updated} items`);
+  } else {
+    // Even with a 200 status, the operation might not be fully successful
+    toast.warning(result.message || 'Operation completed with warnings');
+  }
+} catch (error) {
+  // Handle unexpected errors
+  toast.error(error instanceof Error ? error.message : 'An unexpected error occurred');
+}
+```
+
+### Error Handling
+```typescript
+// NextJS API route error handling
+export async function POST(request: Request) {
+  try {
+    // Implementation...
+    
+    // Parse the response regardless of status
+    const data = await response.json();
+    
+    // If the backend request failed, return the error with the appropriate status
+    if (!response.ok) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: data.message || 'Error processing request',
+        },
+        { status: response.status }
+      );
+    }
+    
+    // Return successful response
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error in API route:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+      },
+      { status: 500 }
+    );
+  }
+}
+```
+
+## API Response TypeScript Interfaces
+
+Define interfaces for all API responses:
+
+```typescript
+// Common response interface pattern
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data?: T;
+}
+
+// Specific response interfaces
+interface ScrapeResponse extends ApiResponse<any[]> {
+  companies_count: number;
+}
+
+interface RemoveQuarterResponse extends ApiResponse<null> {
+  documents_updated: number;
+}
+```
+
+## API Endpoint Mapping
+
+Maintain a centralized mapping of backend API endpoints:
+
+```typescript
+// In src/lib/api-endpoints.ts
+export const API_ENDPOINTS = {
+  MARKET: {
+    BASE: '/api/v1/market-data',
+    QUARTERS: '/api/v1/quarters',
+  },
+  SCRAPER: {
+    TRIGGER: '/api/v1/scraper/scrape',
+    REMOVE_QUARTER: '/api/v1/scraper/remove-quarter',
+  },
+  STOCK: {
+    DETAILS: (symbol: string) => `/api/v1/stock/${symbol}`,
+    ANALYSIS: (symbol: string) => `/api/v1/stock/${symbol}/analysis-history`,
+  },
+  // Other endpoints...
+};
+```
+
+## NextJS API Route Implementation
+
+Always follow this pattern for API routes:
+
+1. Validate incoming request data
+2. Forward request to backend with proper error handling
+3. Parse response body regardless of status code
+4. Return appropriate response with status code
+
+```typescript
+// Example implementation
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
+  try {
+    // 1. Parse and validate request
+    const body = await request.json();
+    
+    if (!body.quarter) {
+      return NextResponse.json(
+        { success: false, message: 'Quarter parameter is required' },
+        { status: 400 }
+      );
+    }
+    
+    // 2. Log the operation
+    console.log(`Processing operation for: ${body.quarter}`);
+    
+    // 3. Forward to backend
+    const response = await fetch(`${API_BASE_URL}/endpoint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    
+    // 4. Parse response regardless of status
+    const data = await response.json();
+    
+    // 5. Return appropriate response
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, message: data.message || 'Backend error' },
+        { status: response.status }
+      );
+    }
+    
+    return NextResponse.json(data);
+  } catch (error) {
+    // 6. Handle unexpected errors
+    console.error('API route error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+## Error Handling Integration
+
+This rule works in conjunction with the [error-handling-rule.mdc] for complete error management.
