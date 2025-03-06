@@ -12,7 +12,7 @@ console.log('Backend path:', BACKEND_PATH)
 
 // Validate that the backend directory exists
 const backendDirExists = fs.existsSync(BACKEND_PATH)
-const scriptPath = path.join(BACKEND_PATH, 'tools', 'backup_database.py')
+const scriptPath = path.join(BACKEND_PATH, 'tests', 'backup_database.py')
 const scriptExists = fs.existsSync(scriptPath)
 
 export async function POST() {
@@ -45,7 +45,7 @@ export async function POST() {
       console.log('Using python command (python3 not available)')
     }
 
-    const command = `cd "${BACKEND_PATH}" && ${pythonCommand} tools/backup_database.py`
+    const command = `cd "${BACKEND_PATH}" && ${pythonCommand} tests/backup_database.py`
     console.log(`Executing command: ${command}`)
     
     // Execute the backup script

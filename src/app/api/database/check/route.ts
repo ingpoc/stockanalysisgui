@@ -12,7 +12,8 @@ console.log('Backend path:', BACKEND_PATH)
 
 // Validate that the backend directory exists
 const backendDirExists = fs.existsSync(BACKEND_PATH)
-const scriptPath = path.join(BACKEND_PATH, 'tools', 'check_database.py')
+// Update the script path to use tests directory instead of tools
+const scriptPath = path.join(BACKEND_PATH, 'tests', 'check_database.py')
 const scriptExists = fs.existsSync(scriptPath)
 
 export async function GET() {
@@ -45,7 +46,8 @@ export async function GET() {
       console.log('Using python command (python3 not available)')
     }
 
-    const command = `cd "${BACKEND_PATH}" && ${pythonCommand} tools/check_database.py`
+    // Update the command to use tests directory instead of tools
+    const command = `cd "${BACKEND_PATH}" && ${pythonCommand} tests/check_database.py`
     console.log(`Executing command: ${command}`)
     
     // Execute the check database script
