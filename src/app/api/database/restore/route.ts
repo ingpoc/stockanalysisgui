@@ -12,10 +12,9 @@ console.log('Backend path:', BACKEND_PATH)
 
 // Validate that the backend directory exists
 const backendDirExists = fs.existsSync(BACKEND_PATH)
-const scriptPath = path.join(BACKEND_PATH, 'tests', 'reset_database.py')
-const scriptExists = fs.existsSync(scriptPath)
 
-export async function POST() {
+// Update the API endpoint to use the new database utilities
+export async function POST(request: Request) {
   try {
     // Check if the backend directory exists
     if (!backendDirExists) {
@@ -23,15 +22,6 @@ export async function POST() {
       return NextResponse.json({ 
         success: false, 
         message: `Backend directory not found. Expected at: ${BACKEND_PATH}. Please set BACKEND_PATH environment variable.`
-      }, { status: 500 })
-    }
-
-    // Check if the script exists
-    if (!scriptExists) {
-      console.error(`Restore script not found: ${scriptPath}`)
-      return NextResponse.json({ 
-        success: false, 
-        message: `Restore script not found. Expected at: ${scriptPath}`
       }, { status: 500 })
     }
 
@@ -45,67 +35,83 @@ export async function POST() {
       console.log('Using python command (python3 not available)')
     }
 
-    const command = `cd "${BACKEND_PATH}" && ${pythonCommand} tests/reset_database.py`
-    console.log(`Executing command: ${command}`)
+    // Get the backup file from the request body if provided
+    let backupFile: string | null = null;
+    try {
+      const body = await request.json();
+      backupFile = body.backupFile || null;
+    } catch (e) {
+      console.log('No request body or invalid JSON');
+    }
+
+    // Use the new API endpoint instead of the script
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
     
-    // Execute the restore script
-    const { stdout, stderr } = await execPromise(command)
+    // Construct the command based on whether a backup file was specified
+    let command: string;
+    if (backupFile) {
+      command = `curl -X POST "${apiUrl}/database/restore" -H "Content-Type: application/json" -d '{"backup_file":"${backupFile}"}'`;
+    } else {
+      command = `curl -X POST "${apiUrl}/database/restore"`;
+    }
+    
+    console.log(`Executing command: ${command}`);
+    
+    // Execute the API call
+    const { stdout, stderr } = await execPromise(command);
     
     // Log both stdout and stderr for debugging
-    console.log('Script stdout:', stdout)
+    console.log('API response:', stdout);
     if (stderr) {
-      console.log('Script stderr (might not be an error):', stderr)
+      console.log('API stderr (might not be an error):', stderr);
     }
     
-    // Check for specific success marker
-    const successMarker = stdout.includes('SCRIPT_SUCCESS') || 
-                          stdout.includes('RESET_COMPLETED') ||
-                          stdout.includes('RESTORE_COMPLETED') ||
-                          stdout.includes('Database reset process completed successfully') || 
-                          stdout.includes('All database operations completed successfully')
-    
-    if (!successMarker) {
-      console.error('Database restoration did not complete successfully - no success marker found in output')
+    // Parse the JSON response
+    try {
+      const response = JSON.parse(stdout);
       
-      // Look for specific error markers
-      const errorMatch = stdout.match(/SCRIPT_FAILURE: (.+)/) || 
-                         stdout.match(/ERROR: (.+)/) ||
-                         stdout.match(/SCRIPT_ERROR: (.+)/)
-      const errorMessage = errorMatch 
-        ? errorMatch[1] 
-        : 'Database restoration did not complete successfully - no success marker found'
+      if (response.success === false) {
+        return NextResponse.json({ 
+          success: false, 
+          message: response.detail || 'Restore failed',
+          response
+        }, { status: 500 });
+      }
       
       return NextResponse.json({ 
-        success: false, 
-        message: errorMessage,
-        stdout,
-        stderr
-      }, { status: 500 })
+        success: true, 
+        message: response.message || 'Database restored successfully',
+        backupFile: response.backup_file || backupFile || 'latest backup', 
+        response
+      });
+    } catch (parseError) {
+      console.error('Error parsing API response:', parseError);
+      
+      // If we can't parse the response, check for success markers in the raw output
+      const successMarker = stdout.includes('success') || 
+                            stdout.includes('restored');
+      
+      if (!successMarker) {
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to parse API response and no success markers found',
+          stdout,
+          stderr
+        }, { status: 500 });
+      }
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Database restored successfully',
+        backupFile: backupFile || 'latest backup', 
+        output: stdout
+      });
     }
-    
-    // Try to extract information about what was restored
-    const restoredCountMatch = stdout.match(/INFO: Restoration complete: (\d+) documents restored/) ||
-                              stdout.match(/Restoration complete: (\d+) documents restored/)
-    
-    const restoredCount = restoredCountMatch ? parseInt(restoredCountMatch[1]) : 0
-    
-    const backupFileMatch = stdout.match(/INFO: Using latest backup file: (.+)/) ||
-                           stdout.match(/Latest backup file: (.+)/)
-    
-    const backupFile = backupFileMatch ? backupFileMatch[1] : 'unknown backup file'
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: `Database restored successfully from ${backupFile}. ${restoredCount} documents restored.`,
-      restoreCount: restoredCount,
-      backupFile: backupFile,
-      output: stdout
-    })
   } catch (error) {
-    console.error('Error executing restore script:', error)
+    console.error('Error executing restore API call:', error);
     return NextResponse.json({ 
       success: false, 
       message: error instanceof Error ? error.message : 'An unexpected error occurred'
-    }, { status: 500 })
+    }, { status: 500 });
   }
 } 

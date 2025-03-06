@@ -12,9 +12,8 @@ console.log('Backend path:', BACKEND_PATH)
 
 // Validate that the backend directory exists
 const backendDirExists = fs.existsSync(BACKEND_PATH)
-const scriptPath = path.join(BACKEND_PATH, 'tests', 'backup_database.py')
-const scriptExists = fs.existsSync(scriptPath)
 
+// Update the API endpoint to use the new database utilities
 export async function POST() {
   try {
     // Check if the backend directory exists
@@ -23,15 +22,6 @@ export async function POST() {
       return NextResponse.json({ 
         success: false, 
         message: `Backend directory not found. Expected at: ${BACKEND_PATH}. Please set BACKEND_PATH environment variable.`
-      }, { status: 500 })
-    }
-
-    // Check if the script exists
-    if (!scriptExists) {
-      console.error(`Backup script not found: ${scriptPath}`)
-      return NextResponse.json({ 
-        success: false, 
-        message: `Backup script not found. Expected at: ${scriptPath}`
       }, { status: 500 })
     }
 
@@ -45,63 +35,70 @@ export async function POST() {
       console.log('Using python command (python3 not available)')
     }
 
-    const command = `cd "${BACKEND_PATH}" && ${pythonCommand} tests/backup_database.py`
+    // Use the new API endpoint instead of the script
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    const command = `curl -X POST "${apiUrl}/database/backup"`
     console.log(`Executing command: ${command}`)
     
-    // Execute the backup script
+    // Execute the API call
     const { stdout, stderr } = await execPromise(command)
     
     // Log both stdout and stderr for debugging
-    console.log('Script stdout:', stdout)
+    console.log('API response:', stdout)
     if (stderr) {
-      console.log('Script stderr (might not be an error):', stderr)
+      console.log('API stderr (might not be an error):', stderr)
     }
     
-    // Check for specific success marker
-    const successMarker = stdout.includes('SCRIPT_SUCCESS') || 
-                          stdout.includes('BACKUP_COMPLETED')
-    
-    if (!successMarker) {
-      console.error('Backup was not successful - no success marker found in output')
-      // Look for specific error markers
-      const errorMatch = stdout.match(/SCRIPT_FAILURE: (.+)/) || 
-                         stdout.match(/ERROR: (.+)/)
-      const errorMessage = errorMatch ? errorMatch[1] : 'Backup failed - no success marker found'
+    // Parse the JSON response
+    try {
+      const response = JSON.parse(stdout)
+      
+      if (response.success === false) {
+        return NextResponse.json({ 
+          success: false, 
+          message: response.detail || 'Backup failed',
+          response
+        }, { status: 500 })
+      }
       
       return NextResponse.json({ 
-        success: false, 
-        message: errorMessage,
-        stdout,
-        stderr
-      }, { status: 500 })
-    }
-    
-    // Extract the backup file path from the output
-    const backupFileMatch = stdout.match(/SCRIPT_SUCCESS: Backup created successfully at (.+)/) || 
-                           stdout.match(/Saving backup to (.+\.json)/) || 
-                           stdout.match(/Backup completed successfully to (.+\.json)/)
-    
-    let backupFile = null
-    if (backupFileMatch) {
-      backupFile = backupFileMatch[1]
-    } else {
-      // If we can't find the exact path, extract just the filename from a directory listing
-      const directoryMatch = stdout.match(/db_backups\/detailed_financials_backup_[0-9_]+\.json/)
-      if (directoryMatch) {
-        backupFile = directoryMatch[0]
-      } else {
-        backupFile = "Backup completed but file path not detected in output"
+        success: true, 
+        message: 'Database backup completed successfully',
+        backupFile: response.backup_file || response.filename, 
+        response
+      })
+    } catch (parseError) {
+      console.error('Error parsing API response:', parseError)
+      
+      // If we can't parse the response, check for success markers in the raw output
+      const successMarker = stdout.includes('success') || 
+                            stdout.includes('backup_file') ||
+                            stdout.includes('filename')
+      
+      if (!successMarker) {
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to parse API response and no success markers found',
+          stdout,
+          stderr
+        }, { status: 500 })
       }
+      
+      // Extract the backup file path from the output if possible
+      const backupFileMatch = stdout.match(/"backup_file":\s*"([^"]+)"/) || 
+                             stdout.match(/"filename":\s*"([^"]+)"/)
+      
+      const backupFile = backupFileMatch ? backupFileMatch[1] : 'Backup completed but file path not detected in output'
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Database backup completed successfully',
+        backupFile: backupFile, 
+        output: stdout
+      })
     }
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Database backup completed successfully',
-      backupFile: backupFile, 
-      output: stdout
-    })
   } catch (error) {
-    console.error('Error executing backup script:', error)
+    console.error('Error executing backup API call:', error)
     return NextResponse.json({ 
       success: false, 
       message: error instanceof Error ? error.message : 'An unexpected error occurred'

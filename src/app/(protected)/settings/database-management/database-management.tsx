@@ -24,7 +24,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
 
-type ActionStatus = 'idle' | 'loading' | 'success' | 'error'
+type ActionStatus = 'idle' | 'loading' | 'success' | 'error' | 'warning'
 
 interface ActionState {
   backup: ActionStatus
@@ -38,6 +38,13 @@ interface DatabaseInfo {
   oldFormatCount: number
   quarters: string[]
   sampleDocument?: any
+  hasIssues: boolean
+  errors: number
+  warnings: number
+  details?: {
+    errors: { collection: string; message: string }[]
+    warnings: { collection: string; message: string }[]
+  }
 }
 
 export default function DatabaseManagementSettings() {
@@ -114,7 +121,16 @@ export default function DatabaseManagementSettings() {
       
       const data = await response.json()
       setDbInfo(data)
-      setStatus(prev => ({ ...prev, check: 'success' }))
+      
+      // Set status based on whether there are validation issues
+      if (data.hasIssues) {
+        // We still consider this a success for UI purposes, but we'll show warnings
+        setStatus(prev => ({ ...prev, check: 'warning' }))
+        toast.warning(`Database check found ${data.errors} errors and ${data.warnings} warnings`)
+      } else {
+        setStatus(prev => ({ ...prev, check: 'success' }))
+        toast.success('Database check completed successfully')
+      }
     } catch (error) {
       console.error('Error checking database:', error)
       setStatus(prev => ({ ...prev, check: 'error' }))
@@ -251,13 +267,18 @@ export default function DatabaseManagementSettings() {
             <Button 
               onClick={handleCheck} 
               disabled={status.check === 'loading'}
-              variant="outline"
-              className="w-full"
+              variant={status.check === 'warning' ? 'outline' : 'outline'}
+              className={`w-full ${status.check === 'warning' ? 'border-amber-500 text-amber-500' : ''}`}
             >
               {status.check === 'loading' ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Checking...
+                </>
+              ) : status.check === 'warning' ? (
+                <>
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  Check Database (Issues Found)
                 </>
               ) : (
                 'Check Database'
@@ -287,12 +308,12 @@ export default function DatabaseManagementSettings() {
                   <div className="text-2xl font-bold">{dbInfo.documentCount}</div>
                 </div>
                 <div className="bg-muted rounded-md p-3">
-                  <div className="text-sm font-medium">Documents with Correct Format</div>
-                  <div className="text-2xl font-bold">{dbInfo.correctFormatCount}</div>
+                  <div className="text-sm font-medium">Validation Errors</div>
+                  <div className="text-2xl font-bold text-destructive">{dbInfo.errors}</div>
                 </div>
                 <div className="bg-muted rounded-md p-3">
-                  <div className="text-sm font-medium">Documents with Old Format</div>
-                  <div className="text-2xl font-bold">{dbInfo.oldFormatCount}</div>
+                  <div className="text-sm font-medium">Validation Warnings</div>
+                  <div className="text-2xl font-bold text-amber-500">{dbInfo.warnings}</div>
                 </div>
               </div>
               
@@ -309,24 +330,76 @@ export default function DatabaseManagementSettings() {
                 </div>
               </div>
               
-              {dbInfo.oldFormatCount > 0 && (
+              {dbInfo.errors > 0 && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Format Issues Detected</AlertTitle>
+                  <AlertTitle>Validation Errors Detected</AlertTitle>
                   <AlertDescription>
-                    {dbInfo.oldFormatCount} documents have the old format structure. Consider running database fix.
+                    {dbInfo.errors} validation errors were found in your database. Check the console for details.
                   </AlertDescription>
                 </Alert>
               )}
               
-              {dbInfo.correctFormatCount === dbInfo.documentCount && (
+              {dbInfo.warnings > 0 && dbInfo.errors === 0 && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Validation Warnings Detected</AlertTitle>
+                  <AlertDescription>
+                    {dbInfo.warnings} validation warnings were found in your database. Check the console for details.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {dbInfo.errors === 0 && dbInfo.warnings === 0 && (
                 <Alert>
                   <Check className="h-4 w-4" />
                   <AlertTitle>Database Structure is Healthy</AlertTitle>
                   <AlertDescription>
-                    All documents have the correct structure.
+                    No validation errors or warnings were found.
                   </AlertDescription>
                 </Alert>
+              )}
+              
+              {/* Display some validation details if available */}
+              {dbInfo.details && dbInfo.details.errors && dbInfo.details.errors.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Validation Errors</h4>
+                  <div className="bg-muted p-3 rounded-md max-h-40 overflow-y-auto">
+                    <ul className="text-xs space-y-1">
+                      {dbInfo.details.errors.slice(0, 5).map((error, index) => (
+                        <li key={index} className="text-destructive">
+                          {error.collection}: {error.message}
+                        </li>
+                      ))}
+                      {dbInfo.details.errors.length > 5 && (
+                        <li className="text-muted-foreground">
+                          ...and {dbInfo.details.errors.length - 5} more errors
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              )}
+              
+              {/* Display some validation warnings if available */}
+              {dbInfo.details && dbInfo.details.warnings && dbInfo.details.warnings.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Validation Warnings</h4>
+                  <div className="bg-muted p-3 rounded-md max-h-40 overflow-y-auto">
+                    <ul className="text-xs space-y-1">
+                      {dbInfo.details.warnings.slice(0, 5).map((warning, index) => (
+                        <li key={index} className="text-amber-500">
+                          {warning.collection}: {warning.message}
+                        </li>
+                      ))}
+                      {dbInfo.details.warnings.length > 5 && (
+                        <li className="text-muted-foreground">
+                          ...and {dbInfo.details.warnings.length - 5} more warnings
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
               )}
             </div>
           </CardContent>
