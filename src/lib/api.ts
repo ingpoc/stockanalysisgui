@@ -118,11 +118,14 @@ export interface AIAnalysisHistory {
   }[]
 }
 
-export async function fetchMarketData(quarter?: string): Promise<MarketOverview> {
+export async function fetchMarketData(quarter?: string, forceRefresh: boolean = false): Promise<MarketOverview> {
   try {
     const url = new URL(`${API_BASE_URL}/market-data`)
     if (quarter) {
       url.searchParams.append('quarter', quarter)
+    }
+    if (forceRefresh) {
+      url.searchParams.append('force_refresh', 'true')
     }
     const response = await fetch(url.toString())
     if (!response.ok) {

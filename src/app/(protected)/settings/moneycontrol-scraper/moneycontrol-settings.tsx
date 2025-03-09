@@ -54,44 +54,35 @@ interface RemoveQuarterResponse {
 export default function MoneyControlScraperSettings() {
   const [selectedOption, setSelectedOption] = useState<string>('LR')
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [lastScrapeResult, setLastScrapeResult] = useState<ScrapeResponse | null>(null)
   const [progress, setProgress] = useState<number>(0)
+  const [lastScrapeResult, setLastScrapeResult] = useState<ScrapeResponse | null>(null)
+  const [isScraping, setIsScraping] = useState(false)
   
   // State for quarter removal
-  const [selectedQuarter, setSelectedQuarter] = useState<string>('')
+  const [quartersAvailable, setQuartersAvailable] = useState<string[]>([])
+  const [loadingQuarters, setLoadingQuarters] = useState<boolean>(false)
+  const [selectedQuarterToRemove, setSelectedQuarterToRemove] = useState<string>('')
   const [isRemovingQuarter, setIsRemovingQuarter] = useState<boolean>(false)
   const [lastRemoveResult, setLastRemoveResult] = useState<RemoveQuarterResponse | null>(null)
-  const [quarters, setQuarters] = useState<string[]>([])
-  const [loadingQuarters, setLoadingQuarters] = useState<boolean>(true)
 
-  // Fetch quarters from the database
+  // Load available quarters on component mount
   useEffect(() => {
-    const abortController = new AbortController()
-
-    async function loadQuarters() {
-      setLoadingQuarters(true)
-      try {
-        const data = await getQuarters(abortController.signal)
-        if (data.length > 0) {
-          setQuarters(data)
-          setSelectedQuarter(data[0])
-        }
-      } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error('Failed to fetch quarters:', error)
-          toast.error('Failed to fetch quarters. Please try again later.')
-        }
-      } finally {
-        setLoadingQuarters(false)
-      }
-    }
-
     loadQuarters()
-
-    return () => {
-      abortController.abort()
-    }
   }, [])
+  
+  // Function to load available quarters
+  const loadQuarters = async () => {
+    setLoadingQuarters(true)
+    try {
+      const quarters = await getQuarters()
+      setQuartersAvailable(quarters || [])
+    } catch (error) {
+      console.error('Error loading quarters:', error)
+      toast.error('Failed to load available quarters')
+    } finally {
+      setLoadingQuarters(false)
+    }
+  }
 
   const handleScrape = async () => {
     setIsLoading(true)
@@ -99,6 +90,7 @@ export default function MoneyControlScraperSettings() {
     setLastScrapeResult(null)
 
     try {
+      // Start progress animation
       const progressInterval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 90) {
@@ -129,7 +121,13 @@ export default function MoneyControlScraperSettings() {
       setLastScrapeResult(result)
       
       if (result.success) {
-        toast.success(`Successfully scraped ${result.companies_scraped || 0} companies`)
+        // If successfully started background scraping
+        if (result.message && result.message.includes('started in the background')) {
+          setIsScraping(true) // Set background scraping state
+          toast.success('Scraping started in the background. You can navigate away and continue using the app.')
+        } else {
+          toast.success(`Successfully scraped ${result.companies_scraped || 0} companies`)
+        }
       } else {
         toast.warning(result.message || 'Scraping completed with warnings')
       }
@@ -142,18 +140,17 @@ export default function MoneyControlScraperSettings() {
   }
 
   const handleRemoveQuarter = async () => {
-    if (!selectedQuarter) {
+    if (!selectedQuarterToRemove) {
       toast.error('Please select a quarter to remove')
       return
     }
 
-    // Show confirmation dialog
-    if (!confirm(`Are you sure you want to remove all ${selectedQuarter} data from the database? This action cannot be undone.`)) {
+    const confirmRemoval = confirm(`Are you sure you want to remove data for ${selectedQuarterToRemove}? This cannot be undone.`)
+    if (!confirmRemoval) {
       return
     }
 
     setIsRemovingQuarter(true)
-    setLastRemoveResult(null)
 
     try {
       const response = await fetch('/api/scraper/remove-quarter', {
@@ -161,27 +158,37 @@ export default function MoneyControlScraperSettings() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ quarter: selectedQuarter }),
+        body: JSON.stringify({ quarter: selectedQuarterToRemove }),
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to remove quarterly data')
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to remove quarter data')
       }
 
-      setLastRemoveResult(result)
+      const result = await response.json()
       
       if (result.success) {
-        toast.success(`Successfully removed ${selectedQuarter} data from ${result.documents_updated || 0} companies`)
+        toast.success(`Successfully removed quarter data for ${selectedQuarterToRemove}`)
+        
+        // Add a second toast about refreshing dashboard
+        setTimeout(() => {
+          toast.info('Please navigate to the dashboard to see the updated data. If you\'re already on the dashboard, try refreshing the page.', {
+            duration: 5000,
+          })
+        }, 1000)
+        
+        // Refresh quarters list
+        loadQuarters()
       } else {
-        toast.warning(result.message || 'Operation completed with warnings')
+        toast.warning(result.message || 'No data was modified')
       }
     } catch (error) {
       console.error('Error removing quarter data:', error)
-      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Failed to remove quarter data'}`)
     } finally {
       setIsRemovingQuarter(false)
+      setSelectedQuarterToRemove('')
     }
   }
 
@@ -190,7 +197,29 @@ export default function MoneyControlScraperSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Background scraping notification banner - show BEFORE other content */}
+      {isScraping && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300 p-6 rounded-lg mb-6 shadow-sm">
+          <div className="flex items-center mb-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent mr-3"></div>
+            <h3 className="font-medium text-lg">Scraping in progress</h3>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm">
+              <strong>Scraping is running in the background.</strong> You can use all other features of the application while the scraping process completes.
+            </p>
+            <p className="text-sm">
+              Try navigating to the <span className="font-medium">Market Overview</span> to view existing data, 
+              or check your <span className="font-medium">Portfolio</span> while waiting for new data to be available.
+            </p>
+            <p className="text-sm">
+              New data will automatically become available in the dashboard when scraping completes.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Scraping Section */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Scrape Financial Data</h3>
@@ -286,15 +315,15 @@ export default function MoneyControlScraperSettings() {
               <div className="space-y-2">
                 <Label htmlFor="quarter-select">Select Quarter</Label>
                 <Select
-                  value={selectedQuarter}
-                  onValueChange={setSelectedQuarter}
+                  value={selectedQuarterToRemove}
+                  onValueChange={setSelectedQuarterToRemove}
                   disabled={isRemovingQuarter || loadingQuarters}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={loadingQuarters ? "Loading quarters..." : "Select quarter to remove"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {quarters.map((quarter) => (
+                    {quartersAvailable.map((quarter) => (
                       <SelectItem key={quarter} value={quarter}>
                         {quarter}
                       </SelectItem>
@@ -309,7 +338,7 @@ export default function MoneyControlScraperSettings() {
               <Button 
                 variant="destructive" 
                 onClick={handleRemoveQuarter}
-                disabled={isRemovingQuarter || !selectedQuarter || loadingQuarters}
+                disabled={isRemovingQuarter || !selectedQuarterToRemove || loadingQuarters}
               >
                 {isRemovingQuarter ? (
                   <>

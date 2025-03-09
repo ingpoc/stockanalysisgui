@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { StockTable } from "@/components/stock-table"
 import { refreshStockAnalysis, fetchMarketData, getQuarters, type MarketOverview } from "@/lib/api"
@@ -58,6 +58,11 @@ export function StockDashboard() {
   const pageParam = searchParams.get('page')
   const quarterParam = searchParams.get('quarter')
   
+  // UseRef to avoid re-renders for tracking state
+  const isFetchingRef = useRef(false)
+  const lastQuarterFetchedRef = useRef<string | null>(null)
+  const lastUrlUpdateRef = useRef<string | null>(null)
+  
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedStock, setSelectedStock] = useState<string | null>(null)
   const [marketData, setMarketData] = useState<MarketOverview | null>(null)
@@ -69,6 +74,8 @@ export function StockDashboard() {
     ? categoryParam 
     : "top-performers"
   )
+  const [lastDataFetchTime, setLastDataFetchTime] = useState<number>(0)
+  const [fetchErrors, setFetchErrors] = useState<number>(0)
 
   // Load quarters only once on component mount
   useEffect(() => {
@@ -100,60 +107,108 @@ export function StockDashboard() {
     return () => {
       abortController.abort()
     }
-  }, [quarterParam])
+  }, [quarterParam]) // Only depends on quarterParam
+
+  // Create a function for loading market data (not memoized to avoid dependency issues)
+  const loadMarketData = async (quarter: string, forceRefresh: boolean = false) => {
+    // Prevent multiple concurrent fetches for the same quarter
+    if (isFetchingRef.current && lastQuarterFetchedRef.current === quarter && !forceRefresh) {
+      console.log(`Already fetching data for ${quarter}, skipping duplicate request`);
+      return;
+    }
+    
+    if (!quarter) return;
+    
+    isFetchingRef.current = true;
+    lastQuarterFetchedRef.current = quarter;
+    
+    setLoading(true);
+    try {
+      console.log(`Fetching market data for quarter: ${quarter}${forceRefresh ? ' (forced refresh)' : ''}`);
+      const data = await fetchMarketData(quarter, forceRefresh);
+      setMarketData(data);
+      setLastDataFetchTime(Date.now());
+      setFetchErrors(0); // Reset error count on successful fetch
+      
+      // Check if we got any data
+      const hasData = data && 
+        (data.all_stocks?.length || 
+         data.top_performers?.length || 
+         data.latest_results?.length || 
+         data.worst_performers?.length);
+      
+      if (!hasData && !forceRefresh) {
+        // If no data and we haven't tried a forced refresh yet, try once more with force refresh
+        console.log('No data received. Trying with force refresh...');
+        await loadMarketData(quarter, true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch market data:', error);
+      toast.error('Failed to fetch market data. Trying again...');
+      setFetchErrors(prev => prev + 1);
+      
+      // If we've had multiple errors, try with force refresh
+      if (fetchErrors >= 1 && !forceRefresh) {
+        try {
+          console.log('Multiple fetch errors. Trying with force refresh...');
+          await loadMarketData(quarter, true);
+        } catch (retryError) {
+          console.error('Retry with force refresh also failed:', retryError);
+          toast.error('Still unable to fetch market data. Please try again later.');
+        }
+      }
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  };
 
   // Load market data when quarter changes
   useEffect(() => {
-    let mounted = true
-
-    async function loadMarketData() {
-      if (!selectedQuarter) return
+    if (!selectedQuarter) return;
+    
+    // Prevent excessive data loading when switching between pages but not changing quarter
+    if (lastQuarterFetchedRef.current === selectedQuarter) {
+      const currentTime = Date.now();
+      const timeSinceLastFetch = currentTime - lastDataFetchTime;
       
-      setLoading(true)
-      try {
-        const data = await fetchMarketData(selectedQuarter)
-        if (mounted) {
-          setMarketData(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch market data:', error)
-        if (mounted) {
-          toast.error('Failed to fetch market data. Please try again later.')
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false)
-        }
+      // Only refetch if it's been more than 5 minutes or there were errors
+      if (timeSinceLastFetch < 300000 && fetchErrors === 0) {
+        console.log(`Using existing data for ${selectedQuarter}, fetched ${timeSinceLastFetch}ms ago`);
+        return;
       }
     }
+    
+    // Load market data (using a clean function call, not a function reference)
+    loadMarketData(selectedQuarter, false);
+    
+  }, [selectedQuarter, lastDataFetchTime, fetchErrors]);
 
-    loadMarketData()
-
-    return () => {
-      mounted = false
-    }
-  }, [selectedQuarter])
-
-  // Update URL when activeCategory or selectedQuarter changes
+  // Update URL when activeCategory or selectedQuarter changes, but avoid unnecessary updates
   useEffect(() => {
     if (!selectedQuarter) return;
     
-    // Create a new URLSearchParams object with the current search parameters
-    const params = new URLSearchParams(window.location.search)
-    // Update the category parameter
-    params.set('category', activeCategory)
-    // Update the quarter parameter
-    params.set('quarter', selectedQuarter)
+    // Create the new URL parameters
+    const params = new URLSearchParams();
+    params.set('category', activeCategory);
+    params.set('quarter', selectedQuarter);
+    
     // Preserve the page parameter if it exists
-    const currentPage = params.get('page')
+    const currentPage = searchParams.get('page');
     if (currentPage) {
-      params.set('page', currentPage)
+      params.set('page', currentPage);
     } else {
-      params.set('page', '1')
+      params.set('page', '1');
     }
-    // Update the URL without reloading the page
-    router.push(`/dashboard?${params.toString()}`, { scroll: false })
-  }, [activeCategory, selectedQuarter, router])
+    
+    const newUrl = `/dashboard?${params.toString()}`;
+    
+    // Only update if the URL would actually change
+    if (lastUrlUpdateRef.current !== newUrl) {
+      lastUrlUpdateRef.current = newUrl;
+      router.push(newUrl, { scroll: false });
+    }
+  }, [activeCategory, selectedQuarter, router, searchParams]);
 
   const handleRefresh = async () => {
     if (!selectedStock) {
@@ -168,8 +223,7 @@ export function StockDashboard() {
       await toast.promise(
         async () => {
           await refreshStockAnalysis(selectedStock)
-          const data = await fetchMarketData(selectedQuarter)
-          setMarketData(data)
+          await loadMarketData(selectedQuarter, true) // Force refresh after analysis
         },
         {
           loading: 'Refreshing analysis...',
@@ -188,6 +242,19 @@ export function StockDashboard() {
     setSelectedStock(null) // Reset selected stock when quarter changes
     setSelectedQuarter(quarter)
     // Note: URL will be updated by the useEffect above
+  }
+
+  const handleManualRefresh = async () => {
+    if (loading || isRefreshing) return;
+    
+    try {
+      toast.info('Refreshing market data...')
+      await loadMarketData(selectedQuarter, true); // Force refresh
+      toast.success('Market data refreshed successfully')
+    } catch (error) {
+      console.error('Failed to manually refresh market data:', error)
+      toast.error('Failed to refresh market data. Please try again later.')
+    }
   }
 
   // Calculate market statistics
@@ -269,14 +336,24 @@ export function StockDashboard() {
                 </option>
               ))}
             </select>
-            <Button
-              onClick={handleRefresh}
-              disabled={isRefreshing || !selectedStock}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? "Refreshing..." : "Refresh Analysis"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleManualRefresh}
+                disabled={loading || isRefreshing}
+                className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm px-3 py-1 rounded-lg flex items-center gap-1"
+              >
+                <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+                Refresh Data
+              </Button>
+              <Button
+                onClick={handleRefresh}
+                disabled={isRefreshing || !selectedStock}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? "Refreshing..." : "Refresh Analysis"}
+              </Button>
+            </div>
           </div>
         </div>
 
