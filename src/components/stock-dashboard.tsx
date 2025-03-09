@@ -7,6 +7,7 @@ import { refreshStockAnalysis, fetchMarketData, getQuarters, type MarketOverview
 import { RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { PageContainer } from "@/components/layout/page-container"
+import { useSearchParams, useRouter } from "next/navigation"
 
 type StockCategory = "top-performers" | "worst-performers" | "latest-results" | "all-stocks"
 
@@ -49,13 +50,25 @@ function StatsCard({ title, value, trend, trendValue, loading }: {
 }
 
 export function StockDashboard() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  
+  // Read category, page, and quarter from URL parameters
+  const categoryParam = searchParams.get('category') as StockCategory | null
+  const pageParam = searchParams.get('page')
+  const quarterParam = searchParams.get('quarter')
+  
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedStock, setSelectedStock] = useState<string | null>(null)
   const [marketData, setMarketData] = useState<MarketOverview | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedQuarter, setSelectedQuarter] = useState<string>("")
   const [quarters, setQuarters] = useState<string[]>([])
-  const [activeCategory, setActiveCategory] = useState<StockCategory>("top-performers")
+  const [activeCategory, setActiveCategory] = useState<StockCategory>(
+    categoryParam && ["top-performers", "worst-performers", "latest-results", "all-stocks"].includes(categoryParam) 
+    ? categoryParam 
+    : "top-performers"
+  )
 
   // Load quarters only once on component mount
   useEffect(() => {
@@ -66,7 +79,13 @@ export function StockDashboard() {
         const data = await getQuarters(abortController.signal)
         if (data.length > 0) {
           setQuarters(data)
-          setSelectedQuarter(data[0])
+          
+          // Use quarter from URL if available and valid, otherwise use the first quarter
+          if (quarterParam && data.includes(quarterParam)) {
+            setSelectedQuarter(quarterParam)
+          } else {
+            setSelectedQuarter(data[0])
+          }
         }
       } catch (error) {
         if (!abortController.signal.aborted) {
@@ -81,7 +100,7 @@ export function StockDashboard() {
     return () => {
       abortController.abort()
     }
-  }, [])
+  }, [quarterParam])
 
   // Load market data when quarter changes
   useEffect(() => {
@@ -115,6 +134,27 @@ export function StockDashboard() {
     }
   }, [selectedQuarter])
 
+  // Update URL when activeCategory or selectedQuarter changes
+  useEffect(() => {
+    if (!selectedQuarter) return;
+    
+    // Create a new URLSearchParams object with the current search parameters
+    const params = new URLSearchParams(window.location.search)
+    // Update the category parameter
+    params.set('category', activeCategory)
+    // Update the quarter parameter
+    params.set('quarter', selectedQuarter)
+    // Preserve the page parameter if it exists
+    const currentPage = params.get('page')
+    if (currentPage) {
+      params.set('page', currentPage)
+    } else {
+      params.set('page', '1')
+    }
+    // Update the URL without reloading the page
+    router.push(`/dashboard?${params.toString()}`, { scroll: false })
+  }, [activeCategory, selectedQuarter, router])
+
   const handleRefresh = async () => {
     if (!selectedStock) {
       toast.error('Please select a stock to refresh', {
@@ -147,6 +187,7 @@ export function StockDashboard() {
   const handleQuarterChange = (quarter: string) => {
     setSelectedStock(null) // Reset selected stock when quarter changes
     setSelectedQuarter(quarter)
+    // Note: URL will be updated by the useEffect above
   }
 
   // Calculate market statistics

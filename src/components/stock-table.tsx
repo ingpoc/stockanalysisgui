@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { type Stock } from "@/lib/api"
 import { ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 
 interface StockTableProps {
   onStockSelect?: (symbol: string | null) => void
@@ -44,9 +45,22 @@ function generatePageNumbers(currentPage: number, totalPages: number) {
 }
 
 export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarter }: StockTableProps) {
-  const [currentPage, setCurrentPage] = useState(1)
-  const [sortConfig, setSortConfig] = useState<SortConfig>(null)
+  const searchParams = useSearchParams()
   const router = useRouter()
+  
+  // Read page from URL parameters
+  const pageParam = searchParams.get('page')
+  const initialPage = pageParam ? parseInt(pageParam, 10) : 1
+  
+  const [currentPage, setCurrentPage] = useState(initialPage)
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null)
+  
+  // Update URL when page changes
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    params.set('page', currentPage.toString())
+    router.push(`?${params.toString()}`, { scroll: false })
+  }, [currentPage, router])
 
   if (!stocks?.length) {
     return (
@@ -119,12 +133,23 @@ export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarte
   const endIndex = startIndex + ITEMS_PER_PAGE
   const currentStocks = sortedStocks.slice(startIndex, endIndex)
 
-  const handleDoubleClick = (symbol: string) => {
+  const handleDoubleClick = (stock: Stock) => {
+    // Check if the symbol is missing or empty
+    if (!stock.symbol) {
+      // Use the company name as a fallback or show an error
+      toast.error(`Symbol missing for ${stock.company_name}. Cannot navigate to details.`);
+      return;
+    }
+    
     // Use the provided currentQuarter prop if available
     const quarter = currentQuarter || '';
     
-    // Navigate to stock details with quarter parameter
-    router.push(`/stock/${symbol}?quarter=${encodeURIComponent(quarter)}`);
+    // Get the current category from the URL or default to 'top-performers'
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('category') || 'top-performers';
+    
+    // Navigate to stock details with quarter, category, and page parameters
+    router.push(`/stock/${stock.symbol}?quarter=${encodeURIComponent(quarter)}&category=${encodeURIComponent(category)}&page=${currentPage}`);
   }
 
   const renderSortIcon = (key: keyof Stock) => {
@@ -139,6 +164,11 @@ export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarte
     const cleanValue = value.replace(/%%$/, '%').replace(/,/g, '')
     const numValue = parseFloat(cleanValue)
     return `${numValue}%`
+  }
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
   return (
@@ -213,7 +243,7 @@ export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarte
                   selectedStock === stock.symbol ? 'bg-gray-50 dark:bg-[#1A1A1A]' : ''
                 }`}
                 onClick={() => onStockSelect?.(selectedStock === stock.symbol ? null : stock.symbol)}
-                onDoubleClick={() => handleDoubleClick(stock.symbol)}
+                onDoubleClick={() => handleDoubleClick(stock)}
               >
                 <td className="py-4 text-sm font-medium text-gray-900 dark:text-white">{stock.company_name}</td>
                 <td className="py-4 text-right text-sm text-gray-600 dark:text-gray-300">{stock.cmp}</td>
@@ -259,7 +289,7 @@ export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarte
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -275,7 +305,7 @@ export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarte
               ) : (
                 <button
                   key={`page-${pageNum}`}
-                  onClick={() => setCurrentPage(pageNum)}
+                  onClick={() => handlePageChange(pageNum)}
                   className={`min-w-[28px] h-7 text-xs rounded ${
                     currentPage === pageNum
                       ? 'bg-blue-600 text-white'
@@ -289,7 +319,7 @@ export function StockTable({ onStockSelect, selectedStock, stocks, currentQuarte
           </div>
 
           <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
             className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >

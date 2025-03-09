@@ -59,6 +59,10 @@ export default function StockDetailsPage() {
   const symbol = params?.symbol
   const initialQuarter = searchParams.get('quarter') || ''
   
+  // Get the previous state parameters for back navigation
+  const category = searchParams.get('category') || 'top-performers'
+  const page = searchParams.get('page') || '1'
+  
   const [stockDetails, setStockDetails] = useState<StockDetailsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedQuarter, setSelectedQuarter] = useState<string>(initialQuarter)
@@ -118,7 +122,7 @@ export default function StockDetailsPage() {
         <div className="text-center">
           <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Stock Not Found</h2>
           <p className="text-gray-500 dark:text-gray-400">The requested stock could not be found.</p>
-          <Link href="/dashboard">
+          <Link href={`/dashboard?category=${category}&page=${page}&quarter=${encodeURIComponent(initialQuarter)}`}>
             <Button className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
@@ -142,7 +146,7 @@ export default function StockDetailsPage() {
     <PageContainer>
       {/* Header */}
       <div className="mb-6">
-        <Link href="/dashboard">
+        <Link href={`/dashboard?category=${category}&page=${page}&quarter=${encodeURIComponent(selectedQuarter)}`}>
           <Button variant="ghost" className="mb-2 hover:bg-gray-100 dark:hover:bg-gray-800">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
