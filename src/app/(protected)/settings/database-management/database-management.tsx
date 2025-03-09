@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Card, 
   CardContent, 
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
+import { backupDatabase, restoreDatabase, getDatabaseStats } from '@/lib/api'
 
 type ActionStatus = 'idle' | 'loading' | 'success' | 'error' | 'warning'
 
@@ -55,6 +56,7 @@ export default function DatabaseManagementSettings() {
   })
   const [lastBackupFile, setLastBackupFile] = useState<string | null>(null)
   const [dbInfo, setDbInfo] = useState<DatabaseInfo | null>(null)
+  const [message, setMessage] = useState<{ restore: string }>({ restore: '' })
   
   // Perform database backup
   const handleBackup = async () => {
@@ -88,17 +90,18 @@ export default function DatabaseManagementSettings() {
     
     try {
       setStatus(prev => ({ ...prev, restore: 'loading' }))
-      const response = await fetch('/api/database/restore', {
-        method: 'POST',
-      })
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to restore database')
-      }
+      // Use the centralized API client function instead of direct fetch
+      const data = await restoreDatabase('')
       
       setStatus(prev => ({ ...prev, restore: 'success' }))
-      toast.success('Database restored successfully')
+      setMessage(prev => ({ 
+        ...prev, 
+        restore: `Database restored successfully`
+      }))
+      
+      // Refresh the database stats
+      await handleCheck()
     } catch (error) {
       console.error('Error restoring database:', error)
       setStatus(prev => ({ ...prev, restore: 'error' }))
@@ -240,7 +243,7 @@ export default function DatabaseManagementSettings() {
                 <Check className="h-4 w-4" />
                 <AlertTitle>Restore completed</AlertTitle>
                 <AlertDescription>
-                  Database has been restored successfully.
+                  {message.restore}
                 </AlertDescription>
               </Alert>
             </div>

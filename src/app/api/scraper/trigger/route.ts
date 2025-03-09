@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { triggerScraper } from '@/lib/api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
@@ -15,28 +16,10 @@ export async function POST(request: Request) {
       )
     }
     
-    // Forward the request to the Python backend
-    const response = await fetch(`${API_BASE_URL}/scraper/scrape`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ result_type }),
-    })
+    // Use the centralized API client function
+    const data = await triggerScraper({ result_type })
     
-    if (!response.ok) {
-      const errorData = await response.json()
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: errorData.detail || 'Error triggering scraper',
-        },
-        { status: response.status }
-      )
-    }
-    
-    // Return the response from the backend
-    const data = await response.json()
+    // Return the response
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error in scraper trigger API:', error)

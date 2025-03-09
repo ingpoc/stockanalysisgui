@@ -471,4 +471,170 @@ export async function importHoldingsFromCSV(file: File, assetType: 'stock' | 'cr
       ? error 
       : new Error(`Failed to import ${assetType} holdings from CSV`)
   }
+}
+
+// AI Insights API functions
+export interface AIInsightResponse {
+  insights: {
+    sentiment: {
+      score: number;
+      label: string;
+    };
+    analysis: string | Record<string, any>;
+  };
+  symbol: string;
+  timestamp: string;
+}
+
+export async function getAIInsights(symbol: string): Promise<AIInsightResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ai/insights/${symbol}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch AI insights: ${response.statusText}`);
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching AI insights:', error);
+    throw error;
+  }
+}
+
+// Scraper API functions
+export interface ScraperRequest {
+  result_type: string;
+  url?: string;
+  refresh_connection?: boolean;
+}
+
+export interface ScraperResponse {
+  success: boolean;
+  message: string;
+  companies_scraped: number;
+  data?: any[];
+}
+
+export interface RemoveQuarterRequest {
+  quarter: string;
+}
+
+export interface RemoveQuarterResponse {
+  success: boolean;
+  message: string;
+  documents_updated: number;
+}
+
+export async function triggerScraper(options: ScraperRequest): Promise<ScraperResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/scraper/scrape`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(options),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Error triggering scraper');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error triggering scraper:', error);
+    throw error instanceof Error 
+      ? error 
+      : new Error('Unknown error triggering scraper');
+  }
+}
+
+export async function removeQuarter(quarter: string): Promise<RemoveQuarterResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/scraper/remove-quarter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ quarter }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `Error removing quarter ${quarter}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error(`Error removing quarter ${quarter}:`, error);
+    throw error instanceof Error 
+      ? error 
+      : new Error(`Unknown error removing quarter ${quarter}`);
+  }
+}
+
+// Database Management API functions
+export interface DatabaseBackupResponse {
+  message: string;
+  file_path?: string;
+}
+
+export interface DatabaseStatsResponse {
+  collections: Record<string, {
+    count: number;
+    size: number;
+  }>;
+  total_size: number;
+  database_name: string;
+}
+
+export async function backupDatabase(): Promise<DatabaseBackupResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/backup-database`, {
+      method: 'POST',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to backup database');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error backing up database:', error);
+    throw error;
+  }
+}
+
+export async function restoreDatabase(filePath: string): Promise<DatabaseBackupResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/restore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ file_path: filePath }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to restore database');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error restoring database:', error);
+    throw error;
+  }
+}
+
+export async function getDatabaseStats(): Promise<DatabaseStatsResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/database-stats`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to get database stats');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error('Error getting database stats:', error);
+    throw error;
+  }
 } 

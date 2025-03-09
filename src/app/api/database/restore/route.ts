@@ -50,9 +50,9 @@ export async function POST(request: Request) {
     // Construct the command based on whether a backup file was specified
     let command: string;
     if (backupFile) {
-      command = `curl -X POST "${apiUrl}/database/restore" -H "Content-Type: application/json" -d '{"backup_file":"${backupFile}"}'`;
+      command = `curl -X POST "${apiUrl}/admin/restore" -H "Content-Type: application/json" -d '{"backup_file":"${backupFile}"}'`;
     } else {
-      command = `curl -X POST "${apiUrl}/database/restore"`;
+      command = `curl -X POST "${apiUrl}/admin/restore"`;
     }
     
     console.log(`Executing command: ${command}`);
