@@ -71,10 +71,10 @@ export default function MoneyControlScraperSettings() {
   }, [])
   
   // Function to load available quarters
-  const loadQuarters = async () => {
+  const loadQuarters = async (forceRefresh: boolean = false) => {
     setLoadingQuarters(true)
     try {
-      const quarters = await getQuarters()
+      const quarters = await getQuarters(forceRefresh)
       setQuartersAvailable(quarters || [])
     } catch (error) {
       console.error('Error loading quarters:', error)
@@ -178,8 +178,17 @@ export default function MoneyControlScraperSettings() {
           })
         }, 1000)
         
-        // Refresh quarters list
-        loadQuarters()
+        // Force refresh of market data and quarters list
+        await fetch(`/api/market/refresh-cache?quarter=${encodeURIComponent(selectedQuarterToRemove)}`, {
+          method: 'POST',
+        }).then(() => {
+          console.log('Cache refresh triggered')
+        }).catch(err => {
+          console.error('Error refreshing cache:', err)
+        })
+        
+        // Refresh quarters list with force refresh
+        loadQuarters(true)
       } else {
         toast.warning(result.message || 'No data was modified')
       }

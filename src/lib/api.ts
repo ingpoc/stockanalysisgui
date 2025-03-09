@@ -231,8 +231,10 @@ export async function getBatchStockDetails(symbols: string[]): Promise<Record<st
   }
 }
 
-export async function getQuarters(signal?: AbortSignal): Promise<string[]> {
-  const response = await fetch(`${API_BASE_URL}/quarters`, { signal })
+export async function getQuarters(forceRefresh: boolean = false, signal?: AbortSignal): Promise<string[]> {
+  // Make sure forceRefresh is always a boolean when passed to the URL
+  const url = `${API_BASE_URL}/quarters${forceRefresh ? '?force_refresh=true' : ''}`
+  const response = await fetch(url, { signal })
   if (!response.ok) {
     throw new Error('Failed to fetch quarters')
   }
