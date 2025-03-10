@@ -234,12 +234,25 @@ export async function getBatchStockDetails(symbols: string[]): Promise<Record<st
 export async function getQuarters(forceRefresh: boolean = false, signal?: AbortSignal): Promise<string[]> {
   // Make sure forceRefresh is always a boolean when passed to the URL
   const url = `${API_BASE_URL}/quarters${forceRefresh ? '?force_refresh=true' : ''}`
-  const response = await fetch(url, { signal })
-  if (!response.ok) {
-    throw new Error('Failed to fetch quarters')
+  try {
+    console.log(`Fetching quarters${forceRefresh ? ' with force refresh' : ''}`);
+    const response = await fetch(url, { signal })
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('Error fetching quarters:', errorData)
+      throw new Error(errorData.message || 'Failed to fetch quarters')
+    }
+    
+    const data = await response.json()
+    console.log(`Received ${data.quarters?.length || 0} quarters from backend`);
+    return data.quarters || []
+  } catch (error) {
+    console.error('Error in getQuarters:', error)
+    throw error instanceof Error 
+      ? error 
+      : new Error('Unknown error fetching quarters')
   }
-  const data = await response.json()
-  return data.quarters || []
 }
 
 export async function searchStocks(query: string, quarter?: string): Promise<Stock[]> {

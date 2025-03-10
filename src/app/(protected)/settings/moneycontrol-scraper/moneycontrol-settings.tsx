@@ -67,15 +67,25 @@ export default function MoneyControlScraperSettings() {
 
   // Load available quarters on component mount
   useEffect(() => {
-    loadQuarters()
+    // On mount, we use the cached data if available (forceRefresh=false)
+    // This ensures we don't unnecessarily hit the backend on every page load
+    loadQuarters(false)
   }, [])
   
   // Function to load available quarters
   const loadQuarters = async (forceRefresh: boolean = false) => {
     setLoadingQuarters(true)
     try {
+      console.log(`Loading quarters${forceRefresh ? ' (force refresh)' : ''}`)
       const quarters = await getQuarters(forceRefresh)
-      setQuartersAvailable(quarters || [])
+      
+      if (quarters && quarters.length > 0) {
+        setQuartersAvailable(quarters)
+      } else if (quarters && quarters.length === 0) {
+        // If quarters is empty, show information to the user
+        setQuartersAvailable([])
+        toast.info('No quarters data available. Try scraping some data first.')
+      }
     } catch (error) {
       console.error('Error loading quarters:', error)
       toast.error('Failed to load available quarters')
@@ -168,36 +178,34 @@ export default function MoneyControlScraperSettings() {
 
       const result = await response.json()
       
-      if (result.success) {
-        toast.success(`Successfully removed quarter data for ${selectedQuarterToRemove}`)
-        
-        // Add a second toast about refreshing dashboard
-        setTimeout(() => {
-          toast.info('Please navigate to the dashboard to see the updated data. If you\'re already on the dashboard, try refreshing the page.', {
-            duration: 5000,
-          })
-        }, 1000)
-        
-        // Force refresh of market data and quarters list
-        await fetch(`/api/market/refresh-cache?quarter=${encodeURIComponent(selectedQuarterToRemove)}`, {
-          method: 'POST',
-        }).then(() => {
-          console.log('Cache refresh triggered')
-        }).catch(err => {
-          console.error('Error refreshing cache:', err)
-        })
-        
-        // Refresh quarters list with force refresh
-        loadQuarters(true)
-      } else {
-        toast.warning(result.message || 'No data was modified')
-      }
+      // Store the removed quarter for optimistic UI update
+      const removedQuarter = selectedQuarterToRemove
+      
+      // Clear the selection
+      setSelectedQuarterToRemove('')
+      
+      // After successful removal, force refresh the quarters cache
+      // Use a short timeout to ensure backend has time to update its cache
+      setTimeout(async () => {
+        try {
+          // Force refresh the quarters data from backend
+          const refreshedQuarters = await getQuarters(true)
+          setQuartersAvailable(refreshedQuarters || [])
+          toast.success(result.message || 'Quarter data removed successfully')
+        } catch (error) {
+          console.error('Error refreshing quarters after removal:', error)
+          
+          // If refresh fails, still update UI optimistically
+          setQuartersAvailable(prevQuarters => 
+            prevQuarters.filter(q => q !== removedQuarter)
+          )
+        }
+      }, 500)
     } catch (error) {
       console.error('Error removing quarter data:', error)
       toast.error(`Error: ${error instanceof Error ? error.message : 'Failed to remove quarter data'}`)
     } finally {
       setIsRemovingQuarter(false)
-      setSelectedQuarterToRemove('')
     }
   }
 
