@@ -547,8 +547,22 @@ export async function triggerScraper(options: ScraperRequest): Promise<ScraperRe
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Error triggering scraper');
+      // Try to parse error as JSON first
+      let errorMessage = 'Error triggering scraper';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+      } catch {
+        // If JSON parsing fails, try to get text
+        try {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+        } catch {
+          // If both fail, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+      }
+      throw new Error(errorMessage);
     }
     
     return response.json();
