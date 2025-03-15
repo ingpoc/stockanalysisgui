@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { StockTable } from "@/components/stock-table"
-import { refreshStockAnalysis, fetchMarketData, getQuarters, type MarketOverview } from "@/lib/api"
+import { refreshStockAnalysis, fetchMarketData, getQuarters, checkScrapingStatus, triggerScraper, type MarketOverview } from "@/lib/api"
 import { RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { PageContainer } from "@/components/layout/page-container"
@@ -76,41 +76,10 @@ export function StockDashboard() {
   )
   const [lastDataFetchTime, setLastDataFetchTime] = useState<number>(0)
   const [fetchErrors, setFetchErrors] = useState<number>(0)
+  const [isScrapingInProgress, setIsScrapingInProgress] = useState(false)
 
-  // Load quarters only once on component mount
-  useEffect(() => {
-    const abortController = new AbortController()
-
-    async function loadQuarters() {
-      try {
-        const data = await getQuarters(abortController.signal)
-        if (data.length > 0) {
-          setQuarters(data)
-          
-          // Use quarter from URL if available and valid, otherwise use the first quarter
-          if (quarterParam && data.includes(quarterParam)) {
-            setSelectedQuarter(quarterParam)
-          } else {
-            setSelectedQuarter(data[0])
-          }
-        }
-      } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error('Failed to fetch quarters:', error)
-          toast.error('Failed to fetch quarters. Please try again later.')
-        }
-      }
-    }
-
-    loadQuarters()
-
-    return () => {
-      abortController.abort()
-    }
-  }, [quarterParam]) // Only depends on quarterParam
-
-  // Create a function for loading market data (not memoized to avoid dependency issues)
-  const loadMarketData = async (quarter: string, forceRefresh: boolean = false) => {
+  // Memoize loadMarketData function to avoid recreation on every render
+  const loadMarketData = useCallback(async (quarter: string, forceRefresh: boolean = false) => {
     // Prevent multiple concurrent fetches for the same quarter
     if (isFetchingRef.current && lastQuarterFetchedRef.current === quarter && !forceRefresh) {
       console.log(`Already fetching data for ${quarter}, skipping duplicate request`);
@@ -126,16 +95,26 @@ export function StockDashboard() {
     try {
       console.log(`Fetching market data for quarter: ${quarter}${forceRefresh ? ' (forced refresh)' : ''}`);
       const data = await fetchMarketData(quarter, forceRefresh);
-      setMarketData(data);
+      console.log('Received market data:', data); // Add logging
+      
+      // Ensure we have arrays for all categories
+      const processedData = {
+        ...data,
+        top_performers: data.top_performers || [],
+        worst_performers: data.worst_performers || [],
+        latest_results: data.latest_results || [],
+        all_stocks: data.all_stocks || []
+      };
+      
+      setMarketData(processedData);
       setLastDataFetchTime(Date.now());
       setFetchErrors(0); // Reset error count on successful fetch
       
       // Check if we got any data
-      const hasData = data && 
-        (data.all_stocks?.length || 
-         data.top_performers?.length || 
-         data.latest_results?.length || 
-         data.worst_performers?.length);
+      const hasData = processedData.all_stocks.length > 0 || 
+                     processedData.top_performers.length > 0 || 
+                     processedData.latest_results.length > 0 || 
+                     processedData.worst_performers.length > 0;
       
       if (!hasData && !forceRefresh) {
         // If no data and we haven't tried a forced refresh yet, try once more with force refresh
@@ -161,7 +140,48 @@ export function StockDashboard() {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  };
+  }, [fetchErrors]); // Only depend on fetchErrors
+
+  // Load quarters only once on component mount
+  useEffect(() => {
+    const abortController = new AbortController();
+    let isSubscribed = true;
+
+    async function loadQuarters() {
+      try {
+        setLoading(true);
+        const data = await getQuarters(false, abortController.signal);
+        
+        // Only update state if component is still mounted
+        if (isSubscribed && data.length > 0) {
+          setQuarters(data);
+          
+          // Use quarter from URL if available and valid, otherwise use the first quarter
+          const quarterToUse = quarterParam && data.includes(quarterParam) ? quarterParam : data[0];
+          setSelectedQuarter(quarterToUse);
+          
+          // Load market data for the selected quarter
+          await loadMarketData(quarterToUse, false);
+        }
+      } catch (error) {
+        if (isSubscribed && !abortController.signal.aborted) {
+          console.error('Failed to fetch quarters:', error);
+          toast.error('Failed to fetch quarters. Please try again later.');
+        }
+      } finally {
+        if (isSubscribed) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadQuarters();
+
+    return () => {
+      isSubscribed = false;
+      abortController.abort();
+    };
+  }, [quarterParam, loadMarketData]); // Include loadMarketData in dependencies
 
   // Load market data when quarter changes
   useEffect(() => {
@@ -182,22 +202,19 @@ export function StockDashboard() {
     // Load market data (using a clean function call, not a function reference)
     loadMarketData(selectedQuarter, false);
     
-  }, [selectedQuarter, lastDataFetchTime, fetchErrors]);
+  }, [selectedQuarter, lastDataFetchTime, fetchErrors, loadMarketData]);
 
   // Update URL when activeCategory or selectedQuarter changes, but avoid unnecessary updates
   useEffect(() => {
     if (!selectedQuarter) return;
     
     // Create the new URL parameters
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
     params.set('category', activeCategory);
     params.set('quarter', selectedQuarter);
     
     // Preserve the page parameter if it exists
-    const currentPage = searchParams.get('page');
-    if (currentPage) {
-      params.set('page', currentPage);
-    } else {
+    if (!params.has('page')) {
       params.set('page', '1');
     }
     
@@ -209,6 +226,34 @@ export function StockDashboard() {
       router.push(newUrl, { scroll: false });
     }
   }, [activeCategory, selectedQuarter, router, searchParams]);
+
+  // Check scraping status periodically when scraping is in progress
+  useEffect(() => {
+    let isSubscribed = true;
+    
+    if (isScrapingInProgress) {
+      const interval = setInterval(async () => {
+        try {
+          const status = await checkScrapingStatus();
+          if (isSubscribed && !status.is_scraping) {
+            setIsScrapingInProgress(false);
+            // Refresh market data when scraping is complete
+            if (selectedQuarter) {
+              await loadMarketData(selectedQuarter, true);
+            }
+            toast.success('Scraping completed successfully');
+          }
+        } catch (error) {
+          console.error('Error checking scraping status:', error);
+        }
+      }, 5000); // Check every 5 seconds
+
+      return () => {
+        isSubscribed = false;
+        clearInterval(interval);
+      };
+    }
+  }, [isScrapingInProgress, selectedQuarter, loadMarketData]);
 
   const handleRefresh = async () => {
     if (!selectedStock) {
@@ -245,43 +290,65 @@ export function StockDashboard() {
   }
 
   const handleManualRefresh = async () => {
-    if (loading || isRefreshing) return;
+    if (loading || isRefreshing || isScrapingInProgress) return;
     
     try {
-      toast.info('Refreshing market data...')
-      await loadMarketData(selectedQuarter, true); // Force refresh
-      toast.success('Market data refreshed successfully')
+      // First try to trigger the scraper
+      toast.info('Starting data scraping...');
+      setIsScrapingInProgress(true);
+      await triggerScraper('LR'); // Correct way to call triggerScraper with string argument
+      
+      // The status check useEffect will handle the rest
     } catch (error) {
-      console.error('Failed to manually refresh market data:', error)
-      toast.error('Failed to refresh market data. Please try again later.')
+      console.error('Failed to start scraping:', error);
+      setIsScrapingInProgress(false);
+      toast.error('Failed to start scraping. Please try again later.');
     }
-  }
+  };
 
   // Calculate market statistics
-  const marketStats = {
-    marketCap: marketData?.all_stocks?.reduce((sum, stock) => sum + (parseFloat(stock.cmp) || 0), 0) || 0,
-    totalTrades: marketData?.all_stocks?.length || 0,
-    avgVolume: marketData?.all_stocks?.length 
-      ? (marketData.all_stocks.reduce((sum, stock) => sum + (parseFloat(stock.cmp) || 0), 0) / marketData.all_stocks.length)
-      : 0,
-    aiAnalyses: marketData?.all_stocks?.filter(stock => stock.recommendation !== '--').length || 0
-  }
+  const marketStats = useMemo(() => {
+    if (!marketData?.all_stocks?.length) {
+      return {
+        marketCap: 0,
+        totalTrades: 0,
+        avgVolume: 0,
+        aiAnalyses: 0
+      };
+    }
 
-  const getCurrentStocks = () => {
-    if (!marketData) return []
+    const totalMarketCap = marketData.all_stocks.reduce((sum, stock) => {
+      const cmp = typeof stock.cmp === 'string' ? parseFloat(stock.cmp.replace(/[₹,]/g, '')) : 0;
+      return sum + (isNaN(cmp) ? 0 : cmp);
+    }, 0);
+
+    return {
+      marketCap: totalMarketCap,
+      totalTrades: marketData.all_stocks.length,
+      avgVolume: totalMarketCap / marketData.all_stocks.length,
+      aiAnalyses: marketData.all_stocks.filter(stock => stock.recommendation && stock.recommendation !== '--').length
+    };
+  }, [marketData]);
+
+  const getCurrentStocks = useCallback(() => {
+    if (!marketData) return [];
+    
+    console.log('Getting stocks for category:', activeCategory); // Add logging
+    console.log('Market data state:', marketData); // Add logging
+    
     switch (activeCategory) {
       case "top-performers":
-        return marketData.top_performers || []
+        return marketData.top_performers || [];
       case "worst-performers":
-        return marketData.worst_performers || []
+        return marketData.worst_performers || [];
       case "latest-results":
-        return marketData.latest_results || []
+        return marketData.latest_results || [];
       case "all-stocks":
-        return marketData.all_stocks || []
+        return marketData.all_stocks || [];
       default:
-        return []
+        return [];
     }
-  }
+  }, [marketData, activeCategory]);
 
   return (
     <PageContainer>
@@ -339,11 +406,11 @@ export function StockDashboard() {
             <div className="flex gap-2">
               <Button
                 onClick={handleManualRefresh}
-                disabled={loading || isRefreshing}
+                disabled={loading || isRefreshing || isScrapingInProgress}
                 className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm px-3 py-1 rounded-lg flex items-center gap-1"
               >
-                <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-                Refresh Data
+                <RefreshCw className={`w-3 h-3 ${loading || isScrapingInProgress ? 'animate-spin' : ''}`} />
+                {isScrapingInProgress ? 'Scraping...' : 'Refresh Data'}
               </Button>
               <Button
                 onClick={handleRefresh}

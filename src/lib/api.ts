@@ -232,26 +232,25 @@ export async function getBatchStockDetails(symbols: string[]): Promise<Record<st
 }
 
 export async function getQuarters(forceRefresh: boolean = false, signal?: AbortSignal): Promise<string[]> {
-  // Make sure forceRefresh is always a boolean when passed to the URL
-  const url = `${API_BASE_URL}/quarters${forceRefresh ? '?force_refresh=true' : ''}`
   try {
-    console.log(`Fetching quarters${forceRefresh ? ' with force refresh' : ''}`);
-    const response = await fetch(url, { signal })
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('Error fetching quarters:', errorData)
-      throw new Error(errorData.message || 'Failed to fetch quarters')
+    const url = new URL(`${API_BASE_URL}/quarters`)
+    if (forceRefresh) {
+      url.searchParams.append('force_refresh', 'true')
     }
-    
+    const response = await fetch(url.toString(), { signal })
+    if (!response.ok) {
+      throw new Error('Failed to fetch quarters')
+    }
     const data = await response.json()
-    console.log(`Received ${data.quarters?.length || 0} quarters from backend`);
-    return data.quarters || []
+    // Handle both array and object with quarters property
+    return Array.isArray(data) ? data : data.quarters || []
   } catch (error) {
-    console.error('Error in getQuarters:', error)
-    throw error instanceof Error 
-      ? error 
-      : new Error('Unknown error fetching quarters')
+    // Don't throw error if it's an abort error
+    if (error instanceof Error && error.name === 'AbortError') {
+      return []
+    }
+    console.error('Error fetching quarters:', error)
+    throw error
   }
 }
 
@@ -536,41 +535,45 @@ export interface RemoveQuarterResponse {
   documents_updated: number;
 }
 
-export async function triggerScraper(options: ScraperRequest): Promise<ScraperResponse> {
+export interface ScrapingStatus {
+  is_scraping: boolean;
+  last_scrape_time: string | null;
+}
+
+export async function checkScrapingStatus(): Promise<ScrapingStatus> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/scraper/status`);
+    if (!response.ok) {
+      throw new Error('Failed to check scraping status');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error checking scraping status:', error);
+    throw error;
+  }
+}
+
+export async function triggerScraper(resultType: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/scraper/scrape`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(options),
+      body: JSON.stringify({ result_type: resultType }),
     });
-    
+
     if (!response.ok) {
-      // Try to parse error as JSON first
-      let errorMessage = 'Error triggering scraper';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.detail || errorData.message || errorMessage;
-      } catch {
-        // If JSON parsing fails, try to get text
-        try {
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
-        } catch {
-          // If both fail, use status text
-          errorMessage = response.statusText || errorMessage;
-        }
-      }
-      throw new Error(errorMessage);
+      throw new Error('Failed to trigger scraper');
     }
-    
-    return response.json();
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to start scraping');
+    }
   } catch (error) {
     console.error('Error triggering scraper:', error);
-    throw error instanceof Error 
-      ? error 
-      : new Error('Unknown error triggering scraper');
+    throw error;
   }
 }
 

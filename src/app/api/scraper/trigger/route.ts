@@ -16,11 +16,14 @@ export async function POST(request: Request) {
       )
     }
     
-    // Use the centralized API client function
-    const data = await triggerScraper({ result_type })
+    // Pass the result_type string directly
+    await triggerScraper(result_type)
     
-    // Return the response
-    return NextResponse.json(data)
+    // Return a success response
+    return NextResponse.json({
+      success: true,
+      message: 'Scraper triggered successfully'
+    })
   } catch (error) {
     console.error('Error in scraper trigger API:', error)
     return NextResponse.json(
