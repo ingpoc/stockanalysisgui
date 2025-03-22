@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { StockRecommendation } from '@/lib/api'
 import { formatCurrency } from '@/lib/utils'
-import { TrendingUp, TrendingDown, Minus, Clock, Target, RefreshCw, ChevronRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Clock, Target, RefreshCw, ChevronRight, AlertCircle } from 'lucide-react'
 
 interface StockRecommendationProps {
   recommendation: StockRecommendation
@@ -62,6 +62,24 @@ export function StockRecommendationDisplay({ recommendation, currentPrice }: Sto
     return 'text-red-600 dark:text-red-400'
   }
 
+  // Safety check to ensure recommendation has required fields
+  const isValidRecommendation = recommendation && 
+    recommendation.action && 
+    recommendation.confidence !== undefined && 
+    Array.isArray(recommendation.reasons);
+    
+  if (!isValidRecommendation) {
+    console.error('Invalid recommendation object:', recommendation);
+    return (
+      <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">
+        <div className="flex items-center">
+          <AlertCircle className="h-4 w-4 mr-1" />
+          Error
+        </div>
+      </Badge>
+    );
+  }
+  
   return (
     <>
       <div className="flex items-center space-x-2">

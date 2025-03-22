@@ -118,14 +118,23 @@ export function PortfolioTable({
       ...prev,
       [symbol]: true
     }))
-
+    
+    console.log(`Fetching recommendation for ${symbol}...`)
     try {
+      // Log the API URL for debugging
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      console.log(`Requesting from: ${apiBaseUrl}/recommendations/stock/${symbol}`)
+      
       const recommendation = await getStockRecommendation(symbol)
+      console.log(`Successfully received recommendation for ${symbol}:`, recommendation)
+      
       // Update recommendations state with the new recommendation
       setRecommendations(prev => ({
         ...prev,
         [symbol]: recommendation
       }))
+      
+      toast.success(`Received recommendation for ${symbol}`)
     } catch (error) {
       console.error(`Failed to load recommendation for ${symbol}:`, error)
       toast.error(`Failed to load recommendation for ${symbol}`, {

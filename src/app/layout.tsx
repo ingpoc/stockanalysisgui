@@ -6,6 +6,10 @@ import { Toaster } from '@/components/ui/toaster'
 import { WalletConnectionProvider } from '@/config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './globals.css'
+import { useEffect } from 'react'
+
+// Import logger to initialize it
+import '@/lib/logger'
 
 const inter = Inter({ subsets: ['latin'] })
 
