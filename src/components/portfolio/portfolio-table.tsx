@@ -18,18 +18,29 @@ import {
 import { Button } from '@/components/ui/button'
 import { HoldingWithCurrentPrice } from '@/types/portfolio'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
-import { AlertCircle, MoreHorizontal, TrendingDown, TrendingUp } from 'lucide-react'
+import { AlertCircle, MoreHorizontal, TrendingDown, TrendingUp, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { StockRecommendation, getStockRecommendation } from '@/lib/api'
+import { StockRecommendationDisplay } from '@/components/portfolio/recommendations/stock-recommendation'
+import { toast } from 'sonner'
 
 interface PortfolioTableProps {
   holdings: HoldingWithCurrentPrice[]
   onDelete: (id: string) => void
   assetType?: 'stock' | 'crypto' | 'mutual_fund'
+  showRecommendations?: boolean
 }
 
-export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: PortfolioTableProps) {
+export function PortfolioTable({ 
+  holdings, 
+  onDelete, 
+  assetType = 'stock',
+  showRecommendations = true 
+}: PortfolioTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const [recommendations, setRecommendations] = useState<Record<string, StockRecommendation>>({})  
+  const [loadingRecommendations, setLoadingRecommendations] = useState<Record<string, boolean>>({})
   
   const filteredHoldings = holdings.filter(holding => 
     holding.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,6 +64,7 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
             <TableHead>Total Value</TableHead>
             <TableHead>Gain/Loss</TableHead>
             <TableHead>%</TableHead>
+            {showRecommendations && <TableHead>Recommendation</TableHead>}
             <TableHead className="w-[80px]">Actions</TableHead>
           </TableRow>
         );
@@ -67,6 +79,7 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
             <TableHead>Total Value</TableHead>
             <TableHead>Gain/Loss</TableHead>
             <TableHead>%</TableHead>
+            {showRecommendations && <TableHead>Recommendation</TableHead>}
             <TableHead className="w-[80px]">Actions</TableHead>
           </TableRow>
         );
@@ -80,6 +93,7 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
             <TableHead>Total Value</TableHead>
             <TableHead>Gain/Loss</TableHead>
             <TableHead>%</TableHead>
+            {showRecommendations && <TableHead>Recommendation</TableHead>}
             <TableHead className="w-[80px]">Actions</TableHead>
           </TableRow>
         );
@@ -96,6 +110,35 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
         return 'Search holdings...';
     }
   };
+  
+  // Function to load recommendation for a specific stock
+  const loadRecommendation = async (symbol: string) => {
+    // Set loading state for this specific symbol
+    setLoadingRecommendations(prev => ({
+      ...prev,
+      [symbol]: true
+    }))
+
+    try {
+      const recommendation = await getStockRecommendation(symbol)
+      // Update recommendations state with the new recommendation
+      setRecommendations(prev => ({
+        ...prev,
+        [symbol]: recommendation
+      }))
+    } catch (error) {
+      console.error(`Failed to load recommendation for ${symbol}:`, error)
+      toast.error(`Failed to load recommendation for ${symbol}`, {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      })
+    } finally {
+      // Clear loading state for this symbol
+      setLoadingRecommendations(prev => ({
+        ...prev,
+        [symbol]: false
+      }))
+    }
+  }
   
   return (
     <div className="space-y-4">
@@ -119,7 +162,7 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
           <TableBody>
             {filteredHoldings.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={assetType === 'mutual_fund' ? 9 : 8} className="text-center">
+                <TableCell colSpan={assetType === 'mutual_fund' ? (showRecommendations ? 10 : 9) : (showRecommendations ? 9 : 8)} className="text-center">
                   No {assetType === 'mutual_fund' ? 'schemes' : assetType === 'crypto' ? 'coins' : 'holdings'} found
                 </TableCell>
               </TableRow>
@@ -180,6 +223,29 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
                         {formatPercentage(holding.gainLossPercentage || 0)}
                       </span>
                     </TableCell>
+                    {showRecommendations && (
+                      <TableCell>
+                        {recommendations[holding.symbol] ? (
+                          <StockRecommendationDisplay 
+                            recommendation={recommendations[holding.symbol]}
+                            currentPrice={holding.currentPrice}
+                          />
+                        ) : (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => loadRecommendation(holding.symbol)}
+                            disabled={loadingRecommendations[holding.symbol]}
+                          >
+                            {loadingRecommendations[holding.symbol] ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              'Get'                        
+                            )}
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -230,6 +296,7 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
                       {formatPercentage(totalGainLossPercentage)}
                     </span>
                   </TableCell>
+                  {showRecommendations && <TableCell></TableCell>}
                   <TableCell></TableCell>
                 </TableRow>
               </>
@@ -239,4 +306,4 @@ export function PortfolioTable({ holdings, onDelete, assetType = 'stock' }: Port
       </div>
     </div>
   )
-} 
+}

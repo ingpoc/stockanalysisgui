@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PortfolioTable } from '@/components/portfolio/portfolio-table'
 import { CSVUpload } from '@/components/portfolio/csv-upload'
 import { PortfolioSummaryComponent } from '@/components/portfolio/portfolio-summary'
+import { PortfolioRecommendationsComponent } from '@/components/portfolio/recommendations/portfolio-recommendations'
 import { HoldingWithCurrentPrice } from '@/types/portfolio'
 import {
   fetchHoldings,
@@ -148,6 +149,11 @@ export default function PortfolioPage() {
         <PortfolioSummaryComponent 
           holdings={[...stockHoldings, ...cryptoHoldings, ...mutualFundHoldings]} 
         />
+        
+        {/* Portfolio Recommendations */}
+        {stockHoldings.length > 0 && (
+          <PortfolioRecommendationsComponent />
+        )}
 
         {/* Main Tabs for Asset Types */}
         <Tabs 

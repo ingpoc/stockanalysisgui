@@ -118,6 +118,32 @@ export interface AIAnalysisHistory {
   }[]
 }
 
+export interface StockRecommendation {
+  symbol: string
+  action: 'BUY' | 'SELL' | 'HOLD'
+  confidence: number
+  reasons: string[]
+  target_price?: number | null
+  stop_loss?: number | null
+  timeframe: 'short' | 'medium' | 'long'
+  timestamp: string
+}
+
+export interface PortfolioRecommendations {
+  recommendations: Record<string, StockRecommendation>
+  summary: {
+    recommendation_counts: {
+      buy: number
+      sell: number
+      hold: number
+      total: number
+    }
+    top_buy_recommendations: Array<{ symbol: string, confidence: number }>
+    top_sell_recommendations: Array<{ symbol: string, confidence: number }>
+    portfolio_suggestions: string[]
+  }
+}
+
 export async function fetchMarketData(quarter?: string, forceRefresh: boolean = false): Promise<MarketOverview> {
   try {
     const url = new URL(`${API_BASE_URL}/market-data`)
@@ -444,6 +470,33 @@ export async function clearHoldings(): Promise<void> {
     }
   } catch (error) {
     console.error('Error clearing holdings:', error)
+    throw error
+  }
+}
+
+export async function getStockRecommendation(symbol: string): Promise<StockRecommendation> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/recommendations/stock/${symbol}`)
+    if (!response.ok) {
+      throw new Error(`Error fetching recommendation: ${response.statusText}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error(`Error fetching recommendation for ${symbol}:`, error)
+    throw error
+  }
+}
+
+export async function getPortfolioRecommendations(): Promise<PortfolioRecommendations> {
+  try {
+    console.log('Fetching portfolio recommendations...')
+    const response = await fetch(`${API_BASE_URL}/recommendations/portfolio`)
+    if (!response.ok) {
+      throw new Error(`Error fetching portfolio recommendations: ${response.statusText}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching portfolio recommendations:', error)
     throw error
   }
 }
