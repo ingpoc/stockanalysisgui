@@ -412,14 +412,6 @@ export function StockDashboard() {
                 <RefreshCw className={`w-3 h-3 ${loading || isScrapingInProgress ? 'animate-spin' : ''}`} />
                 {isScrapingInProgress ? 'Scraping...' : 'Refresh Data'}
               </Button>
-              <Button
-                onClick={handleRefresh}
-                disabled={isRefreshing || !selectedStock}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                {isRefreshing ? "Refreshing..." : "Refresh Analysis"}
-              </Button>
             </div>
           </div>
         </div>

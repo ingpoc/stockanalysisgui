@@ -38,12 +38,54 @@ class Logger {
       level,
       message: String(message),
       timestamp: new Date().toISOString(),
-      details: details ? JSON.stringify(details) : undefined
+      details: details ? this.safeStringify(details) : undefined
     });
     
     // If queue gets big enough, flush immediately
     if (this.logQueue.length >= this.maxQueueSize / 2) {
       this.debouncedFlush();
+    }
+  }
+
+  // Helper function to safely stringify objects
+  private safeStringify(obj: any): string {
+    if (obj === null || obj === undefined) return String(obj);
+    
+    if (typeof obj !== 'object') return String(obj);
+    
+    // Handle DOM nodes and React elements
+    if (obj instanceof Node || 
+        (obj.$$typeof && (obj.$$typeof.toString().includes('Symbol(react')))) {
+      return '[Object DOM/React Element]';
+    }
+    
+    try {
+      // Use a WeakSet to track circular references
+      const seen = new WeakSet();
+      return JSON.stringify(obj, (key, value) => {
+        // Skip function values
+        if (typeof value === 'function') return '[Function]';
+        
+        // Handle DOM nodes
+        if (value instanceof Node) return '[DOM Element]';
+        
+        // Handle React elements
+        if (value && typeof value === 'object' && 
+            value.$$typeof && 
+            (value.$$typeof.toString().includes('Symbol(react'))) {
+          return '[React Element]';
+        }
+        
+        // Handle circular references
+        if (value !== null && typeof value === 'object') {
+          if (seen.has(value)) return '[Circular Reference]';
+          seen.add(value);
+        }
+        
+        return value;
+      });
+    } catch (err: any) {
+      return `[Object: Stringify failed: ${err.message || 'Unknown error'}]`;
     }
   }
 
@@ -108,25 +150,25 @@ class Logger {
     // Override console.log
     console.log = (...args: any[]) => {
       originalConsole.log(...args);
-      this.info(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '));
+      this.info(args.map(arg => this.safeStringify(arg)).join(' '));
     };
     
     // Override console.info
     console.info = (...args: any[]) => {
       originalConsole.info(...args);
-      this.info(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '));
+      this.info(args.map(arg => this.safeStringify(arg)).join(' '));
     };
     
     // Override console.warn
     console.warn = (...args: any[]) => {
       originalConsole.warn(...args);
-      this.warn(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '));
+      this.warn(args.map(arg => this.safeStringify(arg)).join(' '));
     };
     
     // Override console.error
     console.error = (...args: any[]) => {
       originalConsole.error(...args);
-      this.error(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' '));
+      this.error(args.map(arg => this.safeStringify(arg)).join(' '));
     };
   }
 }
