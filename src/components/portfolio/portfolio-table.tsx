@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -18,10 +18,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { HoldingWithCurrentPrice } from '@/types/portfolio'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
-import { AlertCircle, MoreHorizontal, TrendingDown, TrendingUp, RefreshCw } from 'lucide-react'
+import { AlertCircle, MoreHorizontal, TrendingDown, TrendingUp, RefreshCw, Minus } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { StockRecommendation, getStockRecommendation } from '@/lib/api'
+import { StockRecommendation, getStockRecommendation, getPortfolioRecommendations } from '@/lib/api'
 import { StockRecommendationDisplay } from '@/components/portfolio/recommendations/stock-recommendation'
 import { toast } from 'sonner'
 
@@ -30,17 +30,37 @@ interface PortfolioTableProps {
   onDelete: (id: string) => void
   assetType?: 'stock' | 'crypto' | 'mutual_fund'
   showRecommendations?: boolean
+  initialRecommendations?: Record<string, StockRecommendation>
 }
 
 export function PortfolioTable({ 
   holdings, 
   onDelete, 
   assetType = 'stock',
-  showRecommendations = true 
+  showRecommendations = true,
+  initialRecommendations = {}
 }: PortfolioTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [recommendations, setRecommendations] = useState<Record<string, StockRecommendation>>({})  
+  const [recommendations, setRecommendations] = useState<Record<string, StockRecommendation>>(initialRecommendations)  
   const [loadingRecommendations, setLoadingRecommendations] = useState<Record<string, boolean>>({})
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+  
+  // On mount, if no initial recommendations, fetch portfolio-level recommendations
+  useEffect(() => {
+    const hasInitial = Object.keys(initialRecommendations || {}).length > 0
+    if (!hasInitial && showRecommendations) {
+      getPortfolioRecommendations()
+        .then(res => setRecommendations(res.recommendations))
+        .catch(err => console.error('Failed to load portfolio recommendations in table', err))
+    }
+  }, [initialRecommendations, showRecommendations])
+  
+  // Sync internal recommendations when parent prop changes
+  useEffect(() => {
+    if (initialRecommendations && Object.keys(initialRecommendations).length > 0) {
+      setRecommendations(initialRecommendations)
+    }
+  }, [initialRecommendations])
   
   const filteredHoldings = holdings.filter(holding => 
     holding.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,6 +130,10 @@ export function PortfolioTable({
         return 'Search holdings...';
     }
   };
+  
+  const toggleRow = (symbol: string) => {
+    setExpandedRows(prev => ({ ...prev, [symbol]: !prev[symbol] }))
+  }
   
   // Function to load recommendation for a specific stock
   const loadRecommendation = async (symbol: string) => {
@@ -235,13 +259,52 @@ export function PortfolioTable({
                     {showRecommendations && (
                       <TableCell>
                         {recommendations[holding.symbol] ? (
-                          <StockRecommendationDisplay 
-                            recommendation={recommendations[holding.symbol]}
-                            currentPrice={holding.currentPrice}
-                          />
+                          <details
+                            open={!!expandedRows[holding.symbol]}
+                            className="space-y-2"
+                          >
+                            <summary
+                              onClick={(e) => { e.preventDefault(); toggleRow(holding.symbol); }}
+                              className="flex justify-between items-center cursor-pointer"
+                            >
+                              <div className="flex items-center">
+                                {recommendations[holding.symbol].action === 'BUY' ? (
+                                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                                ) : recommendations[holding.symbol].action === 'SELL' ? (
+                                  <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                                ) : (
+                                  <Minus className="h-4 w-4 text-blue-500 mr-1" />
+                                )}
+                                <span className="font-medium">
+                                  {recommendations[holding.symbol].action} ({recommendations[holding.symbol].confidence}%)
+                                </span>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {recommendations[holding.symbol].timeframe}
+                              </span>
+                            </summary>
+                            <div className="pl-4 text-sm space-y-1">
+                              {recommendations[holding.symbol].reasons.map((reason, idx) => (
+                                <div key={idx}>• {reason}</div>
+                              ))}
+                              {recommendations[holding.symbol].target_price != null && (
+                                <div>
+                                  Target Price: {formatCurrency(recommendations[holding.symbol].target_price!)}
+                                </div>
+                              )}
+                              {recommendations[holding.symbol].stop_loss != null && (
+                                <div>
+                                  Stop Loss: {formatCurrency(recommendations[holding.symbol].stop_loss!)}
+                                </div>
+                              )}
+                              <div className="text-xs text-muted-foreground">
+                                Generated: {new Date(recommendations[holding.symbol].timestamp).toLocaleString()}
+                              </div>
+                            </div>
+                          </details>
                         ) : (
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => loadRecommendation(holding.symbol)}
                             disabled={loadingRecommendations[holding.symbol]}

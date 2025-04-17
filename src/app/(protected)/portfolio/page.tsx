@@ -6,12 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PortfolioTable } from '@/components/portfolio/portfolio-table'
 import { CSVUpload } from '@/components/portfolio/csv-upload'
 import { PortfolioSummaryComponent } from '@/components/portfolio/portfolio-summary'
-import { PortfolioRecommendationsComponent } from '@/components/portfolio/recommendations/portfolio-recommendations'
 import { HoldingWithCurrentPrice } from '@/types/portfolio'
 import {
   fetchHoldings,
   fetchEnrichedHoldings,
   deleteHolding,
+  getPortfolioRecommendations,
+  PortfolioRecommendations
 } from '@/lib/api'
 import { PageContainer } from '@/components/layout/page-container'
 
@@ -20,6 +21,7 @@ export default function PortfolioPage() {
   const [cryptoHoldings, setCryptoHoldings] = useState<HoldingWithCurrentPrice[]>([])
   const [mutualFundHoldings, setMutualFundHoldings] = useState<HoldingWithCurrentPrice[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [portfolioRec, setPortfolioRec] = useState<PortfolioRecommendations | null>(null)
   const [activeTab, setActiveTab] = useState('stocks')
 
   // Fetch holdings on component mount
@@ -62,6 +64,14 @@ export default function PortfolioPage() {
       setStockHoldings(stocks)
       setCryptoHoldings(crypto)
       setMutualFundHoldings(mutualFunds)
+      
+      // Fetch portfolio recommendations for stocks
+      try {
+        const recs = await getPortfolioRecommendations()
+        setPortfolioRec(recs)
+      } catch {
+        // ignore recommendation errors
+      }
     } catch (error) {
       console.error('Error loading holdings:', error)
       toast.error('Failed to load portfolio holdings')
@@ -149,11 +159,6 @@ export default function PortfolioPage() {
         <PortfolioSummaryComponent 
           holdings={[...stockHoldings, ...cryptoHoldings, ...mutualFundHoldings]} 
         />
-        
-        {/* Portfolio Recommendations */}
-        {stockHoldings.length > 0 && (
-          <PortfolioRecommendationsComponent />
-        )}
 
         {/* Main Tabs for Asset Types */}
         <Tabs 
@@ -185,6 +190,7 @@ export default function PortfolioPage() {
                     holdings={stockHoldings}
                     onDelete={handleDeleteHolding}
                     assetType="stock"
+                    initialRecommendations={portfolioRec?.recommendations}
                   />
                 )}
               </TabsContent>

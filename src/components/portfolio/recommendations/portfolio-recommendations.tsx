@@ -9,11 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { TrendingUp, TrendingDown, Minus, AlertCircle, RefreshCw } from 'lucide-react'
 import { PortfolioRecommendations, getPortfolioRecommendations } from '@/lib/api'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function PortfolioRecommendationsComponent() {
   const [isLoading, setIsLoading] = useState(true)
   const [data, setData] = useState<PortfolioRecommendations | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   const loadRecommendations = async () => {
     setIsLoading(true)
@@ -21,6 +23,7 @@ export function PortfolioRecommendationsComponent() {
     try {
       const recommendations = await getPortfolioRecommendations()
       setData(recommendations)
+      setLastUpdated(new Date())
     } catch (err) {
       console.error('Error loading recommendations:', err)
       setError('Failed to load portfolio recommendations')
@@ -43,8 +46,17 @@ export function PortfolioRecommendationsComponent() {
           <CardTitle>Portfolio Recommendations</CardTitle>
           <CardDescription>Loading recommendations...</CardDescription>
         </CardHeader>
-        <CardContent className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <CardContent>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mb-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+          <div className="mt-6 space-y-4">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-6 w-2/3" />
+          </div>
         </CardContent>
       </Card>
     )
@@ -91,10 +103,17 @@ export function PortfolioRecommendationsComponent() {
               Analysis based on current holdings and market data
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={loadRecommendations}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" size="sm" onClick={loadRecommendations} disabled={isLoading}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            {lastUpdated && (
+              <span className="text-xs text-muted-foreground">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
