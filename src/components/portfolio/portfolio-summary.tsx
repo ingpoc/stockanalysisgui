@@ -33,6 +33,8 @@ export function PortfolioSummaryComponent({ holdings }: PortfolioSummaryProps) {
     .sort((a, b) => (a.gainLossPercentage || 0) - (b.gainLossPercentage || 0))
     .slice(0, 3)
 
+  const uniqueCount = new Set(holdings.map(h => h.symbol)).size
+
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <Card>
@@ -44,7 +46,7 @@ export function PortfolioSummaryComponent({ holdings }: PortfolioSummaryProps) {
         <CardContent>
           <div className="text-2xl font-bold">{formatCurrency(totalInvestment)}</div>
           <p className="text-xs text-muted-foreground">
-            {holdings.length} stocks in portfolio
+            {uniqueCount} stocks in portfolio
           </p>
         </CardContent>
       </Card>

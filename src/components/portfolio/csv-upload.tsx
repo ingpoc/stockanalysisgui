@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, Upload } from 'lucide-react'
-import { importHoldingsFromCSV } from '@/lib/api'
+import { importHoldingsFromCSV, clearHoldings } from '@/lib/api'
 import { toast } from 'sonner'
 
 interface CSVUploadProps {
@@ -49,6 +49,7 @@ export function CSVUpload({ onSuccess, onError, assetType }: CSVUploadProps) {
     setError(null)
 
     try {
+      await clearHoldings()
       await importHoldingsFromCSV(file, assetType)
       setFile(null)
       toast.success(`${getAssetTypeLabel(assetType)} imported successfully`, {

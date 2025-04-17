@@ -66,6 +66,10 @@ export function PortfolioTable({
     holding.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (holding.company_name && holding.company_name.toLowerCase().includes(searchTerm.toLowerCase()))
   )
+  // Remove duplicate symbols: keep first occurrence of each symbol
+  const uniqueHoldings = filteredHoldings.filter((holding, index) => 
+    filteredHoldings.findIndex(h => h.symbol === holding.symbol) === index
+  )
   
   const totalInvestment = holdings.reduce((sum, holding) => sum + (holding.average_price * holding.quantity), 0)
   const totalCurrentValue = holdings.reduce((sum, holding) => sum + (holding.currentValue || 0), 0)
@@ -183,7 +187,7 @@ export function PortfolioTable({
           className="max-w-sm"
         />
         <div className="text-sm text-muted-foreground">
-          {filteredHoldings.length} of {holdings.length} {assetType === 'mutual_fund' ? 'schemes' : assetType === 'crypto' ? 'coins' : 'holdings'}
+          {uniqueHoldings.length} of {holdings.length} {assetType === 'mutual_fund' ? 'schemes' : assetType === 'crypto' ? 'coins' : 'holdings'}
         </div>
       </div>
       
@@ -193,7 +197,7 @@ export function PortfolioTable({
             {getTableHeaders()}
           </TableHeader>
           <TableBody>
-            {filteredHoldings.length === 0 ? (
+            {uniqueHoldings.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={assetType === 'mutual_fund' ? (showRecommendations ? 10 : 9) : (showRecommendations ? 9 : 8)} className="text-center">
                   No {assetType === 'mutual_fund' ? 'schemes' : assetType === 'crypto' ? 'coins' : 'holdings'} found
@@ -201,7 +205,7 @@ export function PortfolioTable({
               </TableRow>
             ) : (
               <>
-                {filteredHoldings.map((holding, index) => (
+                {uniqueHoldings.map((holding, index) => (
                   <TableRow key={holding.id || `row-${holding.symbol}-${holding.quantity}-${index}`} className={holding.hasError ? "bg-red-50 dark:bg-red-900/10" : ""}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-1">
