@@ -2,13 +2,18 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useAuthNavigation, isValidReturnUrl } from '@/lib/navigation'
 
 require('@solana/wallet-adapter-react-ui/styles.css')
+
+// Dynamically load wallet button to avoid SSR hydration mismatch
+const WalletMultiButton = dynamic(
+  () => import('@solana/wallet-adapter-react-ui').then(mod => mod.WalletMultiButton),
+  { ssr: false }
+)
 
 // Lazy load feature cards
 const FeatureCards = dynamic(() => import('@/components/auth/feature-cards').then(mod => mod.FeatureCards), {
@@ -30,6 +35,9 @@ export default function LoginPage() {
   const { connected, connecting } = useWallet()
   const searchParams = useSearchParams()
   const navigation = useAuthNavigation()
+  // Prevent SSR/CSR mismatch by only rendering client-only parts after mount
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     if (connecting) {
@@ -74,8 +82,7 @@ export default function LoginPage() {
                 Advanced analytics and real-time insights powered by blockchain technology
               </p>
             </div>
-            
-            <FeatureCards />
+            {mounted && <FeatureCards />}
           </div>
         </div>
       </div>
@@ -90,17 +97,19 @@ export default function LoginPage() {
             </p>
           </div>
           <div className="flex justify-center">
-            <WalletMultiButton
-              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-              style={{
-                height: '48px',
-                padding: '0 32px',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: 500,
-                border: 'none'
-              }}
-            />
+            {mounted && (
+              <WalletMultiButton
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                style={{
+                  height: '48px',
+                  padding: '0 32px',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  border: 'none'
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

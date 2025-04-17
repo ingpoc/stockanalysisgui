@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getQuarters } from '@/lib/api'
+import { getQuarters } from '@/services/marketDataService'
 
 // Define the result types
 const SCRAPE_OPTIONS = [

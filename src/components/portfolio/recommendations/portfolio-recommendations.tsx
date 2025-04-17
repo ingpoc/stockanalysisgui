@@ -175,6 +175,29 @@ export function PortfolioRecommendationsComponent() {
           </Card>
         </div>
 
+        {/* Detailed per-stock recommendations */}
+        <div className="mt-6 space-y-4">
+          <h3 className="text-lg font-medium">Recommendation Details</h3>
+          {Object.entries(data.recommendations).map(([symbol, rec]) => (
+            <details key={symbol} className="border rounded p-4">
+              <summary className="flex justify-between items-center cursor-pointer">
+                <span className="font-semibold">{symbol} — {rec.action} ({rec.confidence}%)</span>
+                <span className="text-sm text-muted-foreground">{rec.timeframe}</span>
+              </summary>
+              <ul className="mt-2 list-disc pl-5 space-y-1">
+                {rec.reasons.map((reason, idx) => (
+                  <li key={idx}>{reason}</li>
+                ))}
+                {rec.target_price != null && <li>Target Price: ₹{rec.target_price}</li>}
+                {rec.stop_loss != null && <li>Stop Loss: ₹{rec.stop_loss}</li>}
+              </ul>
+              <p className="text-xs text-gray-500 mt-2">
+                Generated: {new Date(rec.timestamp).toLocaleString()}
+              </p>
+            </details>
+          ))}
+        </div>
+
         <Tabs defaultValue="suggestions">
           <TabsList className="grid grid-cols-2">
             <TabsTrigger value="suggestions">Portfolio Suggestions</TabsTrigger>

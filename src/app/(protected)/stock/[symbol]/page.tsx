@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useSearchParams } from "next/navigation"
-import { getStockDetails, getQuarters, type StockDetailsResponse } from "@/lib/api"
+import { getStockDetails, type StockDetailsResponse } from "@/lib/api"
 import { ArrowLeft, TrendingUp, TrendingDown, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
