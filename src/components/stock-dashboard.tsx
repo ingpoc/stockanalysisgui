@@ -3,13 +3,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { StockTable } from "@/components/stock-table"
-import { refreshStockAnalysis, fetchMarketData, getQuarters, checkScrapingStatus, triggerScraper, type MarketOverview } from "@/lib/api"
+import { refreshStockAnalysis, fetchMarketData, getQuarters, checkScrapingStatus, triggerScraper } from "@/services/marketDataService"
+import { MarketOverview, StockCategory } from "@/types/market"
 import { RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { PageContainer } from "@/components/layout/page-container"
 import { useSearchParams, useRouter } from "next/navigation"
-
-type StockCategory = "top-performers" | "worst-performers" | "latest-results" | "all-stocks"
 
 const TABS = [
   { id: "top-performers", label: "Top Performers" },
@@ -109,6 +108,16 @@ export function StockDashboard() {
       setMarketData(processedData);
       setLastDataFetchTime(Date.now());
       setFetchErrors(0); // Reset error count on successful fetch
+      
+      // Add logging for debugging (browser and server)
+      const logMsg = `Market data for quarter ${quarter}: ${JSON.stringify(processedData)}`;
+      if (typeof window !== 'undefined') {
+        // Browser log
+        console.log(logMsg);
+      } else if (typeof process !== 'undefined' && process.stdout) {
+        // Node.js/SSR log
+        process.stdout.write(logMsg + '\n');
+      }
       
       // Check if we got any data
       const hasData = processedData.all_stocks.length > 0 || 

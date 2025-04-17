@@ -1,27 +1,7 @@
 import { Holding, HoldingWithCurrentPrice } from '@/types/portfolio'
+import { Stock } from '@/types/market'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
-
-export interface Stock {
-  company_name: string
-  symbol: string
-  cmp: string
-  net_profit_growth: string
-  strengths: string
-  weaknesses: string
-  piotroski_score: string
-  estimates: string
-  result_date: string
-  recommendation: string
-}
-
-export interface MarketOverview {
-  quarter: string
-  top_performers: Stock[]
-  worst_performers: Stock[]
-  latest_results: Stock[]
-  all_stocks: Stock[]
-}
 
 export interface FinancialMetric {
   market_cap: string
@@ -144,40 +124,6 @@ export interface PortfolioRecommendations {
   }
 }
 
-export async function fetchMarketData(quarter?: string, forceRefresh: boolean = false): Promise<MarketOverview> {
-  try {
-    const url = new URL(`${API_BASE_URL}/market-data`)
-    if (quarter) {
-      url.searchParams.append('quarter', quarter)
-    }
-    if (forceRefresh) {
-      url.searchParams.append('force_refresh', 'true')
-    }
-    const response = await fetch(url.toString())
-    if (!response.ok) {
-      throw new Error('Failed to fetch market data')
-    }
-    return await response.json()
-  } catch (error) {
-    console.error('Error fetching market data:', error)
-    throw error
-  }
-}
-
-export async function refreshStockAnalysis(symbol: string): Promise<void> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/stock/${symbol}/refresh-analysis`, {
-      method: 'POST',
-    })
-    if (!response.ok) {
-      throw new Error('Failed to refresh analysis')
-    }
-  } catch (error) {
-    console.error('Error refreshing analysis:', error)
-    throw error
-  }
-}
-
 export async function getStockDetails(symbol: string): Promise<StockDetailsResponse> {
   try {
     console.log(`Fetching stock details for ${symbol} from ${API_BASE_URL}/stock/${symbol}`)
@@ -254,47 +200,6 @@ export async function getBatchStockDetails(symbols: string[]): Promise<Record<st
     throw error instanceof Error
       ? error
       : new Error('Unknown error fetching batch stock details')
-  }
-}
-
-export async function getQuarters(forceRefresh: boolean = false, signal?: AbortSignal): Promise<string[]> {
-  try {
-    const url = new URL(`${API_BASE_URL}/quarters`)
-    if (forceRefresh) {
-      url.searchParams.append('force_refresh', 'true')
-    }
-    const response = await fetch(url.toString(), { signal })
-    if (!response.ok) {
-      throw new Error('Failed to fetch quarters')
-    }
-    const data = await response.json()
-    // Handle both array and object with quarters property
-    return Array.isArray(data) ? data : data.quarters || []
-  } catch (error) {
-    // Don't throw error if it's an abort error
-    if (error instanceof Error && error.name === 'AbortError') {
-      return []
-    }
-    console.error('Error fetching quarters:', error)
-    throw error
-  }
-}
-
-export async function searchStocks(query: string, quarter?: string): Promise<Stock[]> {
-  try {
-    // Get all stocks from market data for the current quarter
-    const data = await fetchMarketData(quarter)
-    const allStocks = data?.all_stocks || []
-    
-    // Filter stocks based on query (case-insensitive)
-    const searchQuery = query.toLowerCase()
-    return allStocks.filter(stock => 
-      (stock.company_name?.toLowerCase().includes(searchQuery) || 
-       stock.symbol?.toLowerCase().includes(searchQuery)) ?? false
-    )
-  } catch (error) {
-    console.error('Error searching stocks:', error)
-    return [] // Return empty array instead of throwing
   }
 }
 

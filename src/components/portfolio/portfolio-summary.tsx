@@ -113,8 +113,8 @@ export function PortfolioSummaryComponent({ holdings }: PortfolioSummaryProps) {
             <div>
               <p className="text-xs font-medium">Top Performers</p>
               <ul className="text-xs">
-                {topPerformers.map(h => (
-                  <li key={h.id || `top-${h.symbol}`} className="flex justify-between items-center">
+                {topPerformers.map((h, idx) => (
+                  <li key={h.id ?? `top-${h.symbol}-${h.company_name}-${idx}`} className="flex justify-between items-center">
                     <span>{h.symbol}</span>
                     <span className="text-green-500">
                       {formatPercentage(h.gainLossPercentage || 0)}
@@ -129,8 +129,8 @@ export function PortfolioSummaryComponent({ holdings }: PortfolioSummaryProps) {
             <div>
               <p className="text-xs font-medium mt-2">Worst Performers</p>
               <ul className="text-xs">
-                {worstPerformers.map(h => (
-                  <li key={h.id || `worst-${h.symbol}`} className="flex justify-between items-center">
+                {worstPerformers.map((h, idx) => (
+                  <li key={h.id ?? `worst-${h.symbol}-${h.company_name}-${idx}`} className="flex justify-between items-center">
                     <span>{h.symbol}</span>
                     <span className="text-red-500">
                       {formatPercentage(h.gainLossPercentage || 0)}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { type Stock } from "@/lib/api"
+import { type Stock } from "@/types/market"
 import { ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"

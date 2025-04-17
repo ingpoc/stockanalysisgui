@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Search } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { type Stock } from "@/lib/api"
-import { searchStocks } from "@/lib/api"
+import { type Stock } from "@/types/market"
+// TODO: Reimplement searchStocks using the new service structure if needed
 
 interface SearchBarProps {
   currentQuarter?: string
@@ -42,8 +42,8 @@ export function SearchBar({ currentQuarter }: SearchBarProps) {
       setLoading(true)
       try {
         // Filter all stocks from market data based on query
-        const data = await searchStocks(query, currentQuarter)
-        setResults(data)
+        // const data = await searchStocks(query, currentQuarter)
+        setResults([])
         setIsOpen(true)
       } catch (error) {
         console.error('Search error:', error)

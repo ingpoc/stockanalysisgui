@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { searchStocks, type Stock } from "@/lib/api"
+import { type Stock } from "@/types/market"
 
 function SidebarItem({ 
   icon: Icon, 
@@ -91,9 +91,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       setLoading(true)
       try {
-        const data = await searchStocks(query)
-        setResults(data)
-        setIsOpen(true)
+        // TODO: Reimplement searchStocks using the new service structure if needed
       } catch (error) {
         console.error('Failed to search stocks:', error)
       } finally {
