@@ -244,18 +244,19 @@ export function StockDashboard() {
       const interval = setInterval(async () => {
         try {
           const status = await checkScrapingStatus();
+          // Always refresh market data during scraping to show incremental updates
+          if (selectedQuarter) {
+            await loadMarketData(selectedQuarter, true);
+          }
+          // Once scraping is done, stop polling and notify
           if (isSubscribed && !status.is_scraping) {
             setIsScrapingInProgress(false);
-            // Refresh market data when scraping is complete
-            if (selectedQuarter) {
-              await loadMarketData(selectedQuarter, true);
-            }
             toast.success('Scraping completed successfully');
           }
         } catch (error) {
-          console.error('Error checking scraping status:', error);
+          console.error('Error during scraping polling:', error);
         }
-      }, 5000); // Check every 5 seconds
+      }, 5000); // Poll every 5 seconds
 
       return () => {
         isSubscribed = false;
