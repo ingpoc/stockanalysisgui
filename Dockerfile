@@ -11,14 +11,10 @@ RUN apk add --no-cache python3 build-base linux-headers eudev-dev pkgconfig libu
 COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps
 
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
 # Expose application port
 EXPOSE 3000
 
-# Start the Next.js app
+# Start the Next.js app in dev mode (overridden in docker-compose.yml)
+# CMD ["npm", "run", "start"]
+# Default command can remain, but docker-compose overrides it for development
 CMD ["npm", "run", "start"] 

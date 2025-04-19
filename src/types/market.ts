@@ -19,6 +19,12 @@ export interface MarketOverview {
   worst_performers: Stock[];
   latest_results: Stock[];
   all_stocks: Stock[];
+  summary?: {
+    total_market_cap?: string;
+    total_trades?: number;
+    average_volume?: string;
+    ai_analyses_count?: number;
+  };
 }
 
 export interface FinancialMetric {
@@ -68,4 +74,5 @@ export interface FormattedMetrics {
 export interface ScrapingStatus {
   is_scraping: boolean;
   last_scrape_time: string | null;
+  last_run_status?: 'success' | 'failed' | 'running' | 'pending' | null;
 } 
