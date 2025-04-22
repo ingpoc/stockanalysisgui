@@ -18,12 +18,13 @@ import {
 import { Button } from '@/components/ui/button'
 import { HoldingWithCurrentPrice } from '@/types/portfolio'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
-import { AlertCircle, MoreHorizontal, TrendingDown, TrendingUp, RefreshCw, Minus } from 'lucide-react'
+import { AlertCircle, MoreHorizontal, TrendingDown, TrendingUp, RefreshCw, Minus, Lightbulb } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { StockRecommendation, getStockRecommendation, getPortfolioRecommendations } from '@/lib/api'
 import { StockRecommendationDisplay } from '@/components/portfolio/recommendations/stock-recommendation'
 import { toast } from 'sonner'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 interface PortfolioTableProps {
   holdings: HoldingWithCurrentPrice[]
@@ -205,146 +206,187 @@ export function PortfolioTable({
               </TableRow>
             ) : (
               <>
-                {uniqueHoldings.map((holding, index) => (
-                  <TableRow key={holding.id || `row-${holding.symbol}-${holding.quantity}-${index}`} className={holding.hasError ? "bg-red-50 dark:bg-red-900/10" : ""}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-1">
-                        {holding.symbol}
-                        {holding.hasError && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <AlertCircle className="h-4 w-4 text-amber-500" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{holding.errorMessage}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                    </TableCell>
-                    {assetType === 'mutual_fund' && (
-                      <TableCell>{(holding as any).folio_number || 'N/A'}</TableCell>
-                    )}
-                    <TableCell>{holding.quantity.toLocaleString()}</TableCell>
-                    <TableCell>{formatCurrency(holding.average_price)}</TableCell>
-                    <TableCell>
-                      {holding.hasError ? (
-                        <span className="text-amber-500">{formatCurrency(holding.currentPrice || holding.average_price)}</span>
-                      ) : (
-                        formatCurrency(holding.currentPrice || holding.average_price)
+                {uniqueHoldings.map((holding, index) => {
+                  const recommendation = recommendations[holding.symbol]
+                  const isLoadingRec = loadingRecommendations[holding.symbol]
+                  const isExpanded = !!expandedRows[holding.symbol]
+                  const showSuggestionButton = recommendation?.action === 'SELL' && recommendation?.replacement_suggestions && recommendation.replacement_suggestions.length > 0
+
+                  return (
+                    <TableRow key={holding.id || `row-${holding.symbol}-${holding.quantity}-${index}`} className={holding.hasError ? "bg-red-50 dark:bg-red-900/10" : ""}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-1">
+                          {holding.symbol}
+                          {holding.hasError && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{holding.errorMessage}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </TableCell>
+                      {assetType === 'mutual_fund' && (
+                        <TableCell>{(holding as any).folio_number || 'N/A'}</TableCell>
                       )}
-                    </TableCell>
-                    <TableCell>{formatCurrency(holding.currentValue || holding.average_price * holding.quantity)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        {(holding.gainLoss || 0) > 0 ? (
-                          <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                        ) : (holding.gainLoss || 0) < 0 ? (
-                          <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-                        ) : null}
-                        {formatCurrency(holding.gainLoss || 0)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          (holding.gainLossPercentage || 0) > 0
-                            ? 'text-green-500'
-                            : (holding.gainLossPercentage || 0) < 0
-                            ? 'text-red-500'
-                            : ''
-                        }
-                      >
-                        {formatPercentage(holding.gainLossPercentage || 0)}
-                      </span>
-                    </TableCell>
-                    {showRecommendations && (
+                      <TableCell>{holding.quantity.toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(holding.average_price)}</TableCell>
                       <TableCell>
-                        {recommendations[holding.symbol] ? (
-                          <details
-                            open={!!expandedRows[holding.symbol]}
-                            className="space-y-2"
-                          >
-                            <summary
-                              onClick={(e) => { e.preventDefault(); toggleRow(holding.symbol); }}
-                              className="flex justify-between items-center cursor-pointer"
-                            >
-                              <div className="flex items-center">
-                                {recommendations[holding.symbol].action === 'BUY' ? (
-                                  <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                                ) : recommendations[holding.symbol].action === 'SELL' ? (
-                                  <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-                                ) : (
-                                  <Minus className="h-4 w-4 text-blue-500 mr-1" />
-                                )}
-                                <span className="font-medium">
-                                  {recommendations[holding.symbol].action} ({recommendations[holding.symbol].confidence}%)
-                                </span>
-                              </div>
-                              <span className="text-sm text-muted-foreground">
-                                {recommendations[holding.symbol].timeframe}
-                              </span>
-                            </summary>
-                            <div className="pl-4 text-sm space-y-1">
-                              {recommendations[holding.symbol].reasons.map((reason, idx) => (
-                                <div key={idx}>• {reason}</div>
-                              ))}
-                              {recommendations[holding.symbol].target_price != null && (
-                                <div>
-                                  Target Price: {formatCurrency(recommendations[holding.symbol].target_price!)}
-                                </div>
-                              )}
-                              {recommendations[holding.symbol].stop_loss != null && (
-                                <div>
-                                  Stop Loss: {formatCurrency(recommendations[holding.symbol].stop_loss!)}
-                                </div>
-                              )}
-                              <div className="text-xs text-muted-foreground">
-                                Generated: {new Date(recommendations[holding.symbol].timestamp).toLocaleString()}
-                              </div>
-                            </div>
-                          </details>
+                        {holding.hasError ? (
+                          <span className="text-amber-500">{formatCurrency(holding.currentPrice || holding.average_price)}</span>
                         ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => loadRecommendation(holding.symbol)}
-                            disabled={loadingRecommendations[holding.symbol]}
-                          >
-                            {loadingRecommendations[holding.symbol] ? (
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                              'Get'                        
-                            )}
-                          </Button>
+                          formatCurrency(holding.currentPrice || holding.average_price)
                         )}
                       </TableCell>
-                    )}
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to delete ${holding.symbol}?`)) {
-                                onDelete(holding.id as string)
-                              }
-                            }}
-                            className="text-red-500"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      <TableCell>{formatCurrency(holding.currentValue || holding.average_price * holding.quantity)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          {(holding.gainLoss || 0) > 0 ? (
+                            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                          ) : (holding.gainLoss || 0) < 0 ? (
+                            <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                          ) : null}
+                          {formatCurrency(holding.gainLoss || 0)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            (holding.gainLossPercentage || 0) > 0
+                              ? 'text-green-500'
+                              : (holding.gainLossPercentage || 0) < 0
+                              ? 'text-red-500'
+                              : ''
+                          }
+                        >
+                          {formatPercentage(holding.gainLossPercentage || 0)}
+                        </span>
+                      </TableCell>
+                      {showRecommendations && (
+                        <TableCell>
+                          {recommendation ? (
+                            <details
+                              open={isExpanded}
+                              className="space-y-2"
+                            >
+                              <summary
+                                onClick={(e) => { e.preventDefault(); toggleRow(holding.symbol); }}
+                                className="flex justify-between items-center cursor-pointer"
+                              >
+                                <div className="flex items-center">
+                                  {recommendation.action === 'BUY' ? (
+                                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                                  ) : recommendation.action === 'SELL' ? (
+                                    <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                                  ) : (
+                                    <Minus className="h-4 w-4 text-blue-500 mr-1" />
+                                  )}
+                                  <span className="font-medium">
+                                    {recommendation.action} ({recommendation.confidence}%)
+                                  </span>
+                                  {showSuggestionButton && (
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-5 w-5 ml-1">
+                                          <Lightbulb className="h-3 w-3 text-yellow-500" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-80">
+                                        <div className="grid gap-4">
+                                          <div className="space-y-2">
+                                            <h4 className="font-medium leading-none">Replacement Suggestions</h4>
+                                            <p className="text-sm text-muted-foreground">
+                                              Consider these alternatives for {holding.symbol}:
+                                            </p>
+                                          </div>
+                                          <div className="grid gap-2">
+                                            {recommendation.replacement_suggestions!.map((suggestion, sIdx) => (
+                                              <div key={sIdx} className="grid grid-cols-[25px_1fr] items-start pb-2 last:mb-0 last:pb-0">
+                                                <span className="flex h-2 w-2 translate-y-1 rounded-full bg-sky-500" />
+                                                <div className="space-y-1">
+                                                  <p className="text-sm font-medium leading-none">
+                                                    {suggestion.symbol} (Score: {suggestion.score.toFixed(2)})
+                                                  </p>
+                                                  <p className="text-sm text-muted-foreground">
+                                                    {suggestion.reason}
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
+                                </div>
+                                <span className="text-sm text-muted-foreground">
+                                  {recommendation.timeframe}
+                                </span>
+                              </summary>
+                              <div className="pl-4 text-sm space-y-1">
+                                {recommendation.reasons.map((reason, idx) => (
+                                  <div key={idx}>• {reason}</div>
+                                ))}
+                                {recommendation.target_price != null && (
+                                  <div>
+                                    Target Price: {formatCurrency(recommendation.target_price!)}
+                                  </div>
+                                )}
+                                {recommendation.stop_loss != null && (
+                                  <div>
+                                    Stop Loss: {formatCurrency(recommendation.stop_loss!)}
+                                  </div>
+                                )}
+                                <div className="text-xs text-muted-foreground">
+                                  Generated: {new Date(recommendation.timestamp).toLocaleString()}
+                                </div>
+                              </div>
+                            </details>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => loadRecommendation(holding.symbol)}
+                              disabled={isLoadingRec}
+                            >
+                              {isLoadingRec ? (
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                              ) : (
+                                'Get'
+                              )}
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete ${holding.symbol}?`)) {
+                                  onDelete(holding.id as string)
+                                }
+                              }}
+                              className="text-red-500"
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
                 {/* Summary row */}
                 <TableRow className="bg-muted/50 font-semibold">
                   <TableCell colSpan={assetType === 'mutual_fund' ? 5 : 4} className="text-right">Total:</TableCell>

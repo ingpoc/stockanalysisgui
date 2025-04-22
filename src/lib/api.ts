@@ -107,6 +107,13 @@ export interface StockRecommendation {
   stop_loss?: number | null
   timeframe: 'short' | 'medium' | 'long'
   timestamp: string
+  replacement_suggestions?: ReplacementSuggestion[] | null
+}
+
+export interface ReplacementSuggestion {
+  symbol: string
+  reason: string
+  score: number
 }
 
 export interface PortfolioRecommendations {
