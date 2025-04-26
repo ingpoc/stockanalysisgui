@@ -1,6 +1,9 @@
 import { debounce } from 'lodash';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Public URL for client-side usage
+const PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Internal URL for server-side usage (only available server-side)
+const INTERNAL_API_BASE_URL = process.env.INTERNAL_API_URL || PUBLIC_API_BASE_URL; // Fallback to public URL if internal isn't set
 
 type LogLevel = 'info' | 'warn' | 'error';
 
@@ -53,9 +56,10 @@ class Logger {
     
     if (typeof obj !== 'object') return String(obj);
     
-    // Handle DOM nodes and React elements
-    if (obj instanceof Node || 
-        (obj.$$typeof && (obj.$$typeof.toString().includes('Symbol(react')))) {
+    // Handle DOM nodes and React elements - ONLY IN CLIENT-SIDE ENVIRONMENT
+    const isClient = typeof window !== 'undefined';
+    if (isClient && (obj instanceof Node || 
+        (obj.$$typeof && (obj.$$typeof.toString().includes('Symbol(react'))))) {
       return '[Object DOM/React Element]';
     }
     
@@ -66,8 +70,8 @@ class Logger {
         // Skip function values
         if (typeof value === 'function') return '[Function]';
         
-        // Handle DOM nodes
-        if (value instanceof Node) return '[DOM Element]';
+        // Handle DOM nodes - ONLY IN CLIENT-SIDE ENVIRONMENT
+        if (isClient && value instanceof Node) return '[DOM Element]';
         
         // Handle React elements
         if (value && typeof value === 'object' && 
@@ -102,8 +106,14 @@ class Logger {
   }
 
   private async sendLogsToServer(logs: LogEntry[]): Promise<void> {
+    // Determine the correct API URL based on environment (client vs server)
+    const isClient = typeof window !== 'undefined';
+    const apiUrl = isClient ? PUBLIC_API_BASE_URL : INTERNAL_API_BASE_URL;
+    const endpoint = `${apiUrl}/logs/frontend-logs`;
+
     try {
-      const response = await fetch(`${API_BASE_URL}/logs/frontend-logs`, {
+      // console.log(`Sending logs to: ${endpoint}`); // Temporary debug log
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,8 +138,10 @@ class Logger {
     if (sync && typeof navigator !== 'undefined' && navigator.sendBeacon) {
       // Use sendBeacon for synchronous sending during page unload
       const blob = new Blob([JSON.stringify(logs)], { type: 'application/json' });
-      navigator.sendBeacon(`${API_BASE_URL}/logs/frontend-logs`, blob);
+      // Use public URL for sendBeacon as it runs in the browser context
+      navigator.sendBeacon(`${PUBLIC_API_BASE_URL}/logs/frontend-logs`, blob);
     } else {
+      // Use the appropriate URL (internal/public) for async fetch
       this.sendLogsToServer(logs);
     }
   }

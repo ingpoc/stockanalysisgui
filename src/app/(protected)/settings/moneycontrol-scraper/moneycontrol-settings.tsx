@@ -123,8 +123,16 @@ export default function MoneyControlScraperSettings() {
       setProgress(100)
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to trigger scraper')
+        let errorDetail = `HTTP error! status: ${response.status}`;
+        try {
+          // Try to parse the response body as JSON for more detail
+          const errorData = await response.json();
+          errorDetail = errorData.detail || errorData.message || JSON.stringify(errorData);
+        } catch (jsonError) {
+          // If JSON parsing fails, use the response text
+          errorDetail = await response.text();
+        }
+        throw new Error(`Failed to trigger scraper: ${errorDetail}`);
       }
 
       const result = await response.json()
@@ -172,8 +180,14 @@ export default function MoneyControlScraperSettings() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to remove quarter data')
+        let errorDetail = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorDetail = errorData.detail || errorData.message || JSON.stringify(errorData);
+        } catch (jsonError) {
+          errorDetail = await response.text();
+        }
+        throw new Error(`Failed to remove quarter data: ${errorDetail}`);
       }
 
       const result = await response.json()
