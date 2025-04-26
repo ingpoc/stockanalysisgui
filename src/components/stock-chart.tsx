@@ -1,9 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { fetchStockChart } from "@/lib/api"
 import dynamic from "next/dynamic"
 
+// Assume ChartDataPoint is defined elsewhere or import if needed
+interface ChartDataPoint {
+  date: string
+  close: number
+}
+
+// Dynamic import for the actual chart rendering component
 const DynamicChart = dynamic(() => import("./stock-chart-content"), {
   ssr: false,
   loading: () => (
@@ -13,40 +18,18 @@ const DynamicChart = dynamic(() => import("./stock-chart-content"), {
   )
 })
 
+// Define props for the simplified StockChart component
 interface StockChartProps {
-  symbol: string
-  interval?: "1d" | "5d" | "1mo" | "3mo" | "6mo" | "1y" | "2y" | "5y" | "max"
+  chartData: ChartDataPoint[] | undefined // Data comes from the hook via parent
+  isLoading: boolean // Loading state comes from the hook via parent
+  error: Error | null // Error state comes from the hook via parent
 }
 
-interface ChartDataPoint {
-  date: string
-  close: number
-}
+// Simplified StockChart component: receives data and state via props
+export function StockChart({ chartData, isLoading, error }: StockChartProps) {
 
-export function StockChart({ symbol, interval = "1y" }: StockChartProps) {
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function loadChartData() {
-      try {
-        setLoading(true)
-        const data = await fetchStockChart(symbol, interval)
-        setChartData(data)
-        setError(null)
-      } catch (err) {
-        console.error('Failed to fetch chart data:', err)
-        setError('Failed to load chart data')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadChartData()
-  }, [symbol, interval])
-
-  if (loading) {
+  // Display loading state
+  if (isLoading) {
     return (
       <div className="h-[400px] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
@@ -54,10 +37,20 @@ export function StockChart({ symbol, interval = "1y" }: StockChartProps) {
     )
   }
 
+  // Display error state
   if (error) {
     return (
       <div className="h-[400px] flex items-center justify-center">
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-red-600 dark:text-red-400">Error loading chart: {error.message}</p>
+      </div>
+    )
+  }
+  
+  // Display chart if data is available
+  if (!chartData || chartData.length === 0) {
+      return (
+      <div className="h-[400px] flex items-center justify-center">
+        <p className="text-gray-500 dark:text-gray-400">No chart data available.</p>
       </div>
     )
   }

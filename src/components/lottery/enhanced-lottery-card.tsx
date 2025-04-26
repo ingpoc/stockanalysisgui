@@ -2,10 +2,7 @@
 
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { useConnection } from '@solana/wallet-adapter-react'
-import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
 import { LotteryInfo, LotteryState } from '@/types/lottery'
-import { LotteryProgram } from '@/lib/solana/program'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,10 +11,10 @@ import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Ticket, Trophy, Loader2, Calendar, DollarSign, Users, Clock, ArrowRight } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { handleProgramError, formatUSDC } from '@/lib/utils'
+import { handleProgramError, formatUSDC, cn } from '@/lib/utils'
 import { AdminLotteryControls } from './admin-lottery-controls'
 import { ADMIN_WALLET } from '@/lib/constants'
-import { cn } from '@/lib/utils'
+import { useLottery } from '@/hooks/useLottery'
 
 interface LotteryCardProps {
   lottery: LotteryInfo
@@ -25,56 +22,51 @@ interface LotteryCardProps {
 }
 
 export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps) {
-  const [loading, setLoading] = useState(false)
   const [numberOfTickets, setNumberOfTickets] = useState(1)
-  const { publicKey, wallet } = useWallet()
-  const { connection } = useConnection()
+  const { publicKey } = useWallet()
+  
+  const {
+    buyTicket,
+    isBuying
+  } = useLottery()
+
   const isActive = lottery.state === LotteryState.Open
   const isEnded = new Date(lottery.drawTime * 1000) < new Date()
-  const isWinner = lottery.winningNumbers && publicKey?.toBase58() === lottery.createdBy
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
 
-  // Helper function to format USDC values
   const formatUSDCValue = (value: number): string => {
     return formatUSDC(value);
   }
 
   const handleBuyTickets = async () => {
-    if (!publicKey || !connection || !wallet) {
+    if (!publicKey) {
       toast.error('Please connect your wallet to buy tickets')
       return
     }
+    if (numberOfTickets <= 0) {
+        toast.error('Please enter a valid number of tickets');
+        return;
+    }
 
     try {
-      setLoading(true)
-      const adapter = wallet.adapter as BaseSignerWalletAdapter
-      const program = new LotteryProgram(connection, {
-        publicKey,
-        signTransaction: adapter.signTransaction.bind(adapter),
-        signAllTransactions: adapter.signAllTransactions.bind(adapter),
+      await buyTicket({ 
+        lotteryAddress: lottery.address, 
+        numberOfTickets 
       })
-
-      await program.buyTicket(lottery.address, numberOfTickets)
       toast.success('Tickets purchased successfully!')
       onParticipate()
     } catch (error) {
-      console.error('Failed to buy tickets:', error)
-      const errorMessage = handleProgramError(error)
-      toast.error(errorMessage)
-    } finally {
-      setLoading(false)
-    }
+      console.error('Failed to buy tickets (UI): ', error)
+    } 
   }
 
   const isOpen = lottery.state === LotteryState.Open
   const drawDate = new Date(lottery.drawTime * 1000)
   
-  // Calculate progress percentage
   const progressPercentage = lottery.targetPrizePool && lottery.targetPrizePool > 0 
     ? Math.min(100, (lottery.prizePool / lottery.targetPrizePool) * 100)
     : 0;
     
-  // Get badge variant based on lottery state
   const getBadgeVariant = () => {
     switch(lottery.state) {
       case LotteryState.Open:
@@ -122,7 +114,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
       </CardHeader>
       
       <CardContent className="space-y-5 pt-2">
-        {/* Price and Prize Pool */}
         <div className="grid grid-cols-2 gap-4 bg-muted/30 p-3 rounded-lg">
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
@@ -143,7 +134,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
           </div>
         </div>
         
-        {/* Tickets */}
         <div className="bg-muted/30 p-3 rounded-lg">
           <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
             <Users className="h-3 w-3" /> Total Tickets
@@ -151,7 +141,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
           <p className="text-lg font-bold">{lottery.totalTickets}</p>
         </div>
         
-        {/* Progress Bar */}
         {lottery.targetPrizePool && lottery.targetPrizePool > 0 && (
           <div className="space-y-1">
             <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
@@ -172,7 +161,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
           </div>
         )}
         
-        {/* Time Remaining */}
         <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg">
           <span className="text-sm text-muted-foreground flex items-center gap-1">
             <Clock className="h-4 w-4" />
@@ -183,7 +171,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
           </span>
         </div>
         
-        {/* Winner Section */}
         {lottery.winningNumbers && (
           <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3 rounded-lg flex justify-between items-center">
             <span className="text-sm font-medium text-amber-800 dark:text-amber-300">Winner</span>
@@ -196,7 +183,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
           </div>
         )}
         
-        {/* Buy Tickets Input */}
         {isOpen && (
           <div className="flex gap-2 mt-4">
             <div className="flex items-center bg-muted/50 rounded-md px-2">
@@ -211,21 +197,20 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
             </div>
             <Button
               onClick={handleBuyTickets}
-              disabled={loading || !publicKey}
+              disabled={isBuying || !publicKey}
               className="flex-1 bg-primary hover:bg-primary/90"
               size="sm"
             >
-              {loading ? (
+              {isBuying ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Ticket className="w-4 h-4 mr-2" />
               )}
-              {loading ? 'Buying...' : 'Buy Tickets'}
+              {isBuying ? 'Buying...' : 'Buy Tickets'}
             </Button>
           </div>
         )}
         
-        {/* Admin Controls */}
         {isAdmin && (
           <div className="mt-4 pt-4 border-t border-dashed border-muted">
             <p className="text-sm font-medium mb-2 text-primary">Admin Controls</p>
@@ -236,24 +221,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
           </div>
         )}
       </CardContent>
-      
-      {isActive && !isEnded && publicKey && !isOpen && (
-        <CardFooter className="pt-0">
-          <Button 
-            className="w-full" 
-            onClick={handleBuyTickets}
-            disabled={loading}
-            variant="outline"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Ticket className="w-4 h-4 mr-2" />
-            )}
-            {loading ? 'Buying...' : 'Buy Tickets'}
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   )
 } 

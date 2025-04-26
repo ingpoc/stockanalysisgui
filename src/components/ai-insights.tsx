@@ -1,315 +1,210 @@
 "use client"
 
-import { useEffect, useState, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { RefreshCw, TrendingDown, TrendingUp, Info } from 'lucide-react'
-import { toast } from 'sonner'
-import { getAnalysisContent, refreshAnalysis, getStockAnalysisHistory, type AIAnalysis } from '@/lib/api'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { RefreshCw, TrendingDown, TrendingUp, Info, History } from "lucide-react"
+import { useStockData } from "@/hooks/useStockData" // Import the hook
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { format } from 'date-fns'
+import { AIAnalysis } from "@/lib/api"
 
 interface AIInsightsProps {
   symbol: string
 }
 
+function AnalysisSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <div className="flex justify-end pt-4">
+          <Skeleton className="h-10 w-24" />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export function AIInsights({ symbol }: AIInsightsProps) {
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [analysis, setAnalysis] = useState<AIAnalysis | null>(null)
+  // Use the hook to get data and actions
+  const {
+    analysisContent,
+    isLoadingAnalysis,
+    errorAnalysis,
+    analysisHistory,
+    isLoadingHistory,
+    errorHistory,
+    refreshAnalysis,
+    isRefreshingAnalysis,
+  } = useStockData(symbol)
 
-  const fetchLatestAnalysis = useCallback(async (forceRefresh = false) => {
-    try {
-      if (forceRefresh) {
-        const refreshResult = await refreshAnalysis(symbol)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        return await getAnalysisContent(refreshResult.id)
-      }
+  // Loading state combines loading states from the hook
+  const isLoading = isLoadingAnalysis || isLoadingHistory
+  // Error state combines errors from the hook
+  const error = errorAnalysis || errorHistory
 
-      // Try to get existing analysis first
-      const history = await getStockAnalysisHistory(symbol)
-      if (history.analyses.length > 0) {
-        const latestAnalysis = history.analyses[0]
-        return await getAnalysisContent(latestAnalysis.id)
-      }
-
-      // If no analysis exists, generate a new one
-      const refreshResult = await refreshAnalysis(symbol)
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return await getAnalysisContent(refreshResult.id)
-    } catch (err) {
-      console.error('Error fetching analysis:', err)
-      throw new Error(err instanceof Error ? err.message : 'Failed to fetch analysis')
-    }
-  }, [symbol])
-
-  useEffect(() => {
-    let mounted = true
-    let timeoutId: NodeJS.Timeout
-
-    const fetchAnalysis = async () => {
-      if (!mounted) return
-
-      setLoading(true)
-      setError(null)
-      try {
-        const newAnalysis = await fetchLatestAnalysis(false)
-        if (mounted) {
-          setAnalysis(newAnalysis)
-        }
-      } catch (err) {
-        if (mounted) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to fetch analysis'
-          setError(errorMessage)
-          console.error('Error in fetchAnalysis:', err)
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    if (symbol) {
-      timeoutId = setTimeout(fetchAnalysis, 100)
-    }
-
-    return () => {
-      mounted = false
-      if (timeoutId) {
-        clearTimeout(timeoutId)
-      }
-    }
-  }, [symbol, fetchLatestAnalysis])
-
-  const handleRefresh = useCallback(async () => {
-    if (refreshing) return // Prevent duplicate calls while refreshing
-
-    setRefreshing(true)
-    try {
-      await toast.promise(
-        async () => {
-          const newAnalysis = await fetchLatestAnalysis(true)
-          setAnalysis(newAnalysis)
-        },
-        {
-          loading: 'Generating new analysis...',
-          success: 'Analysis updated successfully',
-          error: (err) => `Failed to generate analysis: ${err.message}`,
-        }
-      )
-    } catch (err) {
-      console.error('Failed to refresh analysis:', err)
-    } finally {
-      setRefreshing(false)
-    }
-  }, [refreshing, fetchLatestAnalysis])
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Insights</CardTitle>
-          <CardDescription>Loading analysis...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[200px] w-full" />
-        </CardContent>
-      </Card>
-    )
+  if (isLoading) {
+    return <AnalysisSkeleton />
   }
 
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
+        <AlertTitle>Error Loading AI Insights</AlertTitle>
+        <AlertDescription>{error.message}</AlertDescription>
       </Alert>
     )
   }
-
-  if (!analysis) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Insights</CardTitle>
-          <CardDescription>No analysis available</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Generate Analysis
-          </Button>
-        </CardContent>
-      </Card>
-    )
+  
+  const handleRefresh = () => {
+    refreshAnalysis() // Call the mutation from the hook
   }
+  
+  const renderAnalysisContent = (analysis: AIAnalysis | null | undefined) => {
+      if (!analysis) {
+        return <p>No current analysis available.</p>;
+      }
 
-  const SentimentIcon = analysis.sentiment.score >= 0.6 ? TrendingUp :
-                       analysis.sentiment.score <= 0.4 ? TrendingDown : Info
+      const SentimentIcon = analysis.sentiment.score >= 0.6 ? TrendingUp :
+                           analysis.sentiment.score <= 0.4 ? TrendingDown : Info
 
-  const sentimentColor = analysis.sentiment.score >= 0.6 ? 'text-green-500' :
-                        analysis.sentiment.score <= 0.4 ? 'text-red-500' : 'text-yellow-500'
+      const sentimentColor = analysis.sentiment.score >= 0.6 ? 'text-green-500' :
+                            analysis.sentiment.score <= 0.4 ? 'text-red-500' : 'text-yellow-500'
+                            
+      // Function to safely render analysis details which might be string or object
+      const renderAnalysisDetail = (detail: any, title: string) => {
+        if (!detail) return null;
+        if (typeof detail === 'string') {
+          return <p><strong className="font-medium">{title}:</strong> {detail}</p>;
+        }
+        if (Array.isArray(detail)) {
+          return (
+            <div>
+              <strong className="font-medium">{title}:</strong>
+              <ul className="list-disc list-inside ml-4">
+                {detail.map((item, index) => <li key={index}>{item}</li>)}
+              </ul>
+            </div>
+          );
+        }
+        // Handle nested objects like risks_opportunities
+        if (typeof detail === 'object') {
+            return (
+              <div>
+                <strong className="font-medium">{title}:</strong>
+                {Object.entries(detail).map(([key, value]) => (
+                  <div key={key} className="ml-4 mt-1">
+                    {renderAnalysisDetail(value, key.charAt(0).toUpperCase() + key.slice(1))} 
+                  </div>
+                ))}
+              </div>
+            );
+        }
+        return null;
+      };
+
+      return (
+        <div className="space-y-4">
+          <div className={`flex items-center gap-2 ${sentimentColor}`}>
+            <SentimentIcon className="w-5 h-5" />
+            <span className="font-semibold">Sentiment: {analysis.sentiment.label} (Score: {analysis.sentiment.score.toFixed(2)})</span>
+          </div>
+          
+          {/* Render analysis based on its type */}
+          {typeof analysis.analysis === 'string' ? (
+            <p className="text-sm">{analysis.analysis}</p>
+          ) : (
+            <div className="space-y-2 text-sm">
+              {renderAnalysisDetail(analysis.analysis.sentiment_summary, "Sentiment Summary")}
+              {renderAnalysisDetail(analysis.analysis.key_factors, "Key Factors")}
+              {renderAnalysisDetail(analysis.analysis.news_impact, "News Impact")}
+              {renderAnalysisDetail(analysis.analysis.risks_opportunities, "Risks & Opportunities")}
+              {renderAnalysisDetail(analysis.analysis.forward_outlook, "Forward Outlook")}
+            </div>
+          )}
+          
+          <p className="text-sm"><strong className="font-medium">Recommendation:</strong> {analysis.recommendation}</p>
+
+          {/* Display Technical Indicators and Market Analysis if they exist and are objects */}
+          {analysis.technical_indicators && typeof analysis.technical_indicators === 'object' && Object.keys(analysis.technical_indicators).length > 0 && (
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="tech-indicators">
+                <AccordionTrigger className="text-sm font-medium">Technical Indicators</AccordionTrigger>
+                <AccordionContent>
+                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
+                    {JSON.stringify(analysis.technical_indicators, null, 2)}
+                  </pre>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+          
+          {analysis.market_analysis && typeof analysis.market_analysis === 'object' && Object.keys(analysis.market_analysis).length > 0 && (
+            <Accordion type="single" collapsible className="w-full">
+               <AccordionItem value="market-analysis">
+                <AccordionTrigger className="text-sm font-medium">Market Analysis</AccordionTrigger>
+                <AccordionContent>
+                   <div className="space-y-1 text-xs">
+                     {renderAnalysisDetail(analysis.market_analysis.sector_sentiment, "Sector Sentiment")}
+                     {renderAnalysisDetail(analysis.market_analysis.peer_comparison, "Peer Comparison")}
+                     {renderAnalysisDetail(analysis.market_analysis.institutional_interest, "Institutional Interest")}
+                   </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+
+          <p className="text-xs text-muted-foreground text-right">Generated: {format(new Date(analysis.timestamp), 'PPpp')}</p>
+        </div>
+      );
+    };
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <SentimentIcon className={`h-5 w-5 ${sentimentColor}`} />
-            <CardTitle>AI Insights</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="text-xs text-muted-foreground">
-              <span className="font-medium">Last updated:</span>{' '}
-              {new Date(analysis.timestamp).toLocaleDateString(undefined, {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              })}{' '}
-              {new Date(analysis.timestamp).toLocaleTimeString(undefined, {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              })}
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>AI Insights</CardTitle>
+          <CardDescription>AI-powered analysis and sentiment</CardDescription>
         </div>
-        <CardDescription>
-          Analysis confidence: {(analysis.sentiment.score * 100).toFixed(1)}% - {analysis.sentiment.label}
-        </CardDescription>
+        <Button onClick={handleRefresh} disabled={isRefreshingAnalysis} size="sm" variant="outline">
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshingAnalysis ? 'animate-spin' : ''}`} />
+          {isRefreshingAnalysis ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {/* Main Analysis */}
-          <div className="space-y-4">
-            {typeof analysis.analysis === 'string' ? (
-              // Old format
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Analysis</h3>
-                <div className="prose prose-sm max-w-none text-gray-600 dark:text-gray-300">
-                  {analysis.analysis.split('**').map((section, index) => {
-                    if (index % 2 === 1) { // Section title
-                      return <h4 key={index} className="font-medium mt-4 mb-2">{section.trim()}</h4>;
-                    } else { // Section content
-                      return <p key={index} className="mb-4">{section.trim()}</p>;
-                    }
-                  })}
-                </div>
-              </div>
-            ) : (
-              // New format
-              <>
-                {/* Sentiment Summary */}
-                {analysis.analysis.sentiment_summary && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Market Sentiment</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {analysis.analysis.sentiment_summary}
-                    </p>
-                  </div>
-                )}
-
-                {/* Key Factors */}
-                {analysis.analysis.key_factors.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Key Market Factors</h3>
-                    <ul className="list-disc pl-5 space-y-2">
-                      {analysis.analysis.key_factors.map((factor, index) => (
-                        <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                          {factor.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* News Impact */}
-                {analysis.analysis.news_impact.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Latest News Impact</h3>
-                    <ul className="list-disc pl-5 space-y-2">
-                      {analysis.analysis.news_impact.map((news, index) => (
-                        <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                          {news.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Risks and Opportunities */}
-                {analysis.analysis.risks_opportunities && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Hidden Risks & Opportunities</h3>
-                    {analysis.analysis.risks_opportunities.risks.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="text-md font-medium mb-2 text-red-600 dark:text-red-400">Risks</h4>
-                        <ul className="list-disc pl-5 space-y-2">
-                          {analysis.analysis.risks_opportunities.risks.map((risk, index) => (
-                            <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                              {risk.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {analysis.analysis.risks_opportunities.opportunities.length > 0 && (
-                      <div>
-                        <h4 className="text-md font-medium mb-2 text-green-600 dark:text-green-400">Opportunities</h4>
-                        <ul className="list-disc pl-5 space-y-2">
-                          {analysis.analysis.risks_opportunities.opportunities.map((opportunity, index) => (
-                            <li key={index} className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                              {opportunity.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Forward Outlook */}
-                {analysis.analysis.forward_outlook && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Forward Outlook & Catalysts</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {analysis.analysis.forward_outlook.replace(/^[:\s-]+|[:\s-]+$/g, '').trim()}
-                    </p>
-                  </div>
-                )}
-
-                {/* Market Analysis */}
-                {analysis.market_analysis && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Market Context</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {Object.entries(analysis.market_analysis).map(([key, value]) => (
-                        <div key={key} className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                          <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                          </dt>
-                          <dd className="mt-1 text-sm font-semibold text-gray-900 dark:text-white capitalize">{value}</dd>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Recommendation */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-            <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-2">Recommendation</h3>
-            <p className="text-sm text-blue-600 dark:text-blue-400">{analysis.recommendation}</p>
-          </div>
-        </div>
+         {renderAnalysisContent(analysisContent)}
+         
+         {/* Analysis History Section */}
+         {analysisHistory && analysisHistory.analyses && analysisHistory.analyses.length > 0 && (
+           <Accordion type="single" collapsible className="w-full mt-6 pt-4 border-t">
+              <AccordionItem value="history">
+                <AccordionTrigger>
+                   <span className="flex items-center gap-2">
+                     <History className="w-4 h-4" />
+                     Analysis History ({analysisHistory.analyses.length})
+                   </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ul className="space-y-2">
+                    {analysisHistory.analyses.map((item) => (
+                       <li key={item.id} className="text-sm text-muted-foreground">
+                         {format(new Date(item.timestamp), 'PPp')} - {item.label}
+                         {/* Maybe add a button to load/view this specific analysis? */}
+                       </li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+         )}
       </CardContent>
     </Card>
   )

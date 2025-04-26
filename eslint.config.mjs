@@ -1,6 +1,8 @@
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import tailwindPlugin from 'eslint-plugin-tailwindcss';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -40,6 +42,8 @@ const cleanedLegacyConfig = Array.isArray(legacyConfig)
 
 export default [
   {
+    // Global ignores and overrides
+    ignores: [".next/", "node_modules/"], // Add common ignores
     overrideConfig: {
       linterOptions: {
         reportUnusedDisableDirectives: "error",
@@ -47,4 +51,21 @@ export default [
     },
   },
   ...cleanedLegacyConfig,
+  // Prettier integration - must be last
+  eslintPluginPrettierRecommended,
+  // Tailwind CSS plugin configuration
+  {
+    plugins: {
+      tailwindcss: tailwindPlugin
+    },
+    rules: {
+      // Enforce class sorting
+      'tailwindcss/classnames-order': 'warn',
+      // Optional: Add other Tailwind CSS rules if desired
+      // 'tailwindcss/no-custom-classname': 'warn',
+      // 'tailwindcss/no-contradicting-classname': 'error',
+    },
+    // Apply Tailwind rules only to relevant files
+    files: ['**/*.{ts,tsx,js,jsx}'],
+  }
 ];

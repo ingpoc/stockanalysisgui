@@ -1,11 +1,12 @@
-FROM node:18-alpine
+FROM node:18
 
 # Set working directory
 WORKDIR /app
 
 # Install build dependencies for native modules
-RUN apk add --no-cache python3 build-base linux-headers eudev-dev pkgconfig libusb-dev \
-    && ln -sf /usr/bin/python3 /usr/bin/python
+# RUN apk add --no-cache python3 build-base linux-headers eudev-dev pkgconfig libusb-dev \
+#     && ln -sf /usr/bin/python3 /usr/bin/python
+# Debian-based image likely has necessary build tools or handles them differently
 
 # Copy package manifests and install dependencies
 COPY package.json package-lock.json ./

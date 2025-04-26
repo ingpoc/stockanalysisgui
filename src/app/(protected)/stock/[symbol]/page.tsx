@@ -1,16 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useParams, useSearchParams } from "next/navigation"
-import { getStockDetails, type StockDetailsResponse } from "@/lib/api"
-import { ArrowLeft, TrendingUp, TrendingDown, Info } from "lucide-react"
+import { useParams } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { toast } from "sonner"
 import { PageContainer } from "@/components/layout/page-container"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useStockData } from "@/hooks/useStockData"
+import CompanyInfo from "@/components/stock/company-info"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 // Dynamically import heavy components
 const StockChart = dynamic(() => import("@/components/stock-chart").then(mod => mod.StockChart), {
@@ -34,150 +35,111 @@ const AIInsights = dynamic(() => import("@/components/ai-insights").then(mod => 
   )
 })
 
-function GrowthIndicator({ value }: { value: string }) {
-  // Remove any commas and extra % signs, then parse the number
-  const cleanValue = value?.replace(/,/g, '').replace(/%%$/, '%')
-  const numValue = parseFloat(cleanValue)
-  const isPositive = numValue >= 0
-  const Icon = isPositive ? TrendingUp : TrendingDown
-  
+function StockDetailsPageSkeleton() {
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
-      isPositive 
-        ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400' 
-        : 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400'
-    }`}>
-      <Icon className="w-3 h-3" />
-      {cleanValue}
-    </span>
+    <PageContainer>
+      <div className="flex items-center justify-between mb-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-24" />
+      </div>
+      <Skeleton className="h-10 w-full mb-6" /> 
+      <div className="space-y-6">
+        <Skeleton className="h-[200px] w-full" /> 
+        <Skeleton className="h-[400px] w-full" />
+        <Skeleton className="h-[300px] w-full" />
+      </div>
+    </PageContainer>
   )
 }
 
 export default function StockDetailsPage() {
   const params = useParams<{ symbol: string }>()
-  const searchParams = useSearchParams()
-  const symbol = params?.symbol
-  const initialQuarter = searchParams.get('quarter') || ''
+  const symbol = params?.symbol?.toUpperCase() || ''
+
+  // Use the hook to fetch all necessary data
+  const {
+    stockDetails,
+    isLoadingDetails,
+    errorDetails,
+    chartData,
+    isLoadingChart,
+    errorChart,
+  } = useStockData(symbol)
   
-  // Get the previous state parameters for back navigation
-  const category = searchParams.get('category') || 'top-performers'
-  const page = searchParams.get('page') || '1'
-  
-  const [stockDetails, setStockDetails] = useState<StockDetailsResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedQuarter, setSelectedQuarter] = useState<string>(initialQuarter)
-  const [availableQuarters, setAvailableQuarters] = useState<string[]>([])
+  // Combine loading and error states
+  const isLoading = isLoadingDetails
+  const error = errorDetails
 
-  useEffect(() => {
-    async function loadStockDetails() {
-      if (!symbol || typeof symbol !== 'string') return
-      
-      try {
-        console.log('Fetching details for symbol:', symbol)
-        const data = await getStockDetails(symbol)
-        console.log('API Response:', JSON.stringify(data, null, 2))
-        setStockDetails(data)
-        
-        // Extract available quarters from the stock details
-        const quarters = data.stock.financial_metrics.map(metric => metric.quarter).filter(Boolean) as string[]
-        setAvailableQuarters(quarters)
-        
-        // If no quarter is selected or the selected quarter is not available,
-        // default to the quarter from the URL or the most recent quarter
-        if (!selectedQuarter || !quarters.includes(selectedQuarter)) {
-          if (initialQuarter && quarters.includes(initialQuarter)) {
-            setSelectedQuarter(initialQuarter)
-          } else {
-            setSelectedQuarter(quarters[0] || '')
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch stock details:', error)
-        toast.error('Failed to fetch stock details. Please try again later.')
-      } finally {
-        setLoading(false)
-      }
-    }
+  if (isLoading) {
+    return <StockDetailsPageSkeleton />
+  }
 
-    loadStockDetails()
-  }, [symbol, initialQuarter])
-
-  if (loading) {
+  if (error) {
     return (
       <PageContainer>
-        <div className="animate-pulse">
-          <div className="h-8 w-64 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
-          <div className="space-y-3">
-            <div className="h-4 w-full bg-gray-100 dark:bg-gray-900 rounded"></div>
-            <div className="h-4 w-3/4 bg-gray-100 dark:bg-gray-900 rounded"></div>
-          </div>
-        </div>
+         <div className="flex items-center justify-between mb-6">
+           <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">Error</h1>
+           <Link href="/dashboard">
+             <Button variant="outline" size="sm" className="gap-1.5">
+               <ArrowLeft className="h-4 w-4" />
+               Back
+             </Button>
+           </Link>
+         </div>
+         <Alert variant="destructive">
+           <AlertTitle>Failed to Load Stock Data</AlertTitle>
+           <AlertDescription>{error.message}</AlertDescription>
+         </Alert>
       </PageContainer>
     )
   }
-
+  
   if (!stockDetails) {
-    return (
-      <PageContainer>
-        <div className="text-center">
-          <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Stock Not Found</h2>
-          <p className="text-gray-500 dark:text-gray-400">The requested stock could not be found.</p>
-          <Link href={`/dashboard?category=${category}&page=${page}&quarter=${encodeURIComponent(initialQuarter)}`}>
-            <Button className="mt-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-        </div>
-      </PageContainer>
-    )
+      return (
+         <PageContainer>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">Stock Not Found</h1>
+              <Link href="/dashboard">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </Button>
+              </Link>
+            </div>
+            <Alert variant="warning">
+               <AlertTitle>Symbol Not Found</AlertTitle>
+               <AlertDescription>The stock symbol "{symbol}" could not be found or data is unavailable.</AlertDescription>
+             </Alert>
+         </PageContainer>
+      )
   }
 
   const { stock, formatted_metrics } = stockDetails
-  
-  // Find the metrics for the selected quarter
-  const metrics = stock.financial_metrics.find(m => m.quarter === selectedQuarter) || stock.financial_metrics[0] || {}
-
-  const handleQuarterChange = (quarter: string) => {
-    setSelectedQuarter(quarter)
-  }
+  const companyName = stock.company_name
 
   return (
     <PageContainer>
       {/* Header */}
-      <div className="mb-6">
-        <Link href={`/dashboard?category=${category}&page=${page}&quarter=${encodeURIComponent(selectedQuarter)}`}>
-          <Button variant="ghost" className="mb-2 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <div className="flex items-center gap-3">
+          {/* Placeholder for Logo */}
+          <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center text-lg font-medium">
+            {companyName.charAt(0)}
+          </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">{companyName} ({symbol})</h1>
+            <p className="text-sm text-muted-foreground">Stock Details & Analysis</p>
+          </div>
+        </div>
+        <Link href="/dashboard">
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <ArrowLeft className="h-4 w-4" />
+            Back
           </Button>
         </Link>
-        <div className="flex items-baseline gap-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{stock.company_name}</h1>
-          <span className="text-lg text-gray-500 dark:text-gray-400">{symbol}</span>
-        </div>
       </div>
 
-      {/* Quarter Selector */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Quarter:</span>
-          <Select value={selectedQuarter} onValueChange={handleQuarterChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Quarter" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableQuarters.map((quarter) => (
-                <SelectItem key={quarter} value={quarter}>
-                  {quarter}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Tabs */}
+      {/* Tabs for Content */}
       <Tabs defaultValue="company-info" className="space-y-6">
         <TabsList>
           <TabsTrigger value="company-info">Company Info</TabsTrigger>
@@ -185,200 +147,33 @@ export default function StockDetailsPage() {
           <TabsTrigger value="ai-insights">AI Insights</TabsTrigger>
         </TabsList>
 
+        {/* Company Info Tab */}
         <TabsContent value="company-info">
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Basic Information */}
-            <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Basic Information</h2>
-              <dl className="grid grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">CMP</dt>
-                  <dd className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
-                    ₹{formatted_metrics.cmp}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Report Type</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">{metrics.report_type}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Result Date</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">{formatted_metrics.result_date || 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Quarter</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">{metrics.quarter || 'N/A'}</dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* Insights */}
-            <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Insights</h2>
-              <div className="space-y-3">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Strengths</dt>
-                  <dd className="mt-1 text-base font-medium text-green-600 dark:text-green-400 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
-                    {formatted_metrics.strengths || 'N/A'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Weaknesses</dt>
-                  <dd className="mt-1 text-base font-medium text-red-600 dark:text-red-400 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
-                    {formatted_metrics.weaknesses || 'N/A'}
-                  </dd>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Technicals</dt>
-                    <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">
-                      {metrics.technicals_trend || 'N/A'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Piotroski Score</dt>
-                    <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">
-                      {metrics.piotroski_score || 'N/A'}
-                    </dd>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Growth Metrics */}
-            <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Growth Metrics</h2>
-              <dl className="grid grid-cols-1 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue Growth (3Y CAGR)</dt>
-                  <dd className="mt-1">
-                    <GrowthIndicator value={metrics.revenue_growth_3yr_cagr || '0%'} />
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit Growth (3Y CAGR)</dt>
-                  <dd className="mt-1">
-                    <GrowthIndicator value={metrics.net_profit_growth_3yr_cagr || '0%'} />
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Operating Profit Growth (3Y CAGR)</dt>
-                  <dd className="mt-1">
-                    <GrowthIndicator value={metrics.operating_profit_growth_3yr_cagr || '0%'} />
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* Valuation Metrics */}
-            <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Valuation Metrics</h2>
-              <dl className="grid grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Market Cap</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.market_cap || 'N/A'} Cr</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Face Value</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.face_value || 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Book Value</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.book_value || 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">TTM EPS</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.ttm_eps || 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">TTM P/E</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">{metrics.ttm_pe || 'N/A'}</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">P/B Ratio</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">{metrics.pb_ratio || 'N/A'}</dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* Financial Performance */}
-            <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Performance</h2>
-              <dl className="grid grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.revenue || 'N/A'} Cr</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Revenue Growth</dt>
-                  <dd className="mt-1">
-                    <GrowthIndicator value={metrics.revenue_growth || '0%'} />
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Gross Profit</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.gross_profit || 'N/A'} Cr</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Gross Profit Growth</dt>
-                  <dd className="mt-1">
-                    <GrowthIndicator value={metrics.gross_profit_growth || '0%'} />
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit</dt>
-                  <dd className="mt-1 text-base font-medium text-gray-900 dark:text-white">₹{metrics.net_profit || 'N/A'} Cr</dd>
-                </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Net Profit Growth</dt>
-                  <dd className="mt-1">
-                    <GrowthIndicator value={formatted_metrics.net_profit_growth} />
-                  </dd>
-                </div>
-              </dl>
-            </div>
-
-            {/* Recommendation Card */}
-            <div className="rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm border border-gray-100 dark:border-gray-700 lg:col-span-3">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Recommendation</h2>
-              <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
-                <div className="flex items-start gap-4">
-                  <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
-                  <div>
-                    <p className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-2">
-                      {formatted_metrics.recommendation || 'No recommendation available'}
-                    </p>
-                    {metrics.fundamental_insights_description && (
-                      <p className="text-sm text-blue-600 dark:text-blue-400 leading-relaxed">
-                        {metrics.fundamental_insights_description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+           {/* Pass necessary data to CompanyInfo component */}
+           <CompanyInfo symbol={symbol as string} /> 
         </TabsContent>
 
+        {/* Chart Tab */}
         <TabsContent value="chart">
-          <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="rounded-lg bg-card p-6 shadow-sm border border-border">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Stock Price Chart</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Historical price movement and trends</p>
+              <h2 className="text-lg font-semibold text-card-foreground">Stock Price Chart</h2>
+              <p className="text-sm text-muted-foreground mt-1">Historical price movement and trends</p>
+              {/* TODO: Add Interval Selector for Chart */}
             </div>
-            <StockChart symbol={symbol as string} />
+            {/* Pass data/state from hook to the refactored StockChart */}
+            <StockChart 
+              chartData={chartData} 
+              isLoading={isLoadingChart} 
+              error={errorChart} 
+            />
           </div>
         </TabsContent>
 
+        {/* AI Insights Tab */}
         <TabsContent value="ai-insights">
-          <div className="rounded-lg bg-white dark:bg-gray-800 p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI-Powered Analysis</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Advanced AI insights and sentiment analysis</p>
-            </div>
-            <AIInsights symbol={symbol as string} />
-          </div>
+          {/* AIInsights component now uses the hook internally */}
+          <AIInsights symbol={symbol as string} />
         </TabsContent>
       </Tabs>
     </PageContainer>
