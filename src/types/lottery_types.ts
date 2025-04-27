@@ -63,6 +63,34 @@ export type DecentralizedLottery = {
           }
         },
         {
+          "name": "ticketAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.last_ticket_id",
+                "account": "lotteryAccount"
+              }
+            ]
+          }
+        },
+        {
           "name": "userTokenAccount",
           "writable": true
         },
@@ -78,14 +106,13 @@ export type DecentralizedLottery = {
         {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "numberOfTickets",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
       "name": "cancelLottery",
@@ -159,6 +186,167 @@ export type DecentralizedLottery = {
           "name": "admin",
           "writable": true,
           "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claimPrize",
+      "discriminator": [
+        157,
+        233,
+        139,
+        121,
+        246,
+        62,
+        234,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "lotteryAccount",
+          "writable": true
+        },
+        {
+          "name": "ticketAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "ticket_account.id",
+                "account": "ticketAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "globalConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          },
+          "relations": [
+            "lotteryAccount"
+          ]
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "lotteryTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "winnerTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "winner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claimRefund",
+      "discriminator": [
+        15,
+        16,
+        30,
+        161,
+        255,
+        228,
+        97,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "lotteryAccount"
+        },
+        {
+          "name": "ticketAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "ticket_account.id",
+                "account": "ticketAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "lotteryTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "buyerTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
@@ -363,8 +551,31 @@ export type DecentralizedLottery = {
           "name": "usdcMint"
         },
         {
+          "name": "treasuryTokenAccount"
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleRandomness",
+      "discriminator": [
+        209,
+        111,
+        84,
+        239,
+        14,
+        4,
+        26,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "lotteryAccount",
+          "writable": true
         }
       ],
       "args": []
@@ -445,15 +656,14 @@ export type DecentralizedLottery = {
           "writable": true
         },
         {
-          "name": "oracleAccount",
-          "docs": [
-            "Optional Oracle/VRF account for randomness",
-            "Only required when transitioning to Drawing state"
-          ],
-          "optional": true
-        },
-        {
           "name": "admin",
+          "docs": [
+            "Placeholder: Depending on the VRF provider, specific accounts (VRF account, Oracle queue, etc.)",
+            "would be needed here when transitioning to Drawing/AwaitingRandomness.",
+            "pub vrf: AccountInfo<'info>,",
+            "pub oracle_queue: AccountInfo<'info>,",
+            "pub vrf_request_account: AccountInfo<'info>, // The account to store request state"
+          ],
           "writable": true,
           "signer": true
         },
@@ -557,6 +767,19 @@ export type DecentralizedLottery = {
         246,
         7
       ]
+    },
+    {
+      "name": "ticketAccount",
+      "discriminator": [
+        231,
+        93,
+        13,
+        18,
+        239,
+        66,
+        21,
+        45
+      ]
     }
   ],
   "events": [
@@ -587,6 +810,19 @@ export type DecentralizedLottery = {
       ]
     },
     {
+      "name": "prizeClaimed",
+      "discriminator": [
+        213,
+        150,
+        192,
+        76,
+        199,
+        33,
+        212,
+        38
+      ]
+    },
+    {
       "name": "ticketPurchased",
       "discriminator": [
         108,
@@ -597,6 +833,32 @@ export type DecentralizedLottery = {
         145,
         13,
         71
+      ]
+    },
+    {
+      "name": "ticketRefunded",
+      "discriminator": [
+        46,
+        173,
+        213,
+        43,
+        145,
+        205,
+        132,
+        218
+      ]
+    },
+    {
+      "name": "winnerSelected",
+      "discriminator": [
+        245,
+        110,
+        152,
+        173,
+        193,
+        48,
+        133,
+        5
       ]
     }
   ],
@@ -735,6 +997,36 @@ export type DecentralizedLottery = {
       "code": 6026,
       "name": "lotteryCancelled",
       "msg": "Lottery is cancelled"
+    },
+    {
+      "code": 6027,
+      "name": "lotteryNotOpenForTicketPurchases",
+      "msg": "Lottery is not open for ticket purchases."
+    },
+    {
+      "code": 6028,
+      "name": "lotteryAlreadyClaimed",
+      "msg": "Lottery prize has already been claimed."
+    },
+    {
+      "code": 6029,
+      "name": "pdaDerivationError",
+      "msg": "Failed to derive PDA."
+    },
+    {
+      "code": 6030,
+      "name": "invalidWinningTicket",
+      "msg": "Provided ticket PDA does not match the winning ticket stored in the lottery."
+    },
+    {
+      "code": 6031,
+      "name": "ticketAlreadyClaimed",
+      "msg": "The provided ticket has already been claimed or refunded."
+    },
+    {
+      "code": 6032,
+      "name": "invalidStateForRefund",
+      "msg": "Lottery is not in a state where refunds can be claimed (must be Cancelled or Expired)."
     }
   ],
   "types": [
@@ -744,16 +1036,16 @@ export type DecentralizedLottery = {
         "kind": "struct",
         "fields": [
           {
-            "name": "treasury",
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasuryTokenAccount",
             "type": "pubkey"
           },
           {
             "name": "treasuryFeePercentage",
             "type": "u16"
-          },
-          {
-            "name": "admin",
-            "type": "pubkey"
           },
           {
             "name": "usdcMint",
@@ -792,9 +1084,9 @@ export type DecentralizedLottery = {
             "type": "u64"
           },
           {
-            "name": "winningNumbers",
+            "name": "winningTicket",
             "type": {
-              "option": "bytes"
+              "option": "pubkey"
             }
           },
           {
@@ -828,12 +1120,22 @@ export type DecentralizedLottery = {
             }
           },
           {
+            "name": "vrfRequestAccount",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
             "name": "isPrizePoolLocked",
             "type": "bool"
           },
           {
             "name": "targetPrizePool",
             "type": "u64"
+          },
+          {
+            "name": "isClaimed",
+            "type": "bool"
           }
         ]
       }
@@ -879,6 +1181,9 @@ export type DecentralizedLottery = {
           },
           {
             "name": "drawing"
+          },
+          {
+            "name": "awaitingRandomness"
           },
           {
             "name": "completed"
@@ -950,6 +1255,70 @@ export type DecentralizedLottery = {
       }
     },
     {
+      "name": "prizeClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lotteryId",
+            "type": "pubkey"
+          },
+          {
+            "name": "ticketId",
+            "type": "u64"
+          },
+          {
+            "name": "winner",
+            "type": "pubkey"
+          },
+          {
+            "name": "prizePool",
+            "type": "u64"
+          },
+          {
+            "name": "treasuryFee",
+            "type": "u64"
+          },
+          {
+            "name": "winnerPayout",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ticketAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "isClaimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "ticketPurchased",
       "type": {
         "kind": "struct",
@@ -957,6 +1326,10 @@ export type DecentralizedLottery = {
           {
             "name": "lotteryId",
             "type": "pubkey"
+          },
+          {
+            "name": "ticketId",
+            "type": "u64"
           },
           {
             "name": "buyer",
@@ -969,6 +1342,62 @@ export type DecentralizedLottery = {
           {
             "name": "totalCost",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ticketRefunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lotteryId",
+            "type": "pubkey"
+          },
+          {
+            "name": "ticketId",
+            "type": "u64"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "refundAmount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "winnerSelected",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lotteryId",
+            "type": "pubkey"
+          },
+          {
+            "name": "winningTicketId",
+            "type": "u64"
+          },
+          {
+            "name": "winningTicketPda",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomnessValue",
+            "type": "string"
           },
           {
             "name": "timestamp",

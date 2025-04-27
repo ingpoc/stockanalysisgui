@@ -51,6 +51,34 @@
           }
         },
         {
+          "name": "ticket_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.last_ticket_id",
+                "account": "LotteryAccount"
+              }
+            ]
+          }
+        },
+        {
           "name": "user_token_account",
           "writable": true
         },
@@ -66,14 +94,13 @@
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "number_of_tickets",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
       "name": "cancel_lottery",
@@ -147,6 +174,167 @@
           "name": "admin",
           "writable": true,
           "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_prize",
+      "discriminator": [
+        157,
+        233,
+        139,
+        121,
+        246,
+        62,
+        234,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account",
+          "writable": true
+        },
+        {
+          "name": "ticket_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account"
+              },
+              {
+                "kind": "account",
+                "path": "ticket_account.id",
+                "account": "TicketAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          },
+          "relations": [
+            "lottery_account"
+          ]
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        },
+        {
+          "name": "lottery_token_account",
+          "writable": true
+        },
+        {
+          "name": "winner_token_account",
+          "writable": true
+        },
+        {
+          "name": "winner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_refund",
+      "discriminator": [
+        15,
+        16,
+        30,
+        161,
+        255,
+        228,
+        97,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account"
+        },
+        {
+          "name": "ticket_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account"
+              },
+              {
+                "kind": "account",
+                "path": "ticket_account.id",
+                "account": "TicketAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "lottery_token_account",
+          "writable": true
+        },
+        {
+          "name": "buyer_token_account",
+          "writable": true
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
@@ -351,8 +539,31 @@
           "name": "usdc_mint"
         },
         {
+          "name": "treasury_token_account"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle_randomness",
+      "discriminator": [
+        209,
+        111,
+        84,
+        239,
+        14,
+        4,
+        26,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account",
+          "writable": true
         }
       ],
       "args": []
@@ -433,15 +644,14 @@
           "writable": true
         },
         {
-          "name": "oracle_account",
-          "docs": [
-            "Optional Oracle/VRF account for randomness",
-            "Only required when transitioning to Drawing state"
-          ],
-          "optional": true
-        },
-        {
           "name": "admin",
+          "docs": [
+            "Placeholder: Depending on the VRF provider, specific accounts (VRF account, Oracle queue, etc.)",
+            "would be needed here when transitioning to Drawing/AwaitingRandomness.",
+            "pub vrf: AccountInfo<'info>,",
+            "pub oracle_queue: AccountInfo<'info>,",
+            "pub vrf_request_account: AccountInfo<'info>, // The account to store request state"
+          ],
           "writable": true,
           "signer": true
         },
@@ -545,6 +755,19 @@
         246,
         7
       ]
+    },
+    {
+      "name": "TicketAccount",
+      "discriminator": [
+        231,
+        93,
+        13,
+        18,
+        239,
+        66,
+        21,
+        45
+      ]
     }
   ],
   "events": [
@@ -575,6 +798,19 @@
       ]
     },
     {
+      "name": "PrizeClaimed",
+      "discriminator": [
+        213,
+        150,
+        192,
+        76,
+        199,
+        33,
+        212,
+        38
+      ]
+    },
+    {
       "name": "TicketPurchased",
       "discriminator": [
         108,
@@ -585,6 +821,32 @@
         145,
         13,
         71
+      ]
+    },
+    {
+      "name": "TicketRefunded",
+      "discriminator": [
+        46,
+        173,
+        213,
+        43,
+        145,
+        205,
+        132,
+        218
+      ]
+    },
+    {
+      "name": "WinnerSelected",
+      "discriminator": [
+        245,
+        110,
+        152,
+        173,
+        193,
+        48,
+        133,
+        5
       ]
     }
   ],
@@ -723,6 +985,36 @@
       "code": 6026,
       "name": "LotteryCancelled",
       "msg": "Lottery is cancelled"
+    },
+    {
+      "code": 6027,
+      "name": "LotteryNotOpenForTicketPurchases",
+      "msg": "Lottery is not open for ticket purchases."
+    },
+    {
+      "code": 6028,
+      "name": "LotteryAlreadyClaimed",
+      "msg": "Lottery prize has already been claimed."
+    },
+    {
+      "code": 6029,
+      "name": "PDADerivationError",
+      "msg": "Failed to derive PDA."
+    },
+    {
+      "code": 6030,
+      "name": "InvalidWinningTicket",
+      "msg": "Provided ticket PDA does not match the winning ticket stored in the lottery."
+    },
+    {
+      "code": 6031,
+      "name": "TicketAlreadyClaimed",
+      "msg": "The provided ticket has already been claimed or refunded."
+    },
+    {
+      "code": 6032,
+      "name": "InvalidStateForRefund",
+      "msg": "Lottery is not in a state where refunds can be claimed (must be Cancelled or Expired)."
     }
   ],
   "types": [
@@ -732,16 +1024,16 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "treasury",
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_token_account",
             "type": "pubkey"
           },
           {
             "name": "treasury_fee_percentage",
             "type": "u16"
-          },
-          {
-            "name": "admin",
-            "type": "pubkey"
           },
           {
             "name": "usdc_mint",
@@ -780,9 +1072,9 @@
             "type": "u64"
           },
           {
-            "name": "winning_numbers",
+            "name": "winning_ticket",
             "type": {
-              "option": "bytes"
+              "option": "pubkey"
             }
           },
           {
@@ -816,12 +1108,22 @@
             }
           },
           {
+            "name": "vrf_request_account",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
             "name": "is_prize_pool_locked",
             "type": "bool"
           },
           {
             "name": "target_prize_pool",
             "type": "u64"
+          },
+          {
+            "name": "is_claimed",
+            "type": "bool"
           }
         ]
       }
@@ -867,6 +1169,9 @@
           },
           {
             "name": "Drawing"
+          },
+          {
+            "name": "AwaitingRandomness"
           },
           {
             "name": "Completed"
@@ -938,6 +1243,70 @@
       }
     },
     {
+      "name": "PrizeClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "ticket_id",
+            "type": "u64"
+          },
+          {
+            "name": "winner",
+            "type": "pubkey"
+          },
+          {
+            "name": "prize_pool",
+            "type": "u64"
+          },
+          {
+            "name": "treasury_fee",
+            "type": "u64"
+          },
+          {
+            "name": "winner_payout",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TicketAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "is_claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "TicketPurchased",
       "type": {
         "kind": "struct",
@@ -945,6 +1314,10 @@
           {
             "name": "lottery_id",
             "type": "pubkey"
+          },
+          {
+            "name": "ticket_id",
+            "type": "u64"
           },
           {
             "name": "buyer",
@@ -957,6 +1330,62 @@
           {
             "name": "total_cost",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TicketRefunded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "ticket_id",
+            "type": "u64"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "refund_amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WinnerSelected",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "winning_ticket_id",
+            "type": "u64"
+          },
+          {
+            "name": "winning_ticket_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomness_value",
+            "type": "string"
           },
           {
             "name": "timestamp",
