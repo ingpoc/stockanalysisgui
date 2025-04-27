@@ -219,7 +219,7 @@ export async function fetchStockChart(symbol: string, interval: string = "1y"): 
 }
 
 export async function getStockAnalysisHistory(symbol: string): Promise<AIAnalysisHistory> {
-  const response = await fetch(`${API_BASE_URL}/stock/${symbol}/analysis-history`)
+  const response = await fetch(`${API_BASE_URL}/analysis/${symbol}/analysis-history`)
   if (!response.ok) {
     throw new Error('Failed to fetch analysis history')
   }
