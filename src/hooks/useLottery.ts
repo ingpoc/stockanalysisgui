@@ -8,6 +8,7 @@ import { PublicKey } from '@solana/web3.js'
 import type { AnchorWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
 import { handleProgramError } from '@/lib/utils'
+import { BN } from 'bn.js'
 
 export function useLottery() {
   const { connection } = useConnection()
@@ -45,9 +46,24 @@ export function useLottery() {
       prizePool: number
     }) => {
       if (!program) throw new Error('Wallet not connected')
+      // Client-side validation
+      if (ticketPrice <= 0) {
+        throw new Error('Ticket price must be greater than 0')
+      }
+      const currentTime = Math.floor(new Date().getTime() / 1000)
+      if (drawTime <= currentTime) {
+        throw new Error('Draw time must be in the future')
+      }
+      if (prizePool < 0) {
+        throw new Error('Prize pool cannot be negative')
+      }
       return program.createLottery(type, ticketPrice, drawTime, prizePool)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotteries'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotteries'] }),
+    onError: (error) => {
+      console.error('Lottery creation failed:', error)
+      toast.error('Lottery creation failed', { description: error.message })
+    }
   })
 
   const buyTicket = useMutation({
@@ -59,11 +75,19 @@ export function useLottery() {
       numberOfTickets: number
     }) => {
       if (!program) throw new Error('Wallet not connected')
+      // Client-side validation
+      if (numberOfTickets <= 0) {
+        throw new Error('Number of tickets must be greater than 0')
+      }
       const isValid = await program.validateLotteryState(lotteryAddress)
       if (!isValid) throw new Error('Lottery is not open for ticket purchases')
       return program.buyTicket(lotteryAddress, numberOfTickets)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotteries'] })
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotteries'] }),
+    onError: (error) => {
+      console.error('Ticket purchase failed:', error)
+      toast.error('Ticket purchase failed', { description: error.message })
+    }
   })
 
   const transitionState = useMutation({
