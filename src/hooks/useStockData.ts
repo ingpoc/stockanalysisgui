@@ -83,10 +83,21 @@ export function useStockData(symbol: string) {
   const refreshAnalysisMutation = useMutation<{ id: string; content: string; timestamp: string; recommendation: string; }, Error>({
     mutationFn: () => refreshAnalysis(symbol),
     onSuccess: (data) => {
-      // Invalidate and refetch analysis content and history queries
-      queryClient.invalidateQueries({ queryKey: ['analysisContent', symbol] })
-      queryClient.invalidateQueries({ queryKey: ['analysisHistory', symbol] })
       toast.success(`AI Analysis refresh initiated (ID: ${data.id})`)
+
+      // Explicitly refetch history first, then refetch content.
+      queryClient.refetchQueries({ queryKey: ['analysisHistory', symbol], exact: true })
+        .then(() => {
+          // History is refetched, now latestAnalysisId should be updated internally.
+          // Refetch the content query. React Query will use the latest `latestAnalysisId`
+          // when evaluating the query key during the refetch.
+          console.log('Refetching content after history update...')
+          queryClient.refetchQueries({ queryKey: ['analysisContent'], type: 'active' })
+        })
+        .catch((error) => {
+            console.error("Error refetching history/content:", error);
+            toast.error("Failed to update analysis display.");
+        });
     },
     onError: (error) => {
       toast.error('Failed to refresh AI Analysis', { description: error.message })

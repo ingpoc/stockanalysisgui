@@ -253,19 +253,24 @@ export async function refreshAnalysis(symbol: string): Promise<{
   timestamp: string
   recommendation: string
 }> {
-  const response = await fetch(`${API_BASE_URL}/stock/${symbol}/refresh-analysis`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
+  try {
+    const response = await fetch(`${API_BASE_URL}/analysis/${symbol}/refresh-analysis`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Failed to refresh analysis: ${errorText}`)
     }
-  })
-  
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Failed to refresh analysis: ${errorText}`)
+    
+    return response.json()
+  } catch (error) {
+    console.error('Error refreshing analysis:', error)
+    throw error
   }
-  
-  return response.json()
 }
 
 // Portfolio API functions
