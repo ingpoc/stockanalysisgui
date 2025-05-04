@@ -637,4 +637,42 @@ export async function getDatabaseStats(): Promise<DatabaseStatsResponse> {
     console.error('Error getting database stats:', error);
     throw error;
   }
+}
+
+// New function to search stocks
+export async function searchStocks(query: string, limit: number = 10): Promise<Stock[]> {
+  if (query.length < 2) {
+    return []; // Don't search if query is too short
+  }
+  
+  try {
+    // Corrected URL path to include /stock/ prefix
+    const response = await fetch(`${API_BASE_URL}/stock/search?q=${encodeURIComponent(query)}&limit=${limit}`)
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Error searching stocks: ${response.status} - ${errorText}`);
+      // Throw the error text received from the backend if possible
+      let detail = errorText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        detail = errorJson.detail || errorText;
+      } catch (e) { /* Ignore parsing error */ }
+      throw new Error(`Failed to search stocks: ${response.status} - ${detail}`);
+    }
+    
+    const data: Stock[] = await response.json(); // Assuming the backend returns Stock[] like structure
+    
+    // Ensure CMP is treated as a string, provide default if missing
+    const formattedData = data.map(stock => ({
+      ...stock,
+      cmp: String(stock.cmp ?? 'N/A') // Ensure cmp is a string
+    }));
+
+    return formattedData;
+  } catch (error) {
+    console.error('Error in searchStocks:', error);
+    // Rethrow the error so the UI can potentially handle it
+    throw error; 
+  }
 } 

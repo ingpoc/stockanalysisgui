@@ -17,6 +17,7 @@ import {
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { type Stock } from "@/types/market"
+import { searchStocks } from "@/lib/api"
 
 function SidebarItem({ 
   icon: Icon, 
@@ -91,9 +92,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       setLoading(true)
       try {
-        // TODO: Reimplement searchStocks using the new service structure if needed
+        const data = await searchStocks(query)
+        setResults(data)
+        setIsOpen(data.length > 0)
       } catch (error) {
         console.error('Failed to search stocks:', error)
+        setResults([])
       } finally {
         setLoading(false)
       }
