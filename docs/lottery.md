@@ -68,8 +68,8 @@ The system follows a client-server architecture where:
    // Environment variables in .env.local
    NEXT_PUBLIC_ADMIN_WALLET="7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4"
    NEXT_PUBLIC_TREASURY_WALLET="7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4"
-   NEXT_PUBLIC_LOTTERY_PROGRAM_ID="F1pffGp4n5qyNRcCnpoTH5CEfVKQEGxAxmRuRScUw4tz"
-   NEXT_PUBLIC_USDC_MINT="4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+   NEXT_PUBLIC_LOTTERY_PROGRAM_ID="7my34Pj4c96UfSieKESvNZ8napKonpZAiBxUum1VbGS3"
+   NEXT_PUBLIC_USDC_MINT="Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
    NEXT_PUBLIC_GLOBAL_CONFIG_SEED="global_config"
    NEXT_PUBLIC_LOTTERY_SEED="lottery"
    NEXT_PUBLIC_LOTTERY_TOKEN_SEED="lottery_token"
@@ -77,8 +77,8 @@ The system follows a client-server architecture where:
    // Constants in src/lib/constants.ts
    export const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || '7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4'
    export const TREASURY_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || ADMIN_WALLET
-   export const LOTTERY_PROGRAM_ID = process.env.NEXT_PUBLIC_LOTTERY_PROGRAM_ID || 'F1pffGp4n5qyNRcCnpoTH5CEfVKQEGxAxmRuRScUw4tz'
-   export const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT || '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'
+   export const LOTTERY_PROGRAM_ID = process.env.NEXT_PUBLIC_LOTTERY_PROGRAM_ID || '7my34Pj4c96UfSieKESvNZ8napKonpZAiBxUum1VbGS3'
+   export const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT || 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'
    export const GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_GLOBAL_CONFIG_SEED || 'global_config'
    export const LOTTERY_SEED = process.env.NEXT_PUBLIC_LOTTERY_SEED || 'lottery'
    export const LOTTERY_TOKEN_SEED = process.env.NEXT_PUBLIC_LOTTERY_TOKEN_SEED || 'lottery_token'
@@ -647,7 +647,7 @@ The system follows a client-server architecture where:
 
 1. **Important Addresses**
    - Program ID: `F1pffGp4n5qyNRcCnpoTH5CEfVKQEGxAxmRuRScUw4tz`
-   - USDC Mint: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
+   - USDC Mint: `Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr`
    - Admin/Treasury Wallet: `7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4`
    - Global Config PDA: `9Gmin1DevMjy9Too8ZQq78KdWoX16wSpEtQ2xj863f6W`
 

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { BaseSignerWalletAdapter } from '@solana/wallet-adapter-base'
-import { LotteryInfo, LotteryState } from '@/types/lottery'
+import { LotteryInfo, LotteryState } from '@/types/lottery_types'
 import { LotteryProgram } from '@/lib/solana/program'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -26,10 +26,9 @@ interface LotteryCardProps {
 
 export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
   const [loading, setLoading] = useState(false)
-  const [numberOfTickets, setNumberOfTickets] = useState(1)
   const { publicKey, wallet } = useWallet()
   const { connection } = useConnection()
-  const isActive = lottery.state === LotteryState.Open
+  const isActive = lottery.state === 'Open'
   const isEnded = new Date(lottery.drawTime * 1000) < new Date()
   const isWinner = lottery.winningNumbers && publicKey?.toBase58() === lottery.createdBy
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
@@ -55,8 +54,8 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
         signAllTransactions: adapter.signAllTransactions.bind(adapter),
       })
 
-      await program.buyTicket(lottery.address, numberOfTickets)
-      toast.success('Tickets purchased successfully!')
+      await program.buyTicket(lottery.address)
+      toast.success('Ticket purchased successfully!')
       onParticipate()
     } catch (error) {
       console.error('Failed to buy tickets:', error)
@@ -67,7 +66,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
     }
   }
 
-  const isOpen = lottery.state === LotteryState.Open
+  const isOpen = lottery.state === 'Open'
   const drawDate = new Date(lottery.drawTime * 1000)
 
   return (
@@ -118,18 +117,12 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
         )}
         {isOpen && (
           <div className="flex gap-4">
-            <Input
-              type="number"
-              min="1"
-              value={numberOfTickets}
-              onChange={(e) => setNumberOfTickets(parseInt(e.target.value))}
-              className="w-24"
-            />
             <Button
               onClick={handleBuyTickets}
               disabled={loading || !publicKey}
+              className="flex-1"
             >
-              {loading ? 'Buying...' : 'Buy Tickets'}
+              {loading ? 'Buying...' : 'Buy 1 Ticket'}
             </Button>
           </div>
         )}

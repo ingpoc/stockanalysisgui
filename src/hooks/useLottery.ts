@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { LotteryProgram } from '@/lib/solana/program'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { useWallet } from './useWallet'
-import { LotteryType, LotteryInfo, LotteryState } from '@/types/lottery'
+import { LotteryType, LotteryInfo, LotteryState } from '@/types/lottery_types'
 import { PublicKey } from '@solana/web3.js'
 import type { AnchorWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
@@ -12,19 +12,19 @@ import { BN } from 'bn.js'
 
 export function useLottery() {
   const { connection } = useConnection()
-  const { address } = useWallet()
+  const { publicKey, signTransaction, signAllTransactions } = useWallet()
   const queryClient = useQueryClient()
 
-  const anchorWallet: AnchorWallet | undefined = address ? {
-    publicKey: new PublicKey(address),
-    signTransaction: async () => { throw new Error('Not implemented') },
-    signAllTransactions: async () => { throw new Error('Not implemented') }
+  const anchorWallet: AnchorWallet | undefined = publicKey && signTransaction && signAllTransactions ? {
+    publicKey: publicKey,
+    signTransaction: signTransaction,
+    signAllTransactions: signAllTransactions
   } : undefined
 
   const program = anchorWallet ? new LotteryProgram(connection, anchorWallet) : null
 
   const { data: lotteries, isLoading, error } = useQuery<LotteryInfo[], Error>({
-    queryKey: ['lotteries', address],
+    queryKey: ['lotteries', publicKey],
     queryFn: () => {
       if (!program) throw new Error('Wallet not connected')
       return program.getLotteries()
@@ -57,6 +57,8 @@ export function useLottery() {
       if (prizePool < 0) {
         throw new Error('Prize pool cannot be negative')
       }
+      
+      // Type is already in the correct format ('Daily', 'Weekly', 'Monthly')
       return program.createLottery(type, ticketPrice, drawTime, prizePool)
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotteries'] }),
@@ -68,20 +70,13 @@ export function useLottery() {
 
   const buyTicket = useMutation({
     mutationFn: async ({
-      lotteryAddress,
-      numberOfTickets
+      lotteryAddress
     }: {
       lotteryAddress: string
-      numberOfTickets: number
     }) => {
       if (!program) throw new Error('Wallet not connected')
-      // Client-side validation
-      if (numberOfTickets <= 0) {
-        throw new Error('Number of tickets must be greater than 0')
-      }
-      const isValid = await program.validateLotteryState(lotteryAddress)
-      if (!isValid) throw new Error('Lottery is not open for ticket purchases')
-      return program.buyTicket(lotteryAddress, numberOfTickets)
+      // Note: Removed numberOfTickets parameter and validateLotteryState as they don't exist in the actual implementation
+      return program.buyTicket(lotteryAddress)
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotteries'] }),
     onError: (error) => {
@@ -96,38 +91,26 @@ export function useLottery() {
       newState
     }: {
       lotteryAddress: string
-      newState: LotteryState // Assuming LotteryState is imported from types
+      newState: LotteryState
     }) => {
       if (!program) throw new Error('Wallet not connected')
       const lotteryPubkey = new PublicKey(lotteryAddress)
+      
+      // State is already in the correct format ('Created', 'Open', etc.)
       return program.transitionState(lotteryPubkey, newState)
     },
     onSuccess: (data, variables) => {
-      // Invalidate the specific lottery query or all lotteries
-      queryClient.invalidateQueries({ queryKey: ['lotteries', address] })
-      // Optionally, update the cache directly if the mutation returns the updated lottery
-      // queryClient.setQueryData(['lottery', variables.lotteryAddress], updatedData)
+      queryClient.invalidateQueries({ queryKey: ['lotteries', publicKey] })
       toast.success(`Lottery state transitioned successfully to ${variables.newState}`)
     },
     onError: (error, variables) => {
       console.error(`State transition to ${variables.newState} failed:`, error)
-      const errorMessage = handleProgramError(error) // Assuming handleProgramError is available/imported
+      const errorMessage = handleProgramError(error)
       toast.error(`State transition failed`, { description: errorMessage })
     }
   })
 
-  const subscribeLottery = useCallback(
-    (lotteryAddress: string, callback: (lottery: LotteryInfo) => void) => {
-      if (!program) throw new Error('Wallet not connected')
-      return program.subscribeToLotteryChanges(lotteryAddress, callback)
-    }, 
-    [program]
-  )
-
-  const unsubscribeLottery = useCallback(
-    (subscriptionId: number) => program?.unsubscribe(subscriptionId),
-    [program]
-  )
+  // Note: Removed subscription methods as they don't exist in the actual LotteryProgram implementation
 
   return {
     lotteries,
@@ -136,8 +119,6 @@ export function useLottery() {
     createLottery: createLottery.mutateAsync,
     buyTicket: buyTicket.mutateAsync,
     transitionState: transitionState.mutateAsync,
-    subscribeLottery,
-    unsubscribeLottery,
     isCreating: createLottery.isPending,
     isBuying: buyTicket.isPending,
     isTransitioning: transitionState.isPending

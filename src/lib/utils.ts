@@ -21,6 +21,11 @@ export function handleProgramError(error: any): string {
   
   // Check for specific error messages
   if (error.message) {
+    // Check for transaction already processed error
+    if (error.message.includes('This transaction has already been processed')) {
+      return 'This transaction has already been processed. The operation may have completed successfully.';
+    }
+    
     // Check for oracle account not provided error
     if (error.message.includes("Account 'oracleAccount' not provided")) {
       return "Oracle account not provided. This is required for Drawing and Cancelled state transitions.";

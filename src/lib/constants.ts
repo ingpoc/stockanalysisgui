@@ -15,16 +15,15 @@ export const SOLANA_MAINNET_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_MAINNET_RPC
 // Lottery Program Configuration
 export const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || '7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4'
 export const TREASURY_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || ADMIN_WALLET
-export const LOTTERY_PROGRAM_ID = process.env.NEXT_PUBLIC_LOTTERY_PROGRAM_ID || 'F1pffGp4n5qyNRcCnpoTH5CEfVKQEGxAxmRuRScUw4tz'
-export const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT || '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'
+export const LOTTERY_PROGRAM_ID = process.env.NEXT_PUBLIC_LOTTERY_PROGRAM_ID || '7my34Pj4c96UfSieKESvNZ8napKonpZAiBxUum1VbGS3'
+export const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT || 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'
 export const GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_GLOBAL_CONFIG_SEED || 'global_config'
 export const LOTTERY_SEED = process.env.NEXT_PUBLIC_LOTTERY_SEED || 'lottery'
 export const LOTTERY_TOKEN_SEED = process.env.NEXT_PUBLIC_LOTTERY_TOKEN_SEED || 'lottery_token'
 
 // Application Configuration
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 export const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID || ''
 
-// Feature Flags
-export const ENABLE_CRYPTO_LOTTERY = process.env.NEXT_PUBLIC_ENABLE_CRYPTO_LOTTERY === 'true' 
+// Feature Flags - Lottery is always enabled now
+export const ENABLE_CRYPTO_LOTTERY = true 

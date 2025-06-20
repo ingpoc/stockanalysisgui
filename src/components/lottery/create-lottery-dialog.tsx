@@ -34,7 +34,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, ControllerRenderProps } from 'react-hook-form'
 import * as z from 'zod'
 import { toast } from 'sonner'
-import { LotteryType } from '@/types/lottery'
+import { LotteryType } from '@/types/lottery_types'
 import { handleProgramError, formatUSDC } from '@/lib/utils'
 import { useLottery } from '@/hooks/useLottery'
 import { Loader2 } from 'lucide-react'
@@ -52,10 +52,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface CreateLotteryDialogProps {
-  onSuccess: () => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess?: () => void
 }
 
-const getDrawTime = (type: LotteryType): Date => {
+const getDrawTime = (type: string): Date => {
   const now = new Date()
   let drawTime = new Date(now)
   drawTime.setHours(23, 59, 59, 999)
@@ -76,8 +78,34 @@ const getDrawTime = (type: LotteryType): Date => {
   return drawTime
 }
 
-export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
-  const [open, setOpen] = useState(false)
+const getDurationHours = (type: string) => {
+  switch (type) {
+    case 'Daily':
+      return 24;
+    case 'Weekly':
+      return 24 * 7;
+    case 'Monthly':
+      return 24 * 30;
+    default:
+      return 24;
+  }
+}
+
+// Convert form values to LotteryType
+const convertToLotteryType = (formType: string): LotteryType => {
+  switch (formType) {
+    case 'daily':
+      return 'Daily'
+    case 'weekly':
+      return 'Weekly'
+    case 'monthly':
+      return 'Monthly'
+    default:
+      return 'Daily'
+  }
+}
+
+export function CreateLotteryDialog({ open, onOpenChange, onSuccess }: CreateLotteryDialogProps) {
   const { publicKey } = useWallet()
   const {
     createLottery,
@@ -103,29 +131,26 @@ export function CreateLotteryDialog({ onSuccess }: CreateLotteryDialogProps) {
       const ticketPrice = parseFloat(values.ticketPrice)
       const prizePool = values.prizePool === '' || values.prizePool === undefined ? 0 : parseFloat(values.prizePool)
 
-      const drawTime = getDrawTime(values.type as LotteryType)
+      const drawTime = getDrawTime(values.type)
       const drawTimeSeconds = Math.floor(drawTime.getTime() / 1000)
       
       await createLottery({
-        type: values.type as LotteryType,
+        type: convertToLotteryType(values.type),
         ticketPrice,
         drawTime: drawTimeSeconds,
         prizePool
       })
 
-      setOpen(false)
+      onOpenChange(false)
       form.reset()
-      onSuccess()
+      onSuccess?.()
     } catch (error) {
       console.error('Failed to create lottery (UI):', error)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Create Lottery</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Create New Lottery</DialogTitle>

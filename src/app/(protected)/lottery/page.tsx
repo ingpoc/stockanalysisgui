@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { PageContainer } from '@/components/layout/page-container'
 import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
 import { useAuthNavigation } from '@/lib/navigation'
@@ -12,7 +13,7 @@ import { useLottery } from '@/hooks/useLottery'
 import dynamic from 'next/dynamic'
 
 // Dynamically import the main lottery card
-const EnhancedLotteryCard = dynamic(() => 
+const EnhancedLotteryCard = dynamic(() =>
   import("@/components/lottery/enhanced-lottery-card")
     .then(mod => mod.EnhancedLotteryCard),
   {
@@ -25,12 +26,14 @@ const EnhancedLotteryCard = dynamic(() =>
 
 export default function LotteryPage() {
   const [isMounted, setIsMounted] = useState(false)
+  const [showInitDialog, setShowInitDialog] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const { connected } = useWallet()
   const navigation = useAuthNavigation()
-  const { 
-    lotteries, 
-    isLoading, 
-    error 
+  const {
+    lotteries,
+    isLoading,
+    error
   } = useLottery()
 
   useEffect(() => {
@@ -57,10 +60,21 @@ export default function LotteryPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Lotteries</h1>
         <div className="space-x-2">
-          <InitializeProgramDialog />
-          <CreateLotteryDialog onSuccess={handleLotteryRefresh} />
+          <Button onClick={() => setShowInitDialog(true)} variant="outline">Initialize Program</Button>
+          <Button onClick={() => setShowCreateDialog(true)}>Create Lottery</Button>
         </div>
       </div>
+
+      <InitializeProgramDialog 
+        open={showInitDialog}
+        onOpenChange={setShowInitDialog}
+      />
+      
+      <CreateLotteryDialog 
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={handleLotteryRefresh}
+      />
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -97,4 +111,4 @@ export default function LotteryPage() {
       )}
     </PageContainer>
   )
-} 
+}

@@ -22,8 +22,12 @@ import { USDC_MINT, TREASURY_WALLET } from '@/lib/constants'
 const DEFAULT_USDC_MINT = USDC_MINT
 const DEFAULT_TREASURY = TREASURY_WALLET
 
-export function InitializeProgramDialog() {
-  const [open, setOpen] = useState(false)
+interface InitializeProgramDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function InitializeProgramDialog({ open, onOpenChange }: InitializeProgramDialogProps) {
   const [usdcMint, setUsdcMint] = useState(DEFAULT_USDC_MINT)
   const [treasury, setTreasury] = useState(DEFAULT_TREASURY)
   const [isLoading, setIsLoading] = useState(false)
@@ -51,7 +55,7 @@ export function InitializeProgramDialog() {
       toast.success("Program initialized", {
         description: "The lottery program has been initialized successfully."
       })
-      setOpen(false)
+      onOpenChange(false)
     } catch (error) {
       console.error('Program initialization failed:', error)
       const errorMessage = handleProgramError(error)
@@ -64,10 +68,7 @@ export function InitializeProgramDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Initialize Program</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Initialize Lottery Program</DialogTitle>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { LotteryInfo, LotteryState } from '@/types/lottery'
+import { LotteryType, LotteryState, LotteryInfo } from '@/types/lottery_types'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,7 +22,6 @@ interface LotteryCardProps {
 }
 
 export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps) {
-  const [numberOfTickets, setNumberOfTickets] = useState(1)
   const { publicKey } = useWallet()
   
   const {
@@ -30,7 +29,7 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
     isBuying
   } = useLottery()
 
-  const isActive = lottery.state === LotteryState.Open
+  const isActive = lottery.state === 'Open'
   const isEnded = new Date(lottery.drawTime * 1000) < new Date()
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
 
@@ -43,24 +42,19 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
       toast.error('Please connect your wallet to buy tickets')
       return
     }
-    if (numberOfTickets <= 0) {
-        toast.error('Please enter a valid number of tickets');
-        return;
-    }
 
     try {
       await buyTicket({ 
-        lotteryAddress: lottery.address, 
-        numberOfTickets 
+        lotteryAddress: lottery.address
       })
-      toast.success('Tickets purchased successfully!')
+      toast.success('Ticket purchased successfully!')
       onParticipate()
     } catch (error) {
-      console.error('Failed to buy tickets (UI): ', error)
+      console.error('Failed to buy ticket (UI): ', error)
     } 
   }
 
-  const isOpen = lottery.state === LotteryState.Open
+  const isOpen = lottery.state === 'Open'
   const drawDate = new Date(lottery.drawTime * 1000)
   
   const progressPercentage = lottery.targetPrizePool && lottery.targetPrizePool > 0 
@@ -69,16 +63,16 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
     
   const getBadgeVariant = () => {
     switch(lottery.state) {
-      case LotteryState.Open:
+      case 'Open':
         return "success" as const;
-      case LotteryState.Created:
+      case 'Created':
         return "secondary" as const;
-      case LotteryState.Drawing:
+      case 'Drawing':
         return "default" as const;
-      case LotteryState.Completed:
+      case 'Completed':
         return "default" as const;
-      case LotteryState.Expired:
-      case LotteryState.Cancelled:
+      case 'Expired':
+      case 'Cancelled':
         return "destructive" as const;
       default:
         return "outline" as const;
@@ -93,8 +87,8 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
       <div className={cn(
         "h-2 w-full",
         isActive ? "bg-green-500" : 
-        lottery.state === LotteryState.Completed ? "bg-blue-500" :
-        lottery.state === LotteryState.Drawing ? "bg-amber-500" :
+        lottery.state === 'Completed' ? "bg-blue-500" :
+        lottery.state === 'Drawing' ? "bg-amber-500" :
         "bg-gray-300"
       )}></div>
       
@@ -185,16 +179,6 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
         
         {isOpen && (
           <div className="flex gap-2 mt-4">
-            <div className="flex items-center bg-muted/50 rounded-md px-2">
-              <span className="text-sm text-muted-foreground mr-2">Qty:</span>
-              <Input
-                type="number"
-                min="1"
-                value={numberOfTickets}
-                onChange={(e) => setNumberOfTickets(parseInt(e.target.value) || 1)}
-                className="w-16 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-2 text-center"
-              />
-            </div>
             <Button
               onClick={handleBuyTickets}
               disabled={isBuying || !publicKey}
@@ -206,7 +190,7 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
               ) : (
                 <Ticket className="w-4 h-4 mr-2" />
               )}
-              {isBuying ? 'Buying...' : 'Buy Tickets'}
+              {isBuying ? 'Buying...' : 'Buy 1 Ticket'}
             </Button>
           </div>
         )}

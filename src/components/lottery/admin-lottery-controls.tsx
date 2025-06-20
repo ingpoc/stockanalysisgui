@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
-import { LotteryState, LotteryInfo } from '@/types/lottery'
+import { LotteryState, LotteryInfo } from '@/types/lottery_types'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -23,21 +23,26 @@ interface AdminLotteryControlsProps {
 }
 
 export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryControlsProps) {
-  const [selectedState, setSelectedState] = useState<LotteryState | ''>('')
+  const [selectedState, setSelectedState] = useState<string>('')
   const { connected } = useWallet()
   const {
     transitionState,
     isTransitioning
   } = useLottery()
 
+  // Map capitalized states to the correct format for useLottery hook
+  const mapStateToEnum = (state: string): LotteryState => {
+    return state as LotteryState
+  }
+
   const getAvailableStates = () => {
     switch (lottery.state) {
-      case LotteryState.Created:
-        return [LotteryState.Open, LotteryState.Cancelled]
-      case LotteryState.Open:
-        return [LotteryState.Drawing, LotteryState.Cancelled]
-      case LotteryState.Drawing:
-        return [LotteryState.Completed, LotteryState.Expired]
+      case 'Created':
+        return ['Open', 'Cancelled']
+      case 'Open':
+        return ['Drawing', 'Cancelled']
+      case 'Drawing':
+        return ['Completed', 'Expired']
       default:
         return []
     }
@@ -50,11 +55,11 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
     }
 
     try {
-      if (selectedState === LotteryState.Drawing) {
+      if (selectedState === 'Drawing') {
         toast.info('Transitioning to Drawing state', {
           description: 'This will use the oracle account to generate random numbers for the lottery.'
         })
-      } else if (selectedState === LotteryState.Cancelled) {
+      } else if (selectedState === 'Cancelled') {
         toast.info('Transitioning to Cancelled state', {
           description: 'This will use the oracle account to cancel the lottery.'
         })
@@ -62,7 +67,7 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
       
       await transitionState({ 
         lotteryAddress: lottery.address, 
-        newState: selectedState 
+        newState: mapStateToEnum(selectedState)
       })
       
       setTimeout(() => {
@@ -84,7 +89,7 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
 
   return (
     <div className="flex items-center gap-2">
-      <Select value={selectedState} onValueChange={(value) => setSelectedState(value as LotteryState)}>
+      <Select value={selectedState} onValueChange={(value) => setSelectedState(value as string)}>
         <SelectTrigger className="flex-1 text-xs h-8">
           <SelectValue placeholder="Select next state" />
         </SelectTrigger>

@@ -1,14 +1,26 @@
-{
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/decentralized_lottery.json`.
+ */
+/**
+ * Auto-generated Program IDL types in camelCase format.
+ *
+ * Note that this is auto-generated from the IDL. For comprehensive
+ * types with UI helpers, use lottery_types.ts instead.
+ */
+export type DecentralizedLottery = {
   "address": "7my34Pj4c96UfSieKESvNZ8napKonpZAiBxUum1VbGS3",
   "metadata": {
-    "name": "decentralized_lottery",
+    "name": "decentralizedLottery",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
   "instructions": [
     {
-      "name": "buy_ticket",
+      "name": "buyTicket",
       "discriminator": [
         11,
         24,
@@ -21,7 +33,7 @@
       ],
       "accounts": [
         {
-          "name": "lottery_account",
+          "name": "lotteryAccount",
           "writable": true,
           "pda": {
             "seeds": [
@@ -41,11 +53,11 @@
           }
         },
         {
-          "name": "ticket_account",
+          "name": "ticketAccount",
           "writable": true
         },
         {
-          "name": "global_config",
+          "name": "globalConfig",
           "pda": {
             "seeds": [
               {
@@ -75,14 +87,14 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "claim_prize",
+      "name": "claimPrize",
       "discriminator": [
         157,
         233,
@@ -95,7 +107,7 @@
       ],
       "accounts": [
         {
-          "name": "lottery_account",
+          "name": "lotteryAccount",
           "writable": true,
           "pda": {
             "seeds": [
@@ -115,11 +127,11 @@
           }
         },
         {
-          "name": "ticket_account",
+          "name": "ticketAccount",
           "writable": true
         },
         {
-          "name": "global_config",
+          "name": "globalConfig",
           "pda": {
             "seeds": [
               {
@@ -149,14 +161,14 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "create_lottery",
+      "name": "createLottery",
       "discriminator": [
         242,
         165,
@@ -169,7 +181,7 @@
       ],
       "accounts": [
         {
-          "name": "lottery_account",
+          "name": "lotteryAccount",
           "writable": true,
           "pda": {
             "seeds": [
@@ -189,7 +201,7 @@
           }
         },
         {
-          "name": "global_config",
+          "name": "globalConfig",
           "pda": {
             "seeds": [
               {
@@ -219,29 +231,29 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "lottery_type_enum",
+          "name": "lotteryTypeEnum",
           "type": {
             "defined": {
-              "name": "LotteryType"
+              "name": "lotteryType"
             }
           }
         },
         {
-          "name": "ticket_price",
+          "name": "ticketPrice",
           "type": "u64"
         },
         {
-          "name": "draw_time",
+          "name": "drawTime",
           "type": "i64"
         },
         {
-          "name": "target_prize_pool",
+          "name": "targetPrizePool",
           "type": "u64"
         }
       ]
@@ -260,7 +272,7 @@
       ],
       "accounts": [
         {
-          "name": "global_config",
+          "name": "globalConfig",
           "writable": true,
           "pda": {
             "seeds": [
@@ -291,21 +303,21 @@
           "signer": true
         },
         {
-          "name": "usdc_mint"
+          "name": "usdcMint"
         },
         {
-          "name": "treasury_token_account",
+          "name": "treasuryTokenAccount",
           "writable": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "select_winner",
+      "name": "selectWinner",
       "discriminator": [
         119,
         66,
@@ -318,7 +330,7 @@
       ],
       "accounts": [
         {
-          "name": "lottery_account",
+          "name": "lotteryAccount",
           "writable": true,
           "pda": {
             "seeds": [
@@ -338,7 +350,7 @@
           }
         },
         {
-          "name": "global_config",
+          "name": "globalConfig",
           "pda": {
             "seeds": [
               {
@@ -368,14 +380,14 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "transition_state",
+      "name": "transitionState",
       "discriminator": [
         52,
         205,
@@ -388,7 +400,7 @@
       ],
       "accounts": [
         {
-          "name": "lottery_account",
+          "name": "lotteryAccount",
           "writable": true,
           "pda": {
             "seeds": [
@@ -408,7 +420,7 @@
           }
         },
         {
-          "name": "global_config",
+          "name": "globalConfig",
           "pda": {
             "seeds": [
               {
@@ -438,16 +450,16 @@
           "signer": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "next_state",
+          "name": "nextState",
           "type": {
             "defined": {
-              "name": "LotteryState"
+              "name": "lotteryState"
             }
           }
         }
@@ -456,7 +468,7 @@
   ],
   "accounts": [
     {
-      "name": "GlobalConfig",
+      "name": "globalConfig",
       "discriminator": [
         149,
         8,
@@ -469,7 +481,7 @@
       ]
     },
     {
-      "name": "LotteryAccount",
+      "name": "lotteryAccount",
       "discriminator": [
         1,
         165,
@@ -482,7 +494,7 @@
       ]
     },
     {
-      "name": "TicketAccount",
+      "name": "ticketAccount",
       "discriminator": [
         231,
         93,
@@ -497,7 +509,7 @@
   ],
   "events": [
     {
-      "name": "DrawingStarted",
+      "name": "drawingStarted",
       "discriminator": [
         105,
         108,
@@ -510,7 +522,7 @@
       ]
     },
     {
-      "name": "LotteryCreated",
+      "name": "lotteryCreated",
       "discriminator": [
         162,
         18,
@@ -523,7 +535,7 @@
       ]
     },
     {
-      "name": "LotteryStateChanged",
+      "name": "lotteryStateChanged",
       "discriminator": [
         116,
         62,
@@ -536,7 +548,7 @@
       ]
     },
     {
-      "name": "PrizeClaimed",
+      "name": "prizeClaimed",
       "discriminator": [
         213,
         150,
@@ -549,7 +561,7 @@
       ]
     },
     {
-      "name": "RandomnessConsumed",
+      "name": "randomnessConsumed",
       "discriminator": [
         90,
         36,
@@ -562,7 +574,7 @@
       ]
     },
     {
-      "name": "RandomnessRequested",
+      "name": "randomnessRequested",
       "discriminator": [
         10,
         64,
@@ -575,7 +587,7 @@
       ]
     },
     {
-      "name": "TicketPurchased",
+      "name": "ticketPurchased",
       "discriminator": [
         108,
         59,
@@ -588,7 +600,7 @@
       ]
     },
     {
-      "name": "TicketRefunded",
+      "name": "ticketRefunded",
       "discriminator": [
         46,
         173,
@@ -601,7 +613,7 @@
       ]
     },
     {
-      "name": "TreasuryWithdrawal",
+      "name": "treasuryWithdrawal",
       "discriminator": [
         244,
         117,
@@ -614,7 +626,7 @@
       ]
     },
     {
-      "name": "VrfClientInitialized",
+      "name": "vrfClientInitialized",
       "discriminator": [
         0,
         118,
@@ -627,7 +639,7 @@
       ]
     },
     {
-      "name": "WinnerSelected",
+      "name": "winnerSelected",
       "discriminator": [
         245,
         110,
@@ -643,253 +655,253 @@
   "errors": [
     {
       "code": 6000,
-      "name": "UnsupportedLotteryType",
+      "name": "unsupportedLotteryType",
       "msg": "Lottery type not supported"
     },
     {
       "code": 6001,
-      "name": "InvalidTicketPrice",
+      "name": "invalidTicketPrice",
       "msg": "Invalid ticket price"
     },
     {
       "code": 6002,
-      "name": "InvalidPrizePool",
+      "name": "invalidPrizePool",
       "msg": "Invalid prize pool"
     },
     {
       "code": 6003,
-      "name": "InvalidDrawTime",
+      "name": "invalidDrawTime",
       "msg": "Lottery draw time invalid"
     },
     {
       "code": 6004,
-      "name": "InvalidTicketAmount",
+      "name": "invalidTicketAmount",
       "msg": "Ticket purchase amount invalid"
     },
     {
       "code": 6005,
-      "name": "TicketPurchaseLimitReached",
+      "name": "ticketPurchaseLimitReached",
       "msg": "Ticket purchase limit reached"
     },
     {
       "code": 6006,
-      "name": "LotteryNotOpen",
+      "name": "lotteryNotOpen",
       "msg": "Lottery is not open"
     },
     {
       "code": 6007,
-      "name": "LotteryDrawing",
+      "name": "lotteryDrawing",
       "msg": "Lottery is drawing"
     },
     {
       "code": 6008,
-      "name": "LotteryCompleted",
+      "name": "lotteryCompleted",
       "msg": "Lottery is completed"
     },
     {
       "code": 6009,
-      "name": "LotteryExpired",
+      "name": "lotteryExpired",
       "msg": "Lottery is expired"
     },
     {
       "code": 6010,
-      "name": "InvalidLotteryState",
+      "name": "invalidLotteryState",
       "msg": "Invalid lottery state"
     },
     {
       "code": 6011,
-      "name": "InvalidAccountOwner",
+      "name": "invalidAccountOwner",
       "msg": "Invalid account owner"
     },
     {
       "code": 6012,
-      "name": "InvalidInstructionInput",
+      "name": "invalidInstructionInput",
       "msg": "Invalid instruction input"
     },
     {
       "code": 6013,
-      "name": "SafeMathError",
+      "name": "safeMathError",
       "msg": "Safe Math Error"
     },
     {
       "code": 6014,
-      "name": "PrizeClaimTimeExpired",
+      "name": "prizeClaimTimeExpired",
       "msg": "Prize claim time expired"
     },
     {
       "code": 6015,
-      "name": "InvalidPrizeTier",
+      "name": "invalidPrizeTier",
       "msg": "Invalid prize tier"
     },
     {
       "code": 6016,
-      "name": "TreasuryWithdrawalTimeLockNotReached",
+      "name": "treasuryWithdrawalTimeLockNotReached",
       "msg": "Treasury withdrawal time lock not yet reached"
     },
     {
       "code": 6017,
-      "name": "InvalidTreasuryMultisig",
+      "name": "invalidTreasuryMultisig",
       "msg": "Invalid treasury multisig"
     },
     {
       "code": 6018,
-      "name": "TokenTransferFailed",
+      "name": "tokenTransferFailed",
       "msg": "Token transfer failed"
     },
     {
       "code": 6019,
-      "name": "InvalidTokenAccount",
+      "name": "invalidTokenAccount",
       "msg": "Invalid token account"
     },
     {
       "code": 6020,
-      "name": "InvalidTokenMint",
+      "name": "invalidTokenMint",
       "msg": "Invalid token mint"
     },
     {
       "code": 6021,
-      "name": "OraclePriceFeedError",
+      "name": "oraclePriceFeedError",
       "msg": "Oracle price feed error"
     },
     {
       "code": 6022,
-      "name": "RandomnessGenerationFailed",
+      "name": "randomnessGenerationFailed",
       "msg": "Randomness generation failed"
     },
     {
       "code": 6023,
-      "name": "UnauthorizedAccess",
+      "name": "unauthorizedAccess",
       "msg": "Unauthorized access"
     },
     {
       "code": 6024,
-      "name": "InvalidStateTransition",
+      "name": "invalidStateTransition",
       "msg": "Invalid state transition"
     },
     {
       "code": 6025,
-      "name": "InvalidCancellation",
+      "name": "invalidCancellation",
       "msg": "Lottery cannot be cancelled in current state"
     },
     {
       "code": 6026,
-      "name": "AdminRequired",
+      "name": "adminRequired",
       "msg": "Only admin can perform this action"
     },
     {
       "code": 6027,
-      "name": "LotteryCancelled",
+      "name": "lotteryCancelled",
       "msg": "Lottery is cancelled"
     },
     {
       "code": 6028,
-      "name": "LotteryNotOpenForTicketPurchases",
+      "name": "lotteryNotOpenForTicketPurchases",
       "msg": "Lottery is not open for ticket purchases."
     },
     {
       "code": 6029,
-      "name": "LotteryAlreadyClaimed",
+      "name": "lotteryAlreadyClaimed",
       "msg": "Lottery prize has already been claimed."
     },
     {
       "code": 6030,
-      "name": "PDADerivationError",
+      "name": "pdaDerivationError",
       "msg": "Failed to derive PDA."
     },
     {
       "code": 6031,
-      "name": "InvalidWinningTicket",
+      "name": "invalidWinningTicket",
       "msg": "Provided ticket PDA does not match the winning ticket stored in the lottery."
     },
     {
       "code": 6032,
-      "name": "TicketAlreadyClaimed",
+      "name": "ticketAlreadyClaimed",
       "msg": "The provided ticket has already been claimed or refunded."
     },
     {
       "code": 6033,
-      "name": "InvalidStateForRefund",
+      "name": "invalidStateForRefund",
       "msg": "Lottery is not in a state where refunds can be claimed (must be Cancelled or Expired)."
     },
     {
       "code": 6034,
-      "name": "InvalidInput",
+      "name": "invalidInput",
       "msg": "The input parameters are invalid."
     },
     {
       "code": 6035,
-      "name": "TicketSaleEnded",
+      "name": "ticketSaleEnded",
       "msg": "The ticket sale has ended."
     },
     {
       "code": 6036,
-      "name": "LotteryAlreadyDrawn",
+      "name": "lotteryAlreadyDrawn",
       "msg": "The lottery has already been drawn."
     },
     {
       "code": 6037,
-      "name": "NoTickets",
+      "name": "noTickets",
       "msg": "There are no tickets in this lottery."
     },
     {
       "code": 6038,
-      "name": "InsufficientTicketsSold",
+      "name": "insufficientTicketsSold",
       "msg": "Insufficient tickets sold to proceed with the draw."
     },
     {
       "code": 6039,
-      "name": "LotteryNotDrawn",
+      "name": "lotteryNotDrawn",
       "msg": "The lottery has not been drawn yet."
     },
     {
       "code": 6040,
-      "name": "TicketNotEligibleForRefund",
+      "name": "ticketNotEligibleForRefund",
       "msg": "The specified ticket is not eligible for refund."
     },
     {
       "code": 6041,
-      "name": "LotteryNotExpired",
+      "name": "lotteryNotExpired",
       "msg": "The lottery has not expired yet."
     },
     {
       "code": 6042,
-      "name": "InvalidVrfAccount",
+      "name": "invalidVrfAccount",
       "msg": "VRF account is invalid."
     },
     {
       "code": 6043,
-      "name": "InsufficientFunds",
+      "name": "insufficientFunds",
       "msg": "Insufficient funds for this operation."
     },
     {
       "code": 6044,
-      "name": "ArithmeticOverflow",
+      "name": "arithmeticOverflow",
       "msg": "Arithmetic overflow error."
     },
     {
       "code": 6045,
-      "name": "TicketNotForThisLottery",
+      "name": "ticketNotForThisLottery",
       "msg": "Ticket does not belong to this lottery."
     },
     {
       "code": 6046,
-      "name": "NoWinnerSelected",
+      "name": "noWinnerSelected",
       "msg": "No winner has been selected yet."
     },
     {
       "code": 6047,
-      "name": "EmptyPrizePool",
+      "name": "emptyPrizePool",
       "msg": "The prize pool is empty."
     },
     {
       "code": 6048,
-      "name": "InsufficientPrizeFunds",
+      "name": "insufficientPrizeFunds",
       "msg": "Insufficient funds in the prize pool."
     }
   ],
   "types": [
     {
-      "name": "DrawingStarted",
+      "name": "drawingStarted",
       "docs": [
         "Event emitted when a lottery drawing begins.",
         "- Purpose: Signals the start of the lottery draw process.",
@@ -899,7 +911,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
@@ -907,15 +919,15 @@
             "type": "i64"
           },
           {
-            "name": "total_tickets",
+            "name": "totalTickets",
             "type": "u64"
           },
           {
-            "name": "prize_pool",
+            "name": "prizePool",
             "type": "u64"
           },
           {
-            "name": "vrf_client",
+            "name": "vrfClient",
             "type": {
               "option": "pubkey"
             }
@@ -924,7 +936,7 @@
       }
     },
     {
-      "name": "GlobalConfig",
+      "name": "globalConfig",
       "type": {
         "kind": "struct",
         "fields": [
@@ -933,51 +945,51 @@
             "type": "pubkey"
           },
           {
-            "name": "treasury_token_account",
+            "name": "treasuryTokenAccount",
             "type": "pubkey"
           },
           {
-            "name": "treasury_fee_percentage",
+            "name": "treasuryFeePercentage",
             "type": "u16"
           },
           {
-            "name": "usdc_mint",
+            "name": "usdcMint",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "LotteryAccount",
+      "name": "lotteryAccount",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_type",
+            "name": "lotteryType",
             "type": {
               "defined": {
-                "name": "LotteryType"
+                "name": "lotteryType"
               }
             }
           },
           {
-            "name": "ticket_price",
+            "name": "ticketPrice",
             "type": "u64"
           },
           {
-            "name": "draw_time",
+            "name": "drawTime",
             "type": "i64"
           },
           {
-            "name": "prize_pool",
+            "name": "prizePool",
             "type": "u64"
           },
           {
-            "name": "total_tickets",
+            "name": "totalTickets",
             "type": "u64"
           },
           {
-            "name": "winning_ticket",
+            "name": "winningTicket",
             "type": {
               "option": "pubkey"
             }
@@ -986,24 +998,24 @@
             "name": "state",
             "type": {
               "defined": {
-                "name": "LotteryState"
+                "name": "lotteryState"
               }
             }
           },
           {
-            "name": "created_by",
+            "name": "createdBy",
             "type": "pubkey"
           },
           {
-            "name": "global_config",
+            "name": "globalConfig",
             "type": "pubkey"
           },
           {
-            "name": "auto_transition",
+            "name": "autoTransition",
             "type": "bool"
           },
           {
-            "name": "last_ticket_id",
+            "name": "lastTicketId",
             "type": "u64"
           },
           {
@@ -1011,13 +1023,13 @@
             "type": "pubkey"
           },
           {
-            "name": "vrf_client",
+            "name": "vrfClient",
             "type": {
               "option": "pubkey"
             }
           },
           {
-            "name": "vrf_randomness",
+            "name": "vrfRandomness",
             "type": {
               "option": {
                 "array": [
@@ -1028,35 +1040,35 @@
             }
           },
           {
-            "name": "vrf_request_account",
+            "name": "vrfRequestAccount",
             "type": {
               "option": "pubkey"
             }
           },
           {
-            "name": "oracle_pubkey",
+            "name": "oraclePubkey",
             "type": {
               "option": "pubkey"
             }
           },
           {
-            "name": "is_prize_pool_locked",
+            "name": "isPrizePoolLocked",
             "type": "bool"
           },
           {
-            "name": "target_prize_pool",
+            "name": "targetPrizePool",
             "type": "u64"
           },
           {
-            "name": "is_claimed",
+            "name": "isClaimed",
             "type": "bool"
           },
           {
-            "name": "created_at",
+            "name": "createdAt",
             "type": "i64"
           },
           {
-            "name": "completed_at",
+            "name": "completedAt",
             "type": {
               "option": "i64"
             }
@@ -1065,7 +1077,7 @@
       }
     },
     {
-      "name": "LotteryCreated",
+      "name": "lotteryCreated",
       "docs": [
         "Event emitted when a new lottery is created.",
         "- Purpose: Signals the initialization of a new lottery with its configuration details.",
@@ -1075,62 +1087,62 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "lottery_type",
+            "name": "lotteryType",
             "type": "string"
           },
           {
-            "name": "ticket_price",
+            "name": "ticketPrice",
             "type": "u64"
           },
           {
-            "name": "draw_time",
+            "name": "drawTime",
             "type": "i64"
           },
           {
-            "name": "target_prize_pool",
+            "name": "targetPrizePool",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "LotteryState",
+      "name": "lotteryState",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Created"
+            "name": "created"
           },
           {
-            "name": "Open"
+            "name": "open"
           },
           {
-            "name": "Locked"
+            "name": "locked"
           },
           {
-            "name": "Drawing"
+            "name": "drawing"
           },
           {
-            "name": "AwaitingRandomness"
+            "name": "awaitingRandomness"
           },
           {
-            "name": "Completed"
+            "name": "completed"
           },
           {
-            "name": "Expired"
+            "name": "expired"
           },
           {
-            "name": "Cancelled"
+            "name": "cancelled"
           }
         ]
       }
     },
     {
-      "name": "LotteryStateChanged",
+      "name": "lotteryStateChanged",
       "docs": [
         "Event emitted when a lottery's state changes.",
         "- Purpose: Tracks the lifecycle progression of a lottery through its various states (e.g., Created, Open, AwaitingRandomness, Completed, Expired).",
@@ -1140,22 +1152,22 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "previous_state",
+            "name": "previousState",
             "type": {
               "defined": {
-                "name": "LotteryState"
+                "name": "lotteryState"
               }
             }
           },
           {
-            "name": "new_state",
+            "name": "newState",
             "type": {
               "defined": {
-                "name": "LotteryState"
+                "name": "lotteryState"
               }
             }
           },
@@ -1164,35 +1176,35 @@
             "type": "i64"
           },
           {
-            "name": "total_tickets_sold",
+            "name": "totalTicketsSold",
             "type": "u64"
           },
           {
-            "name": "current_prize_pool",
+            "name": "currentPrizePool",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "LotteryType",
+      "name": "lotteryType",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Daily"
+            "name": "daily"
           },
           {
-            "name": "Weekly"
+            "name": "weekly"
           },
           {
-            "name": "Monthly"
+            "name": "monthly"
           }
         ]
       }
     },
     {
-      "name": "PrizeClaimed",
+      "name": "prizeClaimed",
       "docs": [
         "Event emitted when a prize is claimed by the winner.",
         "- Purpose: Records the distribution of the prize pool, including any treasury fees deducted, to the winner.",
@@ -1202,11 +1214,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "ticket_id",
+            "name": "ticketId",
             "type": "u64"
           },
           {
@@ -1214,15 +1226,15 @@
             "type": "pubkey"
           },
           {
-            "name": "prize_pool",
+            "name": "prizePool",
             "type": "u64"
           },
           {
-            "name": "treasury_fee",
+            "name": "treasuryFee",
             "type": "u64"
           },
           {
-            "name": "winner_payout",
+            "name": "winnerPayout",
             "type": "u64"
           },
           {
@@ -1233,7 +1245,7 @@
       }
     },
     {
-      "name": "RandomnessConsumed",
+      "name": "randomnessConsumed",
       "docs": [
         "Event emitted when randomness is consumed from Switchboard.",
         "- Purpose: Indicates that VRF randomness has been received and processed.",
@@ -1243,11 +1255,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "vrf_client",
+            "name": "vrfClient",
             "type": "pubkey"
           },
           {
@@ -1255,14 +1267,14 @@
             "type": "i64"
           },
           {
-            "name": "dice_result",
+            "name": "diceResult",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "RandomnessRequested",
+      "name": "randomnessRequested",
       "docs": [
         "Event emitted when randomness is requested from Switchboard.",
         "- Purpose: Records when a lottery initiates a request for randomness from Switchboard VRF.",
@@ -1272,15 +1284,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "vrf_client",
+            "name": "vrfClient",
             "type": "pubkey"
           },
           {
-            "name": "vrf_account",
+            "name": "vrfAccount",
             "type": "pubkey"
           },
           {
@@ -1291,7 +1303,7 @@
       }
     },
     {
-      "name": "TicketAccount",
+      "name": "ticketAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1308,7 +1320,7 @@
             "type": "pubkey"
           },
           {
-            "name": "is_claimed",
+            "name": "isClaimed",
             "type": "bool"
           },
           {
@@ -1319,7 +1331,7 @@
       }
     },
     {
-      "name": "TicketPurchased",
+      "name": "ticketPurchased",
       "docs": [
         "Event emitted when a ticket is purchased for a lottery.",
         "- Purpose: Records the purchase details, linking a buyer to a specific ticket in a lottery.",
@@ -1329,11 +1341,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "ticket_id",
+            "name": "ticketId",
             "type": "u64"
           },
           {
@@ -1341,11 +1353,11 @@
             "type": "pubkey"
           },
           {
-            "name": "number_of_tickets",
+            "name": "numberOfTickets",
             "type": "u64"
           },
           {
-            "name": "total_cost",
+            "name": "totalCost",
             "type": "u64"
           },
           {
@@ -1356,7 +1368,7 @@
       }
     },
     {
-      "name": "TicketRefunded",
+      "name": "ticketRefunded",
       "docs": [
         "Event emitted when a ticket is refunded.",
         "- Purpose: Indicates a refund has been issued for a ticket, typically when a lottery expires without a draw.",
@@ -1366,11 +1378,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "ticket_id",
+            "name": "ticketId",
             "type": "u64"
           },
           {
@@ -1378,7 +1390,7 @@
             "type": "pubkey"
           },
           {
-            "name": "refund_amount",
+            "name": "refundAmount",
             "type": "u64"
           },
           {
@@ -1389,7 +1401,7 @@
       }
     },
     {
-      "name": "TreasuryWithdrawal",
+      "name": "treasuryWithdrawal",
       "docs": [
         "Event emitted when funds are withdrawn from the treasury.",
         "- Purpose: Records treasury withdrawals for transparency and audit purposes.",
@@ -1415,14 +1427,14 @@
             "type": "i64"
           },
           {
-            "name": "is_emergency",
+            "name": "isEmergency",
             "type": "bool"
           }
         ]
       }
     },
     {
-      "name": "VrfClientInitialized",
+      "name": "vrfClientInitialized",
       "docs": [
         "Event emitted when a VRF client is initialized for a lottery.",
         "- Purpose: Signals the creation of a new VRF client for a specific lottery.",
@@ -1432,15 +1444,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "vrf_client",
+            "name": "vrfClient",
             "type": "pubkey"
           },
           {
-            "name": "vrf_account",
+            "name": "vrfAccount",
             "type": "pubkey"
           },
           {
@@ -1451,7 +1463,7 @@
       }
     },
     {
-      "name": "WinnerSelected",
+      "name": "winnerSelected",
       "docs": [
         "Event emitted when a winner is selected for a lottery.",
         "- Purpose: Announces the winning ticket and the randomness value used to determine the winner, ensuring transparency.",
@@ -1461,19 +1473,19 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "lottery_id",
+            "name": "lotteryId",
             "type": "pubkey"
           },
           {
-            "name": "winning_ticket_id",
+            "name": "winningTicketId",
             "type": "u64"
           },
           {
-            "name": "winning_ticket_pda",
+            "name": "winningTicketPda",
             "type": "pubkey"
           },
           {
-            "name": "randomness_value",
+            "name": "randomnessValue",
             "type": "string"
           },
           {
@@ -1484,4 +1496,4 @@
       }
     }
   ]
-}
+};

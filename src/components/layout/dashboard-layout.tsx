@@ -1,23 +1,19 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { ModeToggle } from "@/components/mode-toggle"
 import { WalletButton } from "@/components/auth/wallet-button"
 import { 
   LayoutGrid, 
-  Search, 
   Menu,
   ChevronRight,
   ChevronLeft,
   Settings,
   HelpCircle,
   Ticket,
-  Briefcase
+  Dice6
 } from "lucide-react"
-import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { type Stock } from "@/types/market"
-import { searchStocks } from "@/lib/api"
 
 function SidebarItem({ 
   icon: Icon, 
@@ -63,55 +59,6 @@ function SidebarItem({
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState<Stock[]>([])
-  const [isOpen, setIsOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const searchRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
-
-  // Close search results when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  // Search stocks when query changes
-  useEffect(() => {
-    const search = async () => {
-      if (query.length < 2) {
-        setResults([])
-        setIsOpen(false)
-        return
-      }
-
-      setLoading(true)
-      try {
-        const data = await searchStocks(query)
-        setResults(data)
-        setIsOpen(data.length > 0)
-      } catch (error) {
-        console.error('Failed to search stocks:', error)
-        setResults([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    const timeoutId = setTimeout(search, 300)
-    return () => clearTimeout(timeoutId)
-  }, [query])
-
-  const handleSelectStock = (symbol: string) => {
-    setIsOpen(false)
-    setQuery("")
-    router.push(`/stock/${symbol}`)
-  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-[#0F0F0F]">
@@ -122,14 +69,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         } ${isCollapsed ? 'w-[72px]' : 'w-64'}`}
       >
         <div className={`flex items-center gap-2 px-4 py-4 ${isCollapsed ? 'justify-center' : 'px-6'}`}>
-          {!isCollapsed && <h2 className="text-xl font-bold text-gray-900 dark:text-white">Stock Analysis</h2>}
+          {isCollapsed ? (
+            <Dice6 className="h-8 w-8 text-blue-600" />
+          ) : (
+            <>
+              <Dice6 className="h-8 w-8 text-blue-600" />
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Crypto Lottery</h2>
+            </>
+          )}
         </div>
 
         <div className="flex flex-col flex-1 overflow-y-auto duration-300 ease-linear">
           <nav className="mt-2 px-3 space-y-1">
-            <SidebarItem icon={LayoutGrid} label="Market Overview" href="/dashboard" isCollapsed={isCollapsed} />
-            <SidebarItem icon={Briefcase} label="Portfolio" href="/portfolio" isCollapsed={isCollapsed} />
-            <SidebarItem icon={Ticket} label="Crypto Lottery" href="/lottery" isCollapsed={isCollapsed} />
+            <SidebarItem icon={LayoutGrid} label="Dashboard" href="/dashboard" isCollapsed={isCollapsed} />
+            <SidebarItem icon={Ticket} label="Active Lotteries" href="/lottery" isCollapsed={isCollapsed} />
           </nav>
 
           <div className="mt-auto px-3 py-4 space-y-1">
@@ -162,47 +115,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               >
                 <Menu className="h-6 w-6" />
               </button>
-              <div ref={searchRef} className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input 
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Type to search stocks..."
-                  className="pl-10 pr-4 py-2 w-[32rem] rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
-                />
-                {loading && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
-                  </div>
-                )}
-
-                {/* Search Results Dropdown */}
-                {isOpen && results.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-80 w-[32rem] overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-[#1A1A1A]">
-                    {results.map((stock) => (
-                      <button
-                        key={`${stock.symbol}-${stock.company_name}`}
-                        onClick={() => handleSelectStock(stock.symbol)}
-                        className="flex w-full items-center px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                      >
-                        <div className="w-full">
-                          <div className="flex items-center justify-between">
-                            <div className="font-medium text-gray-900 dark:text-white">
-                              {stock.company_name}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              ₹{stock.cmp}
-                            </div>
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {stock.symbol}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div className="flex items-center gap-2">
+                <Dice6 className="h-6 w-6 text-blue-600" />
+                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Decentralized Lottery Platform
+                </h1>
               </div>
             </div>
             <div className="flex items-center gap-4">
