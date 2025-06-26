@@ -66,7 +66,6 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
     }
   }
 
-  const isOpen = lottery.state === 'Open'
   const drawDate = new Date(lottery.drawTime * 1000)
 
   return (
@@ -105,7 +104,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
           <p className="text-lg">{lottery.totalTickets}</p>
         </div>
         {lottery.targetPrizePool && lottery.targetPrizePool > 0 && lottery.prizePool < lottery.targetPrizePool && (
-          <div className="w-full bg-muted rounded-full h-2.5">
+          <div className="w-full bg-muted rounded-full h-2.5 mb-4">
             <div 
               className="bg-primary h-2.5 rounded-full" 
               style={{ width: `${Math.min(100, (lottery.prizePool / lottery.targetPrizePool) * 100)}%` }}
@@ -113,17 +112,6 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
             <p className="text-xs text-muted-foreground mt-1">
               {Math.round((lottery.prizePool / lottery.targetPrizePool) * 100)}% of target reached
             </p>
-          </div>
-        )}
-        {isOpen && (
-          <div className="flex gap-4">
-            <Button
-              onClick={handleBuyTickets}
-              disabled={loading || !publicKey}
-              className="flex-1"
-            >
-              {loading ? 'Buying...' : 'Buy 1 Ticket'}
-            </Button>
           </div>
         )}
         <div className="flex justify-between items-center">
@@ -169,7 +157,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
             ) : (
               <Ticket className="w-4 h-4 mr-2" />
             )}
-            {loading ? 'Buying...' : 'Buy Tickets'}
+            {loading ? 'Buying...' : 'Buy 1 Ticket'}
           </Button>
         )}
       </CardFooter>

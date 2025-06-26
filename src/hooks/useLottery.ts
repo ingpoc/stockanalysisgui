@@ -78,11 +78,22 @@ export function useLottery() {
       // Note: Removed numberOfTickets parameter and validateLotteryState as they don't exist in the actual implementation
       return program.buyTicket(lotteryAddress)
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lotteries'] }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['lotteries'] })
+      if (data === 'duplicate_transaction_success') {
+        toast.success('Ticket purchased successfully!', {
+          description: 'Transaction was already processed'
+        })
+      } else {
+        toast.success('Ticket purchased successfully!')
+      }
+    },
     onError: (error) => {
       console.error('Ticket purchase failed:', error)
-      toast.error('Ticket purchase failed', { description: error.message })
-    }
+      const errorMessage = handleProgramError(error)
+      toast.error('Ticket purchase failed', { description: errorMessage })
+    },
+    retry: false // Prevent automatic retries that can cause duplicate transactions
   })
 
   const transitionState = useMutation({
@@ -101,13 +112,20 @@ export function useLottery() {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lotteries', publicKey] })
-      toast.success(`Lottery state transitioned successfully to ${variables.newState}`)
+      if (data === 'duplicate_transaction_success') {
+        toast.success(`Lottery state transitioned successfully to ${variables.newState}`, {
+          description: 'Transaction was already processed'
+        })
+      } else {
+        toast.success(`Lottery state transitioned successfully to ${variables.newState}`)
+      }
     },
     onError: (error, variables) => {
       console.error(`State transition to ${variables.newState} failed:`, error)
       const errorMessage = handleProgramError(error)
       toast.error(`State transition failed`, { description: errorMessage })
-    }
+    },
+    retry: false // Prevent automatic retries that can cause duplicate transactions
   })
 
   // Note: Removed subscription methods as they don't exist in the actual LotteryProgram implementation

@@ -106,27 +106,9 @@ class Logger {
   }
 
   private async sendLogsToServer(logs: LogEntry[]): Promise<void> {
-    // Determine the correct API URL based on environment (client vs server)
-    const isClient = typeof window !== 'undefined';
-    const apiUrl = isClient ? PUBLIC_API_BASE_URL : INTERNAL_API_BASE_URL;
-    const endpoint = `${apiUrl}/logs/frontend-logs`;
-
-    try {
-      // console.log(`Sending logs to: ${endpoint}`); // Temporary debug log
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(logs),
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to send logs to server:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error sending logs to server:', error);
-    }
+    // Skip sending logs to server since this is a decentralized application
+    // Logs are only kept in browser console for development
+    return;
   }
 
   private flushLogs(sync = false): void {

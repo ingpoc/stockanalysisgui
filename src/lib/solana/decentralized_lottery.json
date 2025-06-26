@@ -1,5 +1,5 @@
 {
-  "address": "7my34Pj4c96UfSieKESvNZ8napKonpZAiBxUum1VbGS3",
+  "address": "9SL8XkX3pvqZ2fjiLMhCFfQn7Gfmpd9ru8rtHFsAPVgq",
   "metadata": {
     "name": "decentralized_lottery",
     "version": "0.1.0",
@@ -36,6 +36,16 @@
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "LotteryAccount"
               }
             ]
           }
@@ -63,7 +73,10 @@
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -73,6 +86,25 @@
           "name": "user",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "user_token_account",
+          "writable": true
+        },
+        {
+          "name": "lottery_token_account",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "system_program",
@@ -110,6 +142,16 @@
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "LotteryAccount"
               }
             ]
           }
@@ -137,7 +179,10 @@
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -147,6 +192,22 @@
           "name": "winner",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "lottery_token_account",
+          "writable": true
+        },
+        {
+          "name": "winner_token_account",
+          "writable": true
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "system_program",
@@ -184,6 +245,14 @@
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
               }
             ]
           }
@@ -207,7 +276,10 @@
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -242,6 +314,10 @@
         },
         {
           "name": "target_prize_pool",
+          "type": "u64"
+        },
+        {
+          "name": "nonce",
           "type": "u64"
         }
       ]
@@ -279,7 +355,10 @@
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -333,43 +412,72 @@
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "LotteryAccount"
               }
             ]
           }
         },
         {
-          "name": "global_config",
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle_randomness",
+      "discriminator": [
+        209,
+        111,
+        84,
+        239,
+        14,
+        4,
+        26,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "lottery_account",
+          "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  103,
                   108,
                   111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "LotteryAccount"
               }
             ]
           }
         },
         {
-          "name": "admin",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
+          "name": "vrf_account"
         }
       ],
       "args": []
@@ -403,6 +511,16 @@
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "LotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "LotteryAccount"
               }
             ]
           }
@@ -426,7 +544,10 @@
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -452,6 +573,62 @@
           }
         }
       ]
+    },
+    {
+      "name": "update_config",
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "new_usdc_mint"
+        },
+        {
+          "name": "new_treasury_token_account"
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -536,6 +713,19 @@
       ]
     },
     {
+      "name": "LotteryWinnerDetermined",
+      "discriminator": [
+        110,
+        172,
+        60,
+        137,
+        146,
+        76,
+        59,
+        123
+      ]
+    },
+    {
       "name": "PrizeClaimed",
       "discriminator": [
         213,
@@ -572,6 +762,19 @@
         63,
         90,
         149
+      ]
+    },
+    {
+      "name": "RandomnessSettled",
+      "discriminator": [
+        219,
+        235,
+        45,
+        239,
+        116,
+        19,
+        92,
+        74
       ]
     },
     {
@@ -885,6 +1088,61 @@
       "code": 6048,
       "name": "InsufficientPrizeFunds",
       "msg": "Insufficient funds in the prize pool."
+    },
+    {
+      "code": 6049,
+      "name": "InvalidMint",
+      "msg": "Invalid mint address."
+    },
+    {
+      "code": 6050,
+      "name": "RandomnessAlreadyFulfilled",
+      "msg": "Randomness has already been fulfilled."
+    },
+    {
+      "code": 6051,
+      "name": "VrfRequestKeyNotSet",
+      "msg": "VRF request key is not set."
+    },
+    {
+      "code": 6052,
+      "name": "VrfAccountMismatch",
+      "msg": "VRF account mismatch."
+    },
+    {
+      "code": 6053,
+      "name": "RandomnessNotFulfilled",
+      "msg": "Randomness is not fulfilled."
+    },
+    {
+      "code": 6054,
+      "name": "RandomnessNotAvailable",
+      "msg": "Randomness is not available."
+    },
+    {
+      "code": 6055,
+      "name": "WinnerAlreadySelected",
+      "msg": "Winner has already been selected."
+    },
+    {
+      "code": 6056,
+      "name": "NoTicketsSold",
+      "msg": "No tickets were sold."
+    },
+    {
+      "code": 6057,
+      "name": "DrawTimeNotReached",
+      "msg": "Draw time has not been reached yet."
+    },
+    {
+      "code": 6058,
+      "name": "VrfClientNotSet",
+      "msg": "VRF client is not set."
+    },
+    {
+      "code": 6059,
+      "name": "VrfCallbackNotTimedOut",
+      "msg": "VRF callback has not timed out yet."
     }
   ],
   "types": [
@@ -933,15 +1191,15 @@
             "type": "pubkey"
           },
           {
-            "name": "treasury_token_account",
-            "type": "pubkey"
-          },
-          {
             "name": "treasury_fee_percentage",
             "type": "u16"
           },
           {
             "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_token_account",
             "type": "pubkey"
           }
         ]
@@ -1040,6 +1298,16 @@
             }
           },
           {
+            "name": "vrf_request_key",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "randomness_fulfilled",
+            "type": "bool"
+          },
+          {
             "name": "is_prize_pool_locked",
             "type": "bool"
           },
@@ -1060,6 +1328,10 @@
             "type": {
               "option": "i64"
             }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
           }
         ]
       }
@@ -1192,6 +1464,51 @@
       }
     },
     {
+      "name": "LotteryWinnerDetermined",
+      "docs": [
+        "Event emitted when a winner is determined for a lottery.",
+        "- Purpose: Announces the winning ticket ID and randomness value used.",
+        "- Context: Triggered by the `select_winner` instruction after randomness is processed."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "previous_state",
+            "type": {
+              "defined": {
+                "name": "LotteryState"
+              }
+            }
+          },
+          {
+            "name": "new_state",
+            "type": {
+              "defined": {
+                "name": "LotteryState"
+              }
+            }
+          },
+          {
+            "name": "winner",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomness",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "PrizeClaimed",
       "docs": [
         "Event emitted when a prize is claimed by the winner.",
@@ -1282,6 +1599,31 @@
           {
             "name": "vrf_account",
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RandomnessSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lottery_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "timestamp",

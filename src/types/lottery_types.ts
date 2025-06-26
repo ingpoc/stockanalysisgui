@@ -272,10 +272,10 @@ export interface LotteryError {
 
 // ===== CONSTANTS =====
 
-export const PROGRAM_ID = new PublicKey('7my34Pj4c96UfSieKESvNZ8napKonpZAiBxUum1VbGS3');
+export const PROGRAM_ID = new PublicKey('9SL8XkX3pvqZ2fjiLMhCFfQn7Gfmpd9ru8rtHFsAPVgq');
 
 export const LOTTERY_SEED = 'lottery';
-export const GLOBAL_CONFIG_SEED = 'global_config';
+export const GLOBAL_CONFIG_SEED = 'global_config_v2';
 export const TICKET_SEED = 'ticket';
 
 // USDC has 6 decimal places

@@ -36,6 +36,11 @@ export function handleProgramError(error: any): string {
       return 'A lottery of this type already exists for this time period. Please wait for the current one to complete.';
     }
     
+    // Check for seeds constraint violation
+    if (error.message.includes('seeds constraint was violated') || error.message.includes('provided seeds do not result in a valid address')) {
+      return 'A lottery creation conflict occurred. Please wait a moment and try again. This can happen if multiple lotteries are created at the same time.';
+    }
+    
     // Check if it's a global config initialization error
     if (error.message.includes('Global config account already initialized')) {
       return 'The program is already initialized. You can proceed to create lotteries.';

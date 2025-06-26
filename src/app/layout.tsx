@@ -23,8 +23,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Stock Analysis Dashboard</title>
-        <meta name="description" content="Advanced stock analysis powered by blockchain" />
+        <title>Crypto Lottery</title>
+        <meta name="description" content="Decentralized lottery platform powered by Solana blockchain" />
       </head>
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
         <QueryClientProvider client={queryClient}>

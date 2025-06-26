@@ -75,11 +75,11 @@ export default function LoginPage() {
           <div className="text-center lg:text-left space-y-8">
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight">
-                Stock Analysis
-                <span className="text-primary"> Dashboard</span>
+                Crypto
+                <span className="text-primary"> Lottery</span>
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                Advanced analytics and real-time insights powered by blockchain technology
+                Decentralized lottery platform powered by Solana blockchain
               </p>
             </div>
             {mounted && <FeatureCards />}

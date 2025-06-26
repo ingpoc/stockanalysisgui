@@ -22,18 +22,22 @@ const deprecatedKeys = [
   "reportUnusedDisableDirectives"
 ];
 
-function deepClean(obj) {
+function deepClean(obj, visited = new WeakSet()) {
+  if (obj === null || typeof obj !== "object") return obj;
+  
+  if (visited.has(obj)) return obj; // Prevent circular reference
+  visited.add(obj);
+  
   if (Array.isArray(obj)) {
-    return obj.map(deepClean);
-  } else if (obj !== null && typeof obj === "object") {
-    const newObj = {};
-    for (const key in obj) {
-      if (deprecatedKeys.includes(key)) continue;
-      newObj[key] = deepClean(obj[key]);
-    }
-    return newObj;
+    return obj.map(item => deepClean(item, visited));
   }
-  return obj;
+  
+  const newObj = {};
+  for (const key in obj) {
+    if (deprecatedKeys.includes(key)) continue;
+    newObj[key] = deepClean(obj[key], visited);
+  }
+  return newObj;
 }
 
 const cleanedLegacyConfig = Array.isArray(legacyConfig)

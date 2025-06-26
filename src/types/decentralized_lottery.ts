@@ -4,14 +4,8 @@
  * Note that this is only a type helper and is not the actual IDL. The original
  * IDL can be found at `target/idl/decentralized_lottery.json`.
  */
-/**
- * Auto-generated Program IDL types in camelCase format.
- *
- * Note that this is auto-generated from the IDL. For comprehensive
- * types with UI helpers, use lottery_types.ts instead.
- */
 export type DecentralizedLottery = {
-  "address": "7my34Pj4c96UfSieKESvNZ8napKonpZAiBxUum1VbGS3",
+  "address": "9SL8XkX3pvqZ2fjiLMhCFfQn7Gfmpd9ru8rtHFsAPVgq",
   "metadata": {
     "name": "decentralizedLottery",
     "version": "0.1.0",
@@ -48,6 +42,16 @@ export type DecentralizedLottery = {
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "lotteryAccount"
               }
             ]
           }
@@ -75,7 +79,10 @@ export type DecentralizedLottery = {
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -85,6 +92,25 @@ export type DecentralizedLottery = {
           "name": "user",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "userTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "lotteryTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "usdcMint"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "systemProgram",
@@ -122,6 +148,16 @@ export type DecentralizedLottery = {
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "lotteryAccount"
               }
             ]
           }
@@ -149,7 +185,10 @@ export type DecentralizedLottery = {
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -159,6 +198,22 @@ export type DecentralizedLottery = {
           "name": "winner",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "lotteryTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "winnerTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "systemProgram",
@@ -196,6 +251,14 @@ export type DecentralizedLottery = {
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
               }
             ]
           }
@@ -219,7 +282,10 @@ export type DecentralizedLottery = {
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -254,6 +320,10 @@ export type DecentralizedLottery = {
         },
         {
           "name": "targetPrizePool",
+          "type": "u64"
+        },
+        {
+          "name": "nonce",
           "type": "u64"
         }
       ]
@@ -291,7 +361,10 @@ export type DecentralizedLottery = {
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -345,43 +418,72 @@ export type DecentralizedLottery = {
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "lotteryAccount"
               }
             ]
           }
         },
         {
-          "name": "globalConfig",
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settleRandomness",
+      "discriminator": [
+        209,
+        111,
+        84,
+        239,
+        14,
+        4,
+        26,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "lotteryAccount",
+          "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  103,
                   108,
                   111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "lotteryAccount"
               }
             ]
           }
         },
         {
-          "name": "admin",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
+          "name": "vrfAccount"
         }
       ],
       "args": []
@@ -415,6 +517,16 @@ export type DecentralizedLottery = {
                   114,
                   121
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.authority",
+                "account": "lotteryAccount"
+              },
+              {
+                "kind": "account",
+                "path": "lottery_account.nonce",
+                "account": "lotteryAccount"
               }
             ]
           }
@@ -438,7 +550,10 @@ export type DecentralizedLottery = {
                   110,
                   102,
                   105,
-                  103
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -464,6 +579,62 @@ export type DecentralizedLottery = {
           }
         }
       ]
+    },
+    {
+      "name": "updateConfig",
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "globalConfig",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "newUsdcMint"
+        },
+        {
+          "name": "newTreasuryTokenAccount"
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -548,6 +719,19 @@ export type DecentralizedLottery = {
       ]
     },
     {
+      "name": "lotteryWinnerDetermined",
+      "discriminator": [
+        110,
+        172,
+        60,
+        137,
+        146,
+        76,
+        59,
+        123
+      ]
+    },
+    {
       "name": "prizeClaimed",
       "discriminator": [
         213,
@@ -584,6 +768,19 @@ export type DecentralizedLottery = {
         63,
         90,
         149
+      ]
+    },
+    {
+      "name": "randomnessSettled",
+      "discriminator": [
+        219,
+        235,
+        45,
+        239,
+        116,
+        19,
+        92,
+        74
       ]
     },
     {
@@ -897,6 +1094,61 @@ export type DecentralizedLottery = {
       "code": 6048,
       "name": "insufficientPrizeFunds",
       "msg": "Insufficient funds in the prize pool."
+    },
+    {
+      "code": 6049,
+      "name": "invalidMint",
+      "msg": "Invalid mint address."
+    },
+    {
+      "code": 6050,
+      "name": "randomnessAlreadyFulfilled",
+      "msg": "Randomness has already been fulfilled."
+    },
+    {
+      "code": 6051,
+      "name": "vrfRequestKeyNotSet",
+      "msg": "VRF request key is not set."
+    },
+    {
+      "code": 6052,
+      "name": "vrfAccountMismatch",
+      "msg": "VRF account mismatch."
+    },
+    {
+      "code": 6053,
+      "name": "randomnessNotFulfilled",
+      "msg": "Randomness is not fulfilled."
+    },
+    {
+      "code": 6054,
+      "name": "randomnessNotAvailable",
+      "msg": "Randomness is not available."
+    },
+    {
+      "code": 6055,
+      "name": "winnerAlreadySelected",
+      "msg": "Winner has already been selected."
+    },
+    {
+      "code": 6056,
+      "name": "noTicketsSold",
+      "msg": "No tickets were sold."
+    },
+    {
+      "code": 6057,
+      "name": "drawTimeNotReached",
+      "msg": "Draw time has not been reached yet."
+    },
+    {
+      "code": 6058,
+      "name": "vrfClientNotSet",
+      "msg": "VRF client is not set."
+    },
+    {
+      "code": 6059,
+      "name": "vrfCallbackNotTimedOut",
+      "msg": "VRF callback has not timed out yet."
     }
   ],
   "types": [
@@ -945,15 +1197,15 @@ export type DecentralizedLottery = {
             "type": "pubkey"
           },
           {
-            "name": "treasuryTokenAccount",
-            "type": "pubkey"
-          },
-          {
             "name": "treasuryFeePercentage",
             "type": "u16"
           },
           {
             "name": "usdcMint",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasuryTokenAccount",
             "type": "pubkey"
           }
         ]
@@ -1052,6 +1304,16 @@ export type DecentralizedLottery = {
             }
           },
           {
+            "name": "vrfRequestKey",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "randomnessFulfilled",
+            "type": "bool"
+          },
+          {
             "name": "isPrizePoolLocked",
             "type": "bool"
           },
@@ -1072,6 +1334,10 @@ export type DecentralizedLottery = {
             "type": {
               "option": "i64"
             }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
           }
         ]
       }
@@ -1204,6 +1470,51 @@ export type DecentralizedLottery = {
       }
     },
     {
+      "name": "lotteryWinnerDetermined",
+      "docs": [
+        "Event emitted when a winner is determined for a lottery.",
+        "- Purpose: Announces the winning ticket ID and randomness value used.",
+        "- Context: Triggered by the `select_winner` instruction after randomness is processed."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lotteryId",
+            "type": "pubkey"
+          },
+          {
+            "name": "previousState",
+            "type": {
+              "defined": {
+                "name": "lotteryState"
+              }
+            }
+          },
+          {
+            "name": "newState",
+            "type": {
+              "defined": {
+                "name": "lotteryState"
+              }
+            }
+          },
+          {
+            "name": "winner",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomness",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "prizeClaimed",
       "docs": [
         "Event emitted when a prize is claimed by the winner.",
@@ -1294,6 +1605,31 @@ export type DecentralizedLottery = {
           {
             "name": "vrfAccount",
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "randomnessSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lotteryId",
+            "type": "pubkey"
+          },
+          {
+            "name": "randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "timestamp",
