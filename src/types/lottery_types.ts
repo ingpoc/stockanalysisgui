@@ -297,15 +297,16 @@ export const PDA_SEEDS: PDASeeds = {
 
 // ===== STATE TRANSITION HELPERS =====
 
+// IMPORTANT: These transitions MUST match the smart contract's can_transition_to method
 export const VALID_STATE_TRANSITIONS: Record<LotteryState, LotteryState[]> = {
   'Created': ['Open', 'Cancelled'],
-  'Open': ['Locked', 'Drawing', 'Expired', 'Cancelled'],
-  'Locked': ['Drawing', 'Expired', 'Cancelled'],
-  'Drawing': ['AwaitingRandomness', 'Completed', 'Expired'],
-  'AwaitingRandomness': ['Completed', 'Expired'],
-  'Completed': [],
-  'Expired': [],
-  'Cancelled': []
+  'Open': ['Locked', 'Cancelled'],  // Smart contract does NOT allow Open → Drawing directly
+  'Locked': ['Drawing', 'Cancelled'],
+  'Drawing': ['AwaitingRandomness', 'Expired', 'Cancelled'],
+  'AwaitingRandomness': ['Completed', 'Expired', 'Cancelled'],
+  'Completed': [],  // Terminal state
+  'Expired': [],    // Terminal state
+  'Cancelled': []   // Terminal state
 };
 
 export function isValidStateTransition(current: LotteryState, next: LotteryState): boolean {

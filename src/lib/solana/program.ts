@@ -1,5 +1,5 @@
 import { Program, AnchorProvider, BN, Idl } from '@coral-xyz/anchor'
-import { Connection, PublicKey, SystemProgram, TransactionSignature, SYSVAR_RENT_PUBKEY } from '@solana/web3.js'
+import { Connection, PublicKey, SystemProgram, TransactionSignature, SYSVAR_RENT_PUBKEY, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js'
 import { AnchorWallet } from '@solana/wallet-adapter-react'
 import { 
   TOKEN_PROGRAM_ID, 
@@ -288,6 +288,26 @@ export class LotteryProgram {
     const currentTime = Math.floor(Date.now() / 1000);
     const drawTime = parseInt(lotteryAccount.drawTime);
     
+    console.log('🔍 State Transition Debug Info:', {
+      lotteryAddress: lotteryPubkey.toString(),
+      currentState: Object.keys(lotteryAccount.state)[0],
+      targetState: nextState,
+      currentTime: new Date(currentTime * 1000).toLocaleString(),
+      drawTime: new Date(drawTime * 1000).toLocaleString(),
+      totalTickets: parseInt(lotteryAccount.totalTickets),
+      authority: lotteryAccount.authority.toString(),
+      signer: this.program.provider.publicKey.toString(),
+      isAdmin: lotteryAccount.authority.equals(this.program.provider.publicKey),
+      globalConfig: lotteryAccount.globalConfig.toString(),
+      autoTransition: lotteryAccount.autoTransition,
+      isPrizePoolLocked: lotteryAccount.isPrizePoolLocked,
+      targetPrizePool: parseInt(lotteryAccount.targetPrizePool),
+      prizePool: parseInt(lotteryAccount.prizePool),
+      createdAt: new Date(parseInt(lotteryAccount.createdAt) * 1000).toLocaleString()
+    });
+    
+    // Let the smart contract handle all validation
+
     // Provide specific error messages for common invalid transitions
     if (lotteryAccount.state.open && nextState === 'Drawing') {
       if (currentTime < drawTime) {
@@ -301,12 +321,62 @@ export class LotteryProgram {
           `Draw time: ${new Date(drawTime * 1000).toLocaleString()}`
         );
       }
+      
+      // Check if minimum tickets requirement might be failing
+      if (parseInt(lotteryAccount.totalTickets) < 1) {
+        throw new Error(
+          `Cannot transition to Drawing state with ${lotteryAccount.totalTickets} tickets. ` +
+          `The smart contract may require at least 1 ticket to be sold before drawing.`
+        );
+      }
+      
+      // Check if user is the admin/authority
+      if (!lotteryAccount.authority.equals(this.program.provider.publicKey)) {
+        throw new Error(
+          `Only the lottery authority can transition states. ` +
+          `Authority: ${lotteryAccount.authority.toString()}, ` +
+          `Signer: ${this.program.provider.publicKey.toString()}`
+        );
+      }
+      
     }
 
     const [globalConfig] = PublicKey.findProgramAddressSync(
       [Buffer.from("global_config_v2")],
       this.program.programId
     );
+
+    // Fetch global config to get the actual admin
+    let globalAdmin: PublicKey;
+    try {
+      const globalConfigAccount = await this.program.account.globalConfig.fetch(globalConfig);
+      globalAdmin = (globalConfigAccount as any).admin;
+      console.log('🔍 Global Admin Info:', {
+        globalConfigAddress: globalConfig.toString(),
+        globalAdmin: globalAdmin.toString(),
+        currentSigner: this.program.provider.publicKey.toString(),
+        isGlobalAdmin: globalAdmin.equals(this.program.provider.publicKey)
+      });
+    } catch (error) {
+      console.error('❌ Failed to fetch global config:', error);
+      throw new Error('Failed to fetch global config. Ensure the program is initialized.');
+    }
+
+    // Check if current user is global admin OR lottery authority
+    const isGlobalAdmin = globalAdmin.equals(this.program.provider.publicKey);
+    const isLotteryAuthority = lotteryAccount.authority.equals(this.program.provider.publicKey);
+    
+    if (!isGlobalAdmin && !isLotteryAuthority) {
+      throw new Error(
+        `Only the global admin or lottery authority can transition lottery states. ` +
+        `Global Admin: ${globalAdmin.toString()}, ` +
+        `Lottery Authority: ${lotteryAccount.authority.toString()}, ` +
+        `Current Signer: ${this.program.provider.publicKey.toString()}`
+      );
+    }
+    
+    // Use the appropriate admin account
+    const adminToUse = isGlobalAdmin ? globalAdmin : lotteryAccount.authority;
 
     // Convert state to enum format
     let stateEnum: any;
@@ -345,8 +415,9 @@ export class LotteryProgram {
         .accounts({
           lotteryAccount: lotteryPubkey,
           globalConfig,
-          admin: this.program.provider.publicKey,
+          admin: adminToUse,  // Use global admin if available, otherwise lottery authority
           systemProgram: SystemProgram.programId,
+          clock: SYSVAR_CLOCK_PUBKEY,  // Add Clock sysvar for time validation
         } as any)
         .rpc({
           skipPreflight: false,
@@ -622,5 +693,188 @@ export class LotteryProgram {
     }
 
     return "Unknown error occurred";
+  }
+
+  private async getUSDCMint(): Promise<PublicKey> {
+    try {
+      const [globalConfig] = PublicKey.findProgramAddressSync(
+        [Buffer.from('global_config_v2')],
+        this.program.programId
+      );
+      const globalConfigAccount = await this.program.account.globalConfig.fetch(globalConfig) as any;
+      return globalConfigAccount.usdcMint;
+    } catch (error) {
+      // Fallback to devnet USDC mint
+      return new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'); // Devnet USDC
+    }
+  }
+
+  // User ticket and winnings methods for dashboard
+
+  async getUserTickets(userPubkey?: PublicKey): Promise<Array<{
+    ticketId: number;
+    lotteryId: string;
+    lotteryType: string;
+    ticketPrice: number;
+    purchasedAt: Date;
+    lotteryState: string;
+    isWinner: boolean;
+    prizeAmount?: number;
+    drawTime: Date;
+  }>> {
+    try {
+      const user = userPubkey || this.program.provider.publicKey;
+      if (!user) {
+        throw new Error("No user public key provided");
+      }
+
+      // Get all ticket accounts owned by the user
+      const ticketAccounts = await this.program.account.ticketAccount.all([
+        {
+          memcmp: {
+            offset: 8 + 32, // Skip discriminator + lotteryId, offset to owner field
+            bytes: user.toBase58()
+          }
+        }
+      ]);
+
+      console.log(`Found ${ticketAccounts.length} tickets for user ${user.toBase58()}`);
+
+      // Get lottery details for each ticket
+      const userTickets = await Promise.all(
+        ticketAccounts.map(async (ticketAccount) => {
+          try {
+            const ticket = ticketAccount.account as any;
+            const lotteryPubkey = ticket.lotteryId;
+            
+            // Fetch lottery details
+            const lotteryAccount = await this.program.account.lotteryAccount.fetch(lotteryPubkey) as any;
+            
+            // Check if this ticket is the winning ticket
+            const isWinner = lotteryAccount.winningTicket && 
+                           lotteryAccount.winningTicket.equals(ticketAccount.publicKey);
+            
+            // Calculate prize amount if winner
+            let prizeAmount = 0;
+            if (isWinner && lotteryAccount.state.completed) {
+              const totalPrize = parseInt(lotteryAccount.prizePool);
+              const treasuryFee = Math.floor(totalPrize * 0.02); // 2% treasury fee
+              prizeAmount = formatUSDC(totalPrize - treasuryFee);
+            }
+
+            return {
+              ticketId: parseInt(ticket.ticketId),
+              lotteryId: lotteryPubkey.toString(),
+              lotteryType: Object.keys(lotteryAccount.lotteryType)[0],
+              ticketPrice: formatUSDC(parseInt(lotteryAccount.ticketPrice)),
+              purchasedAt: formatTimestamp(ticket.purchasedAt),
+              lotteryState: Object.keys(lotteryAccount.state)[0],
+              isWinner,
+              prizeAmount: isWinner ? prizeAmount : undefined,
+              drawTime: formatTimestamp(lotteryAccount.drawTime)
+            };
+          } catch (error) {
+            console.error("Error processing ticket:", error);
+            return null;
+          }
+        })
+      );
+
+      return userTickets.filter(ticket => ticket !== null) as any[];
+    } catch (error) {
+      console.error("Error fetching user tickets:", error);
+      return [];
+    }
+  }
+
+  async getUserBalance(): Promise<{
+    usdcBalance: number;
+    totalSpent: number;
+    totalWinnings: number;
+    netPosition: number;
+  }> {
+    try {
+      const userPubkey = this.program.provider.publicKey;
+      if (!userPubkey) {
+        throw new Error("Wallet not connected");
+      }
+
+      // Get USDC balance
+      const usdcMint = await this.getUSDCMint();
+      const userTokenAccount = await getAssociatedTokenAddress(usdcMint, userPubkey);
+      
+      let usdcBalance = 0;
+      try {
+        const tokenAccount = await getAccount(this.connection, userTokenAccount);
+        usdcBalance = formatUSDC(Number(tokenAccount.amount));
+      } catch (error) {
+        console.log("No USDC token account found for user");
+      }
+
+      // Get user tickets to calculate spending and winnings
+      const userTickets = await this.getUserTickets(userPubkey);
+      
+      const totalSpent = userTickets.reduce((sum, ticket) => sum + ticket.ticketPrice, 0);
+      const totalWinnings = userTickets.reduce((sum, ticket) => 
+        sum + (ticket.isWinner && ticket.prizeAmount ? ticket.prizeAmount : 0), 0
+      );
+      const netPosition = totalWinnings - totalSpent;
+
+      return {
+        usdcBalance,
+        totalSpent,
+        totalWinnings,
+        netPosition
+      };
+    } catch (error) {
+      console.error("Error fetching user balance:", error);
+      return {
+        usdcBalance: 0,
+        totalSpent: 0,
+        totalWinnings: 0,
+        netPosition: 0
+      };
+    }
+  }
+
+  async getUserStats(): Promise<{
+    totalTickets: number;
+    activeLotteries: number;
+    completedLotteries: number;
+    wonLotteries: number;
+    pendingWinnings: number;
+  }> {
+    try {
+      const userTickets = await this.getUserTickets();
+      
+      const totalTickets = userTickets.length;
+      const activeLotteries = userTickets.filter(ticket => 
+        ['Open', 'Locked', 'Drawing', 'AwaitingRandomness'].includes(ticket.lotteryState)
+      ).length;
+      const completedLotteries = userTickets.filter(ticket => 
+        ticket.lotteryState === 'Completed'
+      ).length;
+      const wonLotteries = userTickets.filter(ticket => ticket.isWinner).length;
+      const pendingWinnings = userTickets
+        .filter(ticket => ticket.isWinner && ticket.lotteryState === 'Completed')
+        .reduce((sum, ticket) => sum + (ticket.prizeAmount || 0), 0);
+
+      return {
+        totalTickets,
+        activeLotteries,
+        completedLotteries,
+        wonLotteries,
+        pendingWinnings
+      };
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      return {
+        totalTickets: 0,
+        activeLotteries: 0,
+        completedLotteries: 0,
+        wonLotteries: 0,
+        pendingWinnings: 0
+      };
+    }
   }
 } 

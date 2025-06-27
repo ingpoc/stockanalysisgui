@@ -36,13 +36,22 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
   }
 
   const getAvailableStates = () => {
+    // These MUST match the smart contract's can_transition_to method
     switch (lottery.state) {
       case 'Created':
         return ['Open', 'Cancelled']
       case 'Open':
+        return ['Locked', 'Cancelled']  // Smart contract does NOT allow Open → Drawing
+      case 'Locked':
         return ['Drawing', 'Cancelled']
       case 'Drawing':
-        return ['Completed', 'Expired']
+        return ['AwaitingRandomness', 'Expired', 'Cancelled']
+      case 'AwaitingRandomness':
+        return ['Completed', 'Expired', 'Cancelled']
+      case 'Completed':
+      case 'Expired':
+      case 'Cancelled':
+        return []  // Terminal states
       default:
         return []
     }

@@ -1,112 +1,337 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
+import { PageContainer } from '@/components/layout/page-container'
 import { useLottery } from '@/hooks/useLottery'
-import { LotteryCard } from '@/components/lottery/lottery-card'
+import { useUserDashboard } from '@/hooks/useUserDashboard'
+import dynamic from 'next/dynamic'
+
+// Dynamically import the enhanced lottery card
+const EnhancedLotteryCard = dynamic(() =>
+  import("@/components/lottery/enhanced-lottery-card")
+    .then(mod => mod.EnhancedLotteryCard),
+  {
+    loading: () => (
+      <div className="h-[300px] rounded border-2 border-gray-200 bg-gray-50 animate-pulse" />
+    ),
+    ssr: false
+  }
+)
 import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
 import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
-import { AdminLotteryControls } from '@/components/lottery/admin-lottery-controls'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Plus, Dice6 } from 'lucide-react'
-import { useState } from 'react'
+import { UserTicketsTable } from '@/components/dashboard/user-tickets-table'
+import { WinningsSummary } from '@/components/dashboard/winnings-summary'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AlertCircle, Dice6 } from 'lucide-react'
+import { useAuthNavigation } from '@/lib/navigation'
 import { ADMIN_WALLET } from '@/lib/constants'
+import { formatUSDC } from '@/lib/utils'
+import { useCountUp, useFadeIn, useStaggeredFadeIn } from '@/hooks/useGSAP'
 
 export default function DashboardPage() {
-  const { connected, publicKey } = useWallet()
-  const { lotteries, isLoading } = useLottery()
+  const [isMounted, setIsMounted] = useState(false)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showInitDialog, setShowInitDialog] = useState(false)
+  const { connected, publicKey } = useWallet()
+  const navigation = useAuthNavigation()
+  const { lotteries, isLoading: lotteriesLoading } = useLottery()
+  const { 
+    userTickets, 
+    userBalance, 
+    userStats, 
+    isLoading: userDataLoading,
+    error: userDataError 
+  } = useUserDashboard()
   
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
 
+  // Animation refs
+  const headerRef = useFadeIn(0.2)
+  const statsRef = useStaggeredFadeIn('.stat-item', 0.4)
+  
+  // Animated counters
+  const balanceRef = useCountUp(userBalance.usdcBalance, '$', '', 1)
+  const ticketsRef = useCountUp(userStats.totalTickets, '', '', 1.2)
+  const netPositionRef = useCountUp(Math.abs(userBalance.netPosition), userBalance.netPosition >= 0 ? '+$' : '-$', '', 1.4)
+  const winningsRef = useCountUp(userBalance.totalWinnings, '$', '', 1.6)
+
+  useEffect(() => {
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
+
+  useEffect(() => {
+    if (isMounted && !connected) {
+      navigation.toLogin('/dashboard')
+    }
+  }, [connected, navigation, isMounted])
+
+  if (!isMounted) {
+    return null
+  }
+
   if (!connected) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-          <Dice6 className="h-16 w-16 text-muted-foreground" />
-          <h1 className="text-2xl font-bold">Welcome to Crypto Lottery</h1>
-          <p className="text-muted-foreground text-center max-w-md">
-            Connect your Solana wallet to participate in decentralized lotteries and win USDC prizes!
-          </p>
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-8">
+          <Dice6 className="h-16 w-16 text-gray-400" />
+          <div className="text-center">
+            <h1 className="text-2xl font-light text-gray-900 tracking-wide mb-2">
+              WELCOME TO CRYPTO LOTTERY
+            </h1>
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-8">
+              DECENTRALIZED • SOLANA
+            </p>
+            <p className="text-sm text-gray-600 max-w-md mb-8">
+              Connect your Solana wallet to participate in decentralized lotteries and win USDC prizes
+            </p>
+          </div>
           <WalletMultiButton />
         </div>
-      </div>
+      </PageContainer>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Crypto Lottery Dashboard</h1>
-          <p className="text-muted-foreground">
-            Participate in decentralized lotteries on Solana
-          </p>
+    <PageContainer>
+      {/* Dieter Rams Header - Consistent with lottery page */}
+      <div className="mb-16">
+        <div className="flex items-baseline justify-between pb-8 border-b border-gray-200">
+          <div>
+            <h1 className="text-2xl font-light text-gray-900 tracking-wide">
+              DASHBOARD
+            </h1>
+            <p className="text-xs text-gray-400 uppercase tracking-wider mt-2">
+              YOUR LOTTERY ACTIVITY AND PERFORMANCE OVERVIEW
+            </p>
+          </div>
+          <div className="flex gap-4">
+            {isAdmin && (
+              <>
+                <button 
+                  onClick={() => setShowInitDialog(true)}
+                  className="px-4 py-2 text-xs text-gray-600 border border-gray-300 hover:border-gray-900 hover:text-gray-900 transition-colors duration-200 uppercase tracking-wider"
+                >
+                  INITIALIZE
+                </button>
+                <button 
+                  onClick={() => setShowCreateDialog(true)}
+                  className="px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider"
+                >
+                  CREATE
+                </button>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex gap-2">
-          {isAdmin && (
-            <>
-              <Button 
-                onClick={() => setShowInitDialog(true)}
-                variant="outline"
-              >
-                Initialize Program
-              </Button>
-              <Button 
-                onClick={() => setShowCreateDialog(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Lottery
-              </Button>
-            </>
-          )}
+        
+        {/* Pure Data Grid - Swiss Typography */}
+        <div className="grid grid-cols-4 gap-16 pt-8">
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">USDC BALANCE</div>
+            <div className="text-3xl font-light text-gray-900 font-mono">
+              {userDataLoading ? '—' : `$${userBalance.usdcBalance.toFixed(2)}`}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL TICKETS</div>
+            <div className="text-3xl font-light text-gray-900 font-mono">
+              {userDataLoading ? '—' : userStats.totalTickets}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">NET POSITION</div>
+            <div className={`text-3xl font-light font-mono ${
+              userBalance.netPosition >= 0 ? 'text-gray-900' : 'text-red-600'
+            }`}>
+              {userDataLoading ? '—' : 
+                `${userBalance.netPosition >= 0 ? '+' : ''}$${Math.abs(userBalance.netPosition).toFixed(2)}`
+              }
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">WINNINGS</div>
+            <div className="text-3xl font-light text-gray-900 font-mono">
+              {userDataLoading ? '—' : `$${userBalance.totalWinnings.toFixed(2)}`}
+            </div>
+          </div>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-                <div className="h-3 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded"></div>
-                  <div className="h-3 bg-muted rounded w-2/3"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : lotteries && lotteries.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lotteries.map((lottery) => (
-            <LotteryCard
-              key={lottery.address}
-              lottery={lottery}
-              onParticipate={() => {}}
-            />
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>No Lotteries Available</CardTitle>
-            <CardDescription>
-              {isAdmin 
-                ? "Create the first lottery to get started!" 
-                : "Check back later for new lottery opportunities."
-              }
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      {/* Error State */}
+      {userDataError && (
+        <Alert variant="destructive" className="mb-8">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error Loading Data</AlertTitle>
+          <AlertDescription>
+            {userDataError instanceof Error ? userDataError.message : 'Unknown error occurred'}
+          </AlertDescription>
+        </Alert>
       )}
 
+      {/* Clean Tabs Navigation */}
+      <Tabs defaultValue="overview" className="space-y-8">
+        <TabsList className="grid w-full grid-cols-4 h-auto p-0 bg-transparent border-b border-gray-200">
+          <TabsTrigger 
+            value="overview" 
+            className="text-xs uppercase tracking-wider text-gray-600 data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent pb-4"
+          >
+            OVERVIEW
+          </TabsTrigger>
+          <TabsTrigger 
+            value="tickets"
+            className="text-xs uppercase tracking-wider text-gray-600 data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent pb-4"
+          >
+            MY TICKETS
+          </TabsTrigger>
+          <TabsTrigger 
+            value="winnings"
+            className="text-xs uppercase tracking-wider text-gray-600 data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent pb-4"
+          >
+            WINNINGS
+          </TabsTrigger>
+          <TabsTrigger 
+            value="lotteries"
+            className="text-xs uppercase tracking-wider text-gray-600 data-[state=active]:text-gray-900 data-[state=active]:border-b-2 data-[state=active]:border-gray-900 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent pb-4"
+          >
+            AVAILABLE
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-12">
+          {/* Additional Stats Grid */}
+          <div className="grid grid-cols-4 gap-16">
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL SPENT</div>
+              <div className="text-xl font-light text-gray-600 font-mono">
+                {userDataLoading ? '—' : `$${userBalance.totalSpent.toFixed(2)}`}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">On lottery tickets</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">ACTIVE LOTTERIES</div>
+              <div className="text-xl font-light text-gray-600 font-mono">
+                {userDataLoading ? '—' : userStats.activeLotteries}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">Awaiting results</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">WIN RATE</div>
+              <div className="text-xl font-light text-gray-600 font-mono">
+                {userDataLoading || userStats.totalTickets === 0 ? '—' : 
+                  `${((userStats.wonLotteries / userStats.totalTickets) * 100).toFixed(1)}%`
+                }
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                {userStats.wonLotteries}/{userStats.totalTickets} tickets
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">PENDING CLAIMS</div>
+              <div className="text-xl font-light text-gray-600 font-mono">
+                {userDataLoading ? '—' : `$${userStats.pendingWinnings.toFixed(2)}`}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">Ready to claim</div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-4">RECENT ACTIVITY</div>
+            {userTickets.length > 0 ? (
+              <div className="space-y-2">
+                {userTickets.slice(0, 5).map((ticket) => (
+                  <div 
+                    key={`${ticket.lotteryId}-${ticket.ticketId}`} 
+                    className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-mono text-gray-600">#{ticket.ticketId}</span>
+                      <span className="text-sm text-gray-600 capitalize">{ticket.lotteryType}</span>
+                      {ticket.isWinner && (
+                        <span className="text-xs text-green-600 uppercase tracking-wider">WINNER</span>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600">{ticket.lotteryState}</div>
+                      {ticket.isWinner && ticket.prizeAmount && (
+                        <div className="text-xs text-green-600 font-mono">+${ticket.prizeAmount.toFixed(2)}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 py-8 text-center border border-dashed border-gray-200">
+                No tickets purchased yet
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Tickets Tab */}
+        <TabsContent value="tickets">
+          <UserTicketsTable 
+            userTickets={userTickets}
+            isLoading={userDataLoading}
+          />
+        </TabsContent>
+
+        {/* Winnings Tab */}
+        <TabsContent value="winnings">
+          <WinningsSummary
+            userTickets={userTickets}
+            userStats={userStats}
+            userBalance={userBalance}
+            isLoading={userDataLoading}
+          />
+        </TabsContent>
+
+        {/* Available Lotteries Tab */}
+        <TabsContent value="lotteries">
+          {lotteriesLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-[350px] rounded border-2 border-gray-200 bg-gray-50 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {lotteries && lotteries.map((lottery) => (
+                <EnhancedLotteryCard
+                  key={lottery.address}
+                  lottery={lottery}
+                  onParticipate={() => {}}
+                />
+              ))}
+              {lotteries && lotteries.length === 0 && (
+                <div className="col-span-full text-center py-20">
+                  <div className="max-w-sm mx-auto">
+                    <p className="text-gray-500 mb-4">No lotteries available</p>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => setShowCreateDialog(true)}
+                        className="px-6 py-2 text-sm bg-gray-900 hover:bg-gray-800 text-white transition-colors"
+                      >
+                        Create First Lottery
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Dialogs */}
       <CreateLotteryDialog 
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
@@ -116,6 +341,6 @@ export default function DashboardPage() {
         open={showInitDialog}
         onOpenChange={setShowInitDialog}
       />
-    </div>
+    </PageContainer>
   )
-} 
+}

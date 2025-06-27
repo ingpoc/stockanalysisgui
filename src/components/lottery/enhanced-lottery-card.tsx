@@ -9,12 +9,14 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
-import { Ticket, Trophy, Loader2, Calendar, DollarSign, Users, Clock, ArrowRight } from 'lucide-react'
+import { Ticket, Trophy, Loader2, Clock, Target } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { handleProgramError, formatUSDC, cn } from '@/lib/utils'
 import { AdminLotteryControls } from './admin-lottery-controls'
 import { ADMIN_WALLET } from '@/lib/constants'
 import { useLottery } from '@/hooks/useLottery'
+import { useEffect, useRef, useCallback } from 'react'
+import { gsap } from 'gsap'
 
 interface LotteryCardProps {
   lottery: LotteryInfo
@@ -30,8 +32,10 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
   } = useLottery()
 
   const isActive = lottery.state === 'Open'
-  const isEnded = new Date(lottery.drawTime * 1000) < new Date()
+  const drawDate = new Date(lottery.drawTime * 1000)
+  const isEnded = drawDate < new Date()
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
+  const isLotteryAuthority = publicKey?.toBase58() === lottery.createdBy
 
   const formatUSDCValue = (value: number): string => {
     return formatUSDC(value);
@@ -47,164 +51,251 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
       await buyTicket({ 
         lotteryAddress: lottery.address
       })
-      toast.success('Ticket purchased successfully!')
       onParticipate()
     } catch (error) {
       console.error('Failed to buy ticket (UI): ', error)
     } 
   }
-
-  const isOpen = lottery.state === 'Open'
-  const drawDate = new Date(lottery.drawTime * 1000)
+  
+  // Pure minimalism - "Less but Better" (Dieter Rams)
+  // Only essential differences, maximum restraint
+  const getLotteryIndicator = (type: string) => {
+    // Single subtle indicator only - no colors, just position
+    switch (type) {
+      case 'Daily': return '●'
+      case 'Weekly': return '■'  
+      case 'Monthly': return '▲'
+      default: return '○'
+    }
+  }
+  
+  const cardRef = useRef<HTMLDivElement>(null)
+  const prizeRef = useRef<HTMLDivElement>(null)
+  const ticketsRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   
   const progressPercentage = lottery.targetPrizePool && lottery.targetPrizePool > 0 
     ? Math.min(100, (lottery.prizePool / lottery.targetPrizePool) * 100)
-    : 0;
+    : 0
+
+  // Rolling number animation for prize pool
+  const animateNumberRoll = useCallback((element: HTMLElement, newValue: number, formatter: (val: number) => string) => {
+    const startValue = parseFloat(element.textContent?.replace(/[^0-9.]/g, '') || '0')
+    const obj = { value: startValue }
     
-  const getBadgeVariant = () => {
-    switch(lottery.state) {
-      case 'Open':
-        return "success" as const;
-      case 'Created':
-        return "secondary" as const;
-      case 'Drawing':
-        return "default" as const;
-      case 'Completed':
-        return "default" as const;
-      case 'Expired':
-      case 'Cancelled':
-        return "destructive" as const;
-      default:
-        return "outline" as const;
+    gsap.to(obj, {
+      value: newValue,
+      duration: 1.2,
+      ease: "power2.out",
+      onUpdate: () => {
+        element.textContent = formatter(obj.value)
+      }
+    })
+  }, [])
+
+  // Subtle GSAP animations on mount
+  useEffect(() => {
+    if (cardRef.current) {
+      gsap.fromTo(cardRef.current, 
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
+      )
     }
-  };
+  }, [])
+
+  // Animate prize pool changes
+  useEffect(() => {
+    if (prizeRef.current && lottery.prizePool > 0) {
+      animateNumberRoll(prizeRef.current, lottery.prizePool, formatUSDCValue)
+    }
+  }, [lottery.prizePool, animateNumberRoll])
+
+  // Animate ticket count changes
+  useEffect(() => {
+    if (ticketsRef.current && lottery.totalTickets > 0) {
+      animateNumberRoll(ticketsRef.current, lottery.totalTickets, (val) => Math.floor(val).toString())
+    }
+  }, [lottery.totalTickets, animateNumberRoll])
+
+  // Hover interactions
+  const handleCardHover = useCallback((isHovering: boolean) => {
+    if (cardRef.current) {
+      gsap.to(cardRef.current, {
+        scale: isHovering ? 1.01 : 1,
+        duration: 0.3,
+        ease: "power2.out"
+      })
+    }
+  }, [])
+
+  const handleButtonHover = useCallback((isHovering: boolean) => {
+    if (buttonRef.current) {
+      gsap.to(buttonRef.current, {
+        scale: isHovering ? 1.02 : 1,
+        duration: 0.2,
+        ease: "power2.out"
+      })
+    }
+  }, [])
+
+  // State transition animations
+  useEffect(() => {
+    if (progressRef.current && lottery.targetPrizePool && lottery.targetPrizePool > 0) {
+      gsap.to(progressRef.current, {
+        scaleX: progressPercentage / 100,
+        duration: 0.8,
+        ease: "power2.out",
+        transformOrigin: "left center"
+      })
+    }
+  }, [progressPercentage])
 
   return (
-    <Card className={cn(
-      "overflow-hidden transition-all duration-300 hover:shadow-lg border-2",
-      isActive ? "border-primary/20" : "border-muted"
-    )}>
-      <div className={cn(
-        "h-2 w-full",
-        isActive ? "bg-green-500" : 
-        lottery.state === 'Completed' ? "bg-blue-500" :
-        lottery.state === 'Drawing' ? "bg-amber-500" :
-        "bg-gray-300"
-      )}></div>
-      
-      <CardHeader className="space-y-1 pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-bold flex items-center gap-2">
-            {lottery.lotteryType} Lottery
-          </CardTitle>
-          <Badge variant={getBadgeVariant()} className="px-3 py-1 text-xs font-medium">
-            {lottery.state}
-          </Badge>
-        </div>
-        <CardDescription className="flex items-center gap-1 text-sm">
-          <Calendar className="h-4 w-4" />
-          Draw: {format(drawDate, 'PPp')}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-5 pt-2">
-        <div className="grid grid-cols-2 gap-4 bg-muted/30 p-3 rounded-lg">
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-              <DollarSign className="h-3 w-3" /> Ticket Price
-            </p>
-            <p className="text-2xl font-bold text-primary">{formatUSDCValue(lottery.ticketPrice)}</p>
+    <div 
+      ref={cardRef}
+      className="bg-white border border-gray-200 hover:border-gray-300 transition-colors duration-200"
+      onMouseEnter={() => handleCardHover(true)}
+      onMouseLeave={() => handleCardHover(false)}
+    >
+      {/* Swiss Grid System Header - Pure Typography */}
+      <div className="p-6 pb-0">
+        <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline gap-2">
+            <span className="text-gray-400 text-sm">{getLotteryIndicator(lottery.lotteryType)}</span>
+            <h3 className="text-base font-normal text-gray-900 tracking-wide">
+              {lottery.lotteryType.toUpperCase()}
+            </h3>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-              <Trophy className="h-3 w-3" /> Prize Pool
-            </p>
-            <p className="text-2xl font-bold text-primary">{formatUSDCValue(lottery.prizePool)}</p>
+          <span className={`text-xs tracking-wider ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+            {lottery.state.toUpperCase()}
+          </span>
+        </div>
+        
+        {/* Date - Helvetica-inspired clean typography */}
+        <p className="text-xs text-gray-500 mt-2 font-mono">
+          {format(drawDate, 'dd.MM.yyyy HH:mm')}
+        </p>
+      </div>
+      
+      {/* Swiss Grid Content - Maximum Information Density, Minimum Visual Noise */}
+      <div className="px-6 py-6">
+        {/* Essential Data Only - Typography as Interface */}
+        <div className="space-y-4">
+          
+          {/* Price/Prize Grid - Functional Layout */}
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">PRICE</div>
+              <div className="text-xl font-light text-gray-900 font-mono">
+                {formatUSDCValue(lottery.ticketPrice)}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">PRIZE</div>
+              <div ref={prizeRef} className="text-xl font-light text-gray-900 font-mono">
+                {formatUSDCValue(lottery.prizePool)}
+              </div>
+            </div>
+          </div>
+
+          {/* Essential Metrics - No Decorative Elements */}
+          <div className="pt-4 border-t border-gray-200 space-y-3">
+            <div className="flex justify-between items-baseline">
+              <span className="text-xs text-gray-400 uppercase tracking-wider">TICKETS</span>
+              <span ref={ticketsRef} className="text-sm font-mono text-gray-900">{lottery.totalTickets}</span>
+            </div>
+            
             {lottery.targetPrizePool && lottery.targetPrizePool > 0 && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <ArrowRight className="h-3 w-3" /> Target: {formatUSDCValue(lottery.targetPrizePool)}
-              </p>
+              <div className="flex justify-between items-baseline">
+                <span className="text-xs text-gray-400 uppercase tracking-wider">PROGRESS</span>
+                <span className="text-sm font-mono text-gray-900">{Math.round(progressPercentage)}%</span>
+              </div>
             )}
-          </div>
-        </div>
-        
-        <div className="bg-muted/30 p-3 rounded-lg">
-          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
-            <Users className="h-3 w-3" /> Total Tickets
-          </p>
-          <p className="text-lg font-bold">{lottery.totalTickets}</p>
-        </div>
-        
-        {lottery.targetPrizePool && lottery.targetPrizePool > 0 && (
-          <div className="space-y-1">
-            <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-              <div 
-                className={cn(
-                  "h-3 rounded-full transition-all duration-500",
-                  progressPercentage > 75 ? "bg-green-500" : 
-                  progressPercentage > 50 ? "bg-blue-500" : 
-                  progressPercentage > 25 ? "bg-amber-500" : "bg-primary"
-                )}
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-            </div>
-            <div className="flex justify-between items-center text-xs text-muted-foreground">
-              <span>{Math.round(progressPercentage)}% of target</span>
-              <span>{formatUSDCValue(lottery.prizePool)} / {formatUSDCValue(lottery.targetPrizePool)}</span>
-            </div>
-          </div>
-        )}
-        
-        <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg">
-          <span className="text-sm text-muted-foreground flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            {isActive ? 'Ends' : 'Ended'}
-          </span>
-          <span className="font-semibold text-sm">
-            {formatDistanceToNow(new Date(lottery.drawTime * 1000), { addSuffix: true })}
-          </span>
-        </div>
-        
-        {lottery.winningNumbers && (
-          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3 rounded-lg flex justify-between items-center">
-            <span className="text-sm font-medium text-amber-800 dark:text-amber-300">Winner</span>
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              <span className="font-mono text-sm truncate max-w-[120px] text-amber-700 dark:text-amber-300">
-                {lottery.createdBy.slice(0, 6)}...{lottery.createdBy.slice(-4)}
+            
+            {/* Minimal progress indicator */}
+            {lottery.targetPrizePool && lottery.targetPrizePool > 0 && (
+              <div className="w-full h-px bg-gray-200 overflow-hidden">
+                <div 
+                  ref={progressRef}
+                  className="h-full bg-gray-900 origin-left"
+                  style={{ transform: 'scaleX(0)' }}
+                />
+              </div>
+            )}
+            
+            <div className="flex justify-between items-baseline">
+              <span className="text-xs text-gray-400 uppercase tracking-wider">
+                {isActive ? 'DRAW' : 'ENDED'}
+              </span>
+              <span className="text-xs font-mono text-gray-600">
+                {(() => {
+                  const drawDate = new Date(lottery.drawTime * 1000);
+                  const now = new Date();
+                  const timeDiff = drawDate.getTime() - now.getTime();
+                  
+                  if (timeDiff > 0) {
+                    // Future - show "in X time"
+                    return formatDistanceToNow(drawDate, { addSuffix: true });
+                  } else {
+                    // Past - show "X time ago"
+                    return formatDistanceToNow(drawDate, { addSuffix: true });
+                  }
+                })()}
               </span>
             </div>
           </div>
-        )}
-        
-        {isOpen && (
-          <div className="flex gap-2 mt-4">
-            <Button
-              onClick={handleBuyTickets}
-              disabled={isBuying || !publicKey}
-              className="flex-1 bg-primary hover:bg-primary/90"
-              size="sm"
-            >
-              {isBuying ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Ticket className="w-4 h-4 mr-2" />
-              )}
-              {isBuying ? 'Buying...' : 'Buy 1 Ticket'}
-            </Button>
+
+          {/* Winner State - Only When Necessary */}
+          {lottery.winningNumbers && (
+            <div className="pt-3 border-t border-gray-200">
+              <div className="flex justify-between items-baseline">
+                <span className="text-xs text-gray-400 uppercase tracking-wider">WINNER</span>
+                <span className="text-xs font-mono text-gray-900">
+                  {lottery.createdBy.slice(0, 12)}...
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* Admin Only - When Required */}
+          {(isAdmin || isLotteryAuthority) && (
+            <div className="pt-3 border-t border-gray-200">
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">
+                {isAdmin ? 'ADMIN' : 'AUTHORITY'}
+              </div>
+              <AdminLotteryControls 
+                lottery={lottery} 
+                onStateChange={onParticipate} 
+              />
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Single Action - Pure Function */}
+      <div className="px-6 pb-6">
+        {isActive && !isEnded && publicKey ? (
+          <button 
+            ref={buttonRef}
+            className="w-full py-3 text-sm text-gray-900 border border-gray-300 hover:border-gray-900 hover:text-gray-900 transition-colors duration-200 font-mono tracking-wide"
+            onClick={handleBuyTickets}
+            onMouseEnter={() => handleButtonHover(true)}
+            onMouseLeave={() => handleButtonHover(false)}
+            disabled={isBuying}
+          >
+            {isBuying ? 'PROCESSING...' : `BUY • ${formatUSDCValue(lottery.ticketPrice)}`}
+          </button>
+        ) : (
+          <div className="text-center py-3">
+            <span className="text-xs text-gray-400 uppercase tracking-wider">
+              {!publicKey ? 'WALLET REQUIRED' : 
+               !isActive ? 'UNAVAILABLE' : 
+               'DRAW ENDED'}
+            </span>
           </div>
         )}
-        
-        {isAdmin && (
-          <div className="mt-4 pt-4 border-t border-dashed border-muted">
-            <p className="text-sm font-medium mb-2 text-primary">Admin Controls</p>
-            <AdminLotteryControls 
-              lottery={lottery} 
-              onStateChange={onParticipate} 
-            />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 } 

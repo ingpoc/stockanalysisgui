@@ -138,24 +138,21 @@ export function shortenAddress(address: string, chars = 4): string {
 }
 
 /**
- * Formats a number from the smallest USDC unit (6 decimals) to a human-readable INR value
- * @param value The value in the smallest USDC unit
+ * Formats a USDC value to a human-readable USD value
+ * @param value The value in USDC (already converted from smallest unit)
  * @param decimals The number of decimal places to show (default: 2)
- * @returns Formatted INR value as a string
+ * @returns Formatted USD value as a string
  */
 export function formatUSDC(value: number | undefined, decimals: number = 2): string {
-  if (value === undefined || value === null) {
-    return '0 ₹';
+  if (value === undefined || value === null || value === 0) {
+    return '$0.00';
   }
   
-  // USDC has 6 decimal places
-  const usdcValue = value / 1_000_000;
-  
-  // Format with the specified number of decimal places
-  return `${usdcValue.toLocaleString('en-IN', {
+  // Value is already in USDC format (converted in getLotteries method)
+  return `$${value.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals
-  })} ₹`;
+  })}`;
 }
 
 /**
@@ -179,4 +176,28 @@ export function formatPercentage(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value / 100);
+}
+
+/**
+ * Format distance to now (time ago)
+ */
+export function formatDistanceToNow(date: Date): string {
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInSeconds = Math.floor(diffInMs / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInSeconds < 60) {
+    return 'just now';
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  } else if (diffInDays < 7) {
+    return `${diffInDays}d ago`;
+  } else {
+    return date.toLocaleDateString();
+  }
 }

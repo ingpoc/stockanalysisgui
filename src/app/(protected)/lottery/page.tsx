@@ -57,11 +57,53 @@ export default function LotteryPage() {
 
   return (
     <PageContainer>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Lotteries</h1>
-        <div className="space-x-2">
-          <Button onClick={() => setShowInitDialog(true)} variant="outline">Initialize Program</Button>
-          <Button onClick={() => setShowCreateDialog(true)}>Create Lottery</Button>
+      {/* Dieter Rams Header - Pure Function */}
+      <div className="mb-16">
+        <div className="flex items-baseline justify-between pb-8 border-b border-gray-200">
+          <div>
+            <h1 className="text-2xl font-light text-gray-900 tracking-wide">
+              CRYPTO LOTTERY
+            </h1>
+            <p className="text-xs text-gray-400 uppercase tracking-wider mt-2">
+              DECENTRALIZED • SOLANA
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setShowInitDialog(true)}
+              className="px-4 py-2 text-xs text-gray-600 border border-gray-300 hover:border-gray-900 hover:text-gray-900 transition-colors duration-200 uppercase tracking-wider"
+            >
+              INITIALIZE
+            </button>
+            <button 
+              onClick={() => setShowCreateDialog(true)}
+              className="px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider"
+            >
+              CREATE
+            </button>
+          </div>
+        </div>
+        
+        {/* Pure Data Grid - Swiss Typography */}
+        <div className="grid grid-cols-3 gap-16 pt-8">
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">ACTIVE</div>
+            <div className="text-3xl font-light text-gray-900 font-mono">
+              {lotteries?.filter(l => l.state === 'Open').length || 0}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TICKETS</div>
+            <div className="text-3xl font-light text-gray-900 font-mono">
+              {lotteries?.reduce((sum, l) => sum + l.totalTickets, 0) || 0}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">POOL</div>
+            <div className="text-3xl font-light text-gray-900 font-mono">
+              ${lotteries?.reduce((sum, l) => sum + l.prizePool, 0).toFixed(2) || '0.00'}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -85,16 +127,16 @@ export default function LotteryPage() {
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="h-[300px] rounded-lg bg-muted animate-pulse"
+              className="h-[350px] rounded border-2 border-gray-200 bg-gray-50 animate-pulse"
             />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {lotteries && lotteries.map((lottery) => (
             <EnhancedLotteryCard
               key={lottery.address}
@@ -103,8 +145,16 @@ export default function LotteryPage() {
             />
           ))}
           {lotteries && lotteries.length === 0 && !error && (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
-              No lotteries found. Initialize the program or create one!
+            <div className="col-span-full text-center py-20">
+              <div className="max-w-sm mx-auto">
+                <p className="text-gray-500 mb-4">No lotteries found</p>
+                <Button 
+                  onClick={() => setShowCreateDialog(true)}
+                  className="px-6 py-2 text-sm bg-gray-900 hover:bg-gray-800 text-white transition-colors"
+                >
+                  Create First Lottery
+                </Button>
+              </div>
             </div>
           )}
         </div>
