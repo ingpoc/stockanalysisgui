@@ -8,15 +8,13 @@ const nextConfig: NextConfig = {
     }
     return config
   },
-  // Configure Turbopack
-  experimental: {
-    turbo: {
-      rules: {
-        // Add any custom Turbopack rules here
-      },
-      resolveAlias: {
-        '@/*': './src/*'
-      }
+  // Configure Turbopack (stable)
+  turbopack: {
+    rules: {
+      // Add any custom Turbopack rules here
+    },
+    resolveAlias: {
+      '@/*': './src/*'
     }
   }
 };

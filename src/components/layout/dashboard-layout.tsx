@@ -79,14 +79,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isCollapsed])
 
-  // Animate mobile sidebar
+  // Set initial sidebar position and animate mobile sidebar
   useEffect(() => {
     if (sidebarRef.current) {
-      gsap.to(sidebarRef.current, {
-        x: isMobileOpen ? 0 : '-100%',
-        duration: 0.3,
-        ease: "power2.out"
-      })
+      // Set initial position for desktop (visible) and mobile (hidden)
+      const initialX = window.innerWidth >= 1024 ? 0 : '-100%'
+      gsap.set(sidebarRef.current, { x: initialX })
+      
+      // Then animate based on mobile state
+      if (window.innerWidth < 1024) {
+        gsap.to(sidebarRef.current, {
+          x: isMobileOpen ? 0 : '-100%',
+          duration: 0.3,
+          ease: "power2.out"
+        })
+      }
     }
   }, [isMobileOpen])
 
@@ -112,7 +119,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <aside 
         ref={sidebarRef}
         className="fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-hidden bg-white border-r border-gray-200 lg:static w-64"
-        style={{ transform: 'translateX(-100%)' }}
       >
         <div className={`border-b border-gray-200 px-6 py-8 ${isCollapsed ? 'px-4' : ''}`}>
           {isCollapsed ? (
@@ -131,6 +137,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <nav className={`py-8 space-y-2 ${isCollapsed ? 'px-4' : 'px-6'}`}>
             <SidebarItem icon={LayoutGrid} label="Dashboard" href="/dashboard" isCollapsed={isCollapsed} />
             <SidebarItem icon={Ticket} label="Active Lotteries" href="/lottery" isCollapsed={isCollapsed} />
+            <SidebarItem icon={Dice6} label="Roulette" href="/roulette" isCollapsed={isCollapsed} />
           </nav>
 
           <div className={`mt-auto py-8 space-y-2 border-t border-gray-200 ${isCollapsed ? 'px-4' : 'px-6'}`}>

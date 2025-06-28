@@ -10,6 +10,7 @@ import { AlertCircle } from 'lucide-react'
 import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
 import { useAuthNavigation } from '@/lib/navigation'
 import { useLottery } from '@/hooks/useLottery'
+import { useCountUp, useFadeIn, useStaggeredFadeIn } from '@/hooks/useGSAP'
 import dynamic from 'next/dynamic'
 
 // Dynamically import the main lottery card
@@ -51,6 +52,20 @@ export default function LotteryPage() {
     console.log("Refresh triggered - relying on hook invalidation.")
   }, [])
 
+  // Animation refs
+  const headerRef = useFadeIn(0.2)
+  const statsRef = useStaggeredFadeIn('.lottery-stat-item', 0.4)
+  const cardsRef = useStaggeredFadeIn('.lottery-card', 0.6)
+  
+  // Animated counters
+  const activeLotteriesCount = lotteries?.filter(l => l.state === 'Open').length || 0
+  const totalTicketsCount = lotteries?.reduce((sum, l) => sum + l.totalTickets, 0) || 0
+  const totalPoolAmount = lotteries?.reduce((sum, l) => sum + l.prizePool, 0) || 0
+  
+  const activeRef = useCountUp(activeLotteriesCount, '', '', 1)
+  const ticketsRef = useCountUp(totalTicketsCount, '', '', 1.2)
+  const poolRef = useCountUp(totalPoolAmount, '$', '', 1.4)
+
   if (!isMounted) {
     return null
   }
@@ -58,7 +73,7 @@ export default function LotteryPage() {
   return (
     <PageContainer>
       {/* Dieter Rams Header - Pure Function */}
-      <div className="mb-16">
+      <div ref={headerRef} className="mb-16">
         <div className="flex items-baseline justify-between pb-8 border-b border-gray-200">
           <div>
             <h1 className="text-2xl font-light text-gray-900 tracking-wide">
@@ -84,24 +99,24 @@ export default function LotteryPage() {
           </div>
         </div>
         
-        {/* Pure Data Grid - Swiss Typography */}
-        <div className="grid grid-cols-3 gap-16 pt-8">
-          <div>
+        {/* Pure Data Grid - Swiss Typography with Animations */}
+        <div ref={statsRef} className="grid grid-cols-3 gap-16 pt-8">
+          <div className="lottery-stat-item">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">ACTIVE</div>
-            <div className="text-3xl font-light text-gray-900 font-mono">
-              {lotteries?.filter(l => l.state === 'Open').length || 0}
+            <div ref={activeRef} className="text-3xl font-light text-gray-900 font-mono">
+              0
             </div>
           </div>
-          <div>
+          <div className="lottery-stat-item">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TICKETS</div>
-            <div className="text-3xl font-light text-gray-900 font-mono">
-              {lotteries?.reduce((sum, l) => sum + l.totalTickets, 0) || 0}
+            <div ref={ticketsRef} className="text-3xl font-light text-gray-900 font-mono">
+              0
             </div>
           </div>
-          <div>
+          <div className="lottery-stat-item">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">POOL</div>
-            <div className="text-3xl font-light text-gray-900 font-mono">
-              ${lotteries?.reduce((sum, l) => sum + l.prizePool, 0).toFixed(2) || '0.00'}
+            <div ref={poolRef} className="text-3xl font-light text-gray-900 font-mono">
+              $0.00
             </div>
           </div>
         </div>
@@ -136,13 +151,14 @@ export default function LotteryPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {lotteries && lotteries.map((lottery) => (
-            <EnhancedLotteryCard
-              key={lottery.address}
-              lottery={lottery}
-              onParticipate={handleLotteryRefresh}
-            />
+            <div key={lottery.address} className="lottery-card">
+              <EnhancedLotteryCard
+                lottery={lottery}
+                onParticipate={handleLotteryRefresh}
+              />
+            </div>
           ))}
           {lotteries && lotteries.length === 0 && !error && (
             <div className="col-span-full text-center py-20">

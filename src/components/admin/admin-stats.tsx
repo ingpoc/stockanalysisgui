@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DollarSign, Users, Trophy, Clock, TrendingUp, Activity } from 'lucide-react'
 import { LotteryInfo } from '@/types/lottery_types'
 import { formatUSDC } from '@/lib/utils'
+import { useCountUp, useStaggeredFadeIn } from '@/hooks/useGSAP'
 
 interface AdminStatsProps {
   lotteries: LotteryInfo[]
@@ -48,6 +49,15 @@ export function AdminStats({ lotteries, isLoading }: AdminStatsProps) {
       totalRevenue
     }
   }, [lotteries])
+
+  // Animation refs
+  const statsRef = useStaggeredFadeIn('.admin-stat-item', 0.3)
+  
+  // Animated counters
+  const lotteriesRef = useCountUp(stats.totalLotteries, '', '', 1)
+  const revenueRef = useCountUp(stats.totalRevenue, '$', '', 1.2)
+  const commissionsRef = useCountUp(stats.totalCommissions, '$', '', 1.4)
+  const ticketsRef = useCountUp(stats.totalTicketsSold, '', '', 1.6)
 
   if (isLoading) {
     return (
@@ -128,35 +138,35 @@ export function AdminStats({ lotteries, isLoading }: AdminStatsProps) {
 
   return (
     <div className="mb-16">
-      {/* Pure Data Grid - Swiss Typography */}
-      <div className="grid grid-cols-4 gap-16 pt-8">
-        <div>
+      {/* Pure Data Grid - Swiss Typography with Animations */}
+      <div ref={statsRef} className="grid grid-cols-4 gap-16 pt-8">
+        <div className="admin-stat-item">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL LOTTERIES</div>
-          <div className="text-3xl font-light text-gray-900 font-mono">
-            {stats.totalLotteries}
+          <div ref={lotteriesRef} className="text-3xl font-light text-gray-900 font-mono">
+            0
           </div>
           <div className="text-xs text-gray-400 mt-1">
             {stats.activeLotteries} active, {stats.completedLotteries} completed
           </div>
         </div>
-        <div>
+        <div className="admin-stat-item">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL REVENUE</div>
-          <div className="text-3xl font-light text-gray-900 font-mono">
-            {formatUSDC(stats.totalRevenue)}
+          <div ref={revenueRef} className="text-3xl font-light text-gray-900 font-mono">
+            $0.00
           </div>
           <div className="text-xs text-gray-400 mt-1">Gross ticket sales</div>
         </div>
-        <div>
+        <div className="admin-stat-item">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">COMMISSION EARNED</div>
-          <div className="text-3xl font-light text-gray-900 font-mono">
-            {formatUSDC(stats.totalCommissions)}
+          <div ref={commissionsRef} className="text-3xl font-light text-gray-900 font-mono">
+            $0.00
           </div>
           <div className="text-xs text-gray-400 mt-1">2% of total revenue</div>
         </div>
-        <div>
+        <div className="admin-stat-item">
           <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TICKETS SOLD</div>
-          <div className="text-3xl font-light text-gray-900 font-mono">
-            {stats.totalTicketsSold.toLocaleString()}
+          <div ref={ticketsRef} className="text-3xl font-light text-gray-900 font-mono">
+            0
           </div>
           <div className="text-xs text-gray-400 mt-1">
             Avg {stats.avgTicketsPerLottery.toFixed(1)} per lottery

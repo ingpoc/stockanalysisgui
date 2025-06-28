@@ -98,7 +98,7 @@ export default function DashboardPage() {
   return (
     <PageContainer>
       {/* Dieter Rams Header - Consistent with lottery page */}
-      <div className="mb-16">
+      <div ref={headerRef} className="mb-16">
         <div className="flex items-baseline justify-between pb-8 border-b border-gray-200">
           <div>
             <h1 className="text-2xl font-light text-gray-900 tracking-wide">
@@ -128,34 +128,32 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        {/* Pure Data Grid - Swiss Typography */}
-        <div className="grid grid-cols-4 gap-16 pt-8">
-          <div>
+        {/* Pure Data Grid - Swiss Typography with Animations */}
+        <div ref={statsRef} className="grid grid-cols-4 gap-16 pt-8">
+          <div className="stat-item">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">USDC BALANCE</div>
-            <div className="text-3xl font-light text-gray-900 font-mono">
-              {userDataLoading ? '—' : `$${userBalance.usdcBalance.toFixed(2)}`}
+            <div ref={balanceRef} className="text-3xl font-light text-gray-900 font-mono">
+              {userDataLoading ? '—' : '$0.00'}
             </div>
           </div>
-          <div>
+          <div className="stat-item">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL TICKETS</div>
-            <div className="text-3xl font-light text-gray-900 font-mono">
-              {userDataLoading ? '—' : userStats.totalTickets}
+            <div ref={ticketsRef} className="text-3xl font-light text-gray-900 font-mono">
+              {userDataLoading ? '—' : '0'}
             </div>
           </div>
-          <div>
+          <div className="stat-item">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">NET POSITION</div>
-            <div className={`text-3xl font-light font-mono ${
+            <div ref={netPositionRef} className={`text-3xl font-light font-mono ${
               userBalance.netPosition >= 0 ? 'text-gray-900' : 'text-red-600'
             }`}>
-              {userDataLoading ? '—' : 
-                `${userBalance.netPosition >= 0 ? '+' : ''}$${Math.abs(userBalance.netPosition).toFixed(2)}`
-              }
+              {userDataLoading ? '—' : '+$0.00'}
             </div>
           </div>
-          <div>
+          <div className="stat-item">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">WINNINGS</div>
-            <div className="text-3xl font-light text-gray-900 font-mono">
-              {userDataLoading ? '—' : `$${userBalance.totalWinnings.toFixed(2)}`}
+            <div ref={winningsRef} className="text-3xl font-light text-gray-900 font-mono">
+              {userDataLoading ? '—' : '$0.00'}
             </div>
           </div>
         </div>
