@@ -2,11 +2,9 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Text } from '@react-three/drei'
-import { HyperRealisticCasino } from './hyper-realistic-casino'
-import { CasinoRouletteTable } from './casino-roulette-table'
-import { DealerModel } from './dealer-model'
-import { EnhancedBettingInterface } from './enhanced-betting-interface'
+import { OrbitControls, Text, Box, Plane } from '@react-three/drei'
+import { MinimalRouletteTable } from './minimal-roulette-table'
+import { CleanBettingInterface } from './clean-betting-interface'
 import { useRouletteAudio } from '@/hooks/useRouletteAudio'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as THREE from 'three'
@@ -117,214 +115,143 @@ export function SimpleRoulette3D({ playerWallet }: SimpleRoulette3DProps) {
     }, 3000)
   }
 
-  const handleDealerAction = (action: 'spin' | 'throw') => {
-    console.log(`Dealer performed action: ${action}`)
-    
-    // Add visual feedback or sound effects based on dealer actions
-    if (action === 'spin') {
-      console.log('Dealer is spinning the wheel...')
-    } else if (action === 'throw') {
-      console.log('Dealer is throwing the ball...')
-    }
-  }
-
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-[600px]">
       {/* 3D Scene */}
-      <Canvas
-        camera={{ 
-          position: [0, 6, 8], 
-          fov: 60
-        }}
-        shadows
-        gl={{ 
-          preserveDrawingBuffer: true,
-          powerPreference: "high-performance",
-          antialias: true
-        }}
-        onCreated={({ gl }) => {
-          gl.domElement.addEventListener('webglcontextlost', (event) => {
-            event.preventDefault()
-            console.log('WebGL context lost, attempting to restore...')
-          })
-          gl.domElement.addEventListener('webglcontextrestored', () => {
-            console.log('WebGL context restored')
-          })
-        }}
-      >
-        {/* Modern Ambient Lighting */}
-        <ambientLight intensity={0.4} color="#F8FAFC" />
-        
-        {/* Main modern ceiling lighting */}
-        <pointLight
-          position={[0, 6.5, 0]}
-          intensity={6}
-          color="#FFFFFF"
-          distance={30}
-          decay={2}
-          castShadow
-          shadow-mapSize-width={4096}
-          shadow-mapSize-height={4096}
-          shadow-camera-near={0.1}
-          shadow-camera-far={50}
-        />
-        
-        {/* Clean table spotlight */}
-        <spotLight
-          position={[0, 4, 0]}
-          intensity={10}
-          angle={Math.PI / 4}
-          penumbra={0.1}
-          color="#FFFFFF"
-          castShadow
-          target-position={[0, 0.6, 0]}
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-        />
-        
-        {/* Modern side lighting */}
-        <pointLight 
-          position={[-12, 3, -8]} 
-          intensity={3} 
-          color="#F8FAFC" 
-          distance={15}
-          decay={2}
-        />
-        <pointLight 
-          position={[12, 3, -8]} 
-          intensity={3} 
-          color="#F8FAFC" 
-          distance={15}
-          decay={2}
-        />
-        <pointLight 
-          position={[-12, 3, 8]} 
-          intensity={3} 
-          color="#F8FAFC" 
-          distance={15}
-          decay={2}
-        />
-        <pointLight 
-          position={[12, 3, 8]} 
-          intensity={3} 
-          color="#F8FAFC" 
-          distance={15}
-          decay={2}
-        />
-        
-        {/* Architectural accent lighting */}
-        <directionalLight
-          position={[0, 10, -10]}
-          intensity={1.5}
-          color="#F5F5DC"
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-        />
-        
-        {/* Rim lighting for depth */}
-        <directionalLight
-          position={[-15, 5, 5]}
-          intensity={0.8}
-          color="#DAA520"
-        />
-        <directionalLight
-          position={[15, 5, 5]}
-          intensity={0.8}
-          color="#DAA520"
-        />
-        
-        {/* Dealer area lighting */}
-        <pointLight
-          position={[-2, 3, 1]}
-          intensity={6}
-          color="#FFFACD"
-          distance={12}
-          decay={1.5}
-          castShadow
-        />
-        
-        {/* Additional dealer spotlight */}
-        <spotLight
-          position={[0, 5, -2]}
-          intensity={12}
-          angle={Math.PI / 3}
-          penumbra={0.3}
-          color="#FFFFFF"
-          castShadow
-          target-position={[0, 0.8, -3]}
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-        />
-        
-        {/* Dealer rim lighting */}
-        <directionalLight
-          position={[3, 4, -3]}
-          intensity={4}
-          color="#F5F5DC"
-          castShadow
-        />
-        
-        {/* Back lighting for dealer */}
-        <pointLight
-          position={[0, 3, -5]}
-          intensity={4}
-          color="#FFE4B5"
-          distance={10}
-          decay={2}
-        />
-        
-        <Suspense fallback={null}>
-          {/* Hyper-Realistic Casino Environment */}
-          <HyperRealisticCasino />
+      <div className="absolute inset-0">
+        <Canvas
+          camera={{ 
+            position: [0, 8, 10], 
+            fov: 50
+          }}
+          shadows
+          gl={{ 
+            preserveDrawingBuffer: true,
+            powerPreference: "high-performance",
+            antialias: true,
+            alpha: true
+          }}
+        >
+          {/* Clean, minimal lighting */}
+          <ambientLight intensity={0.6} color="#FFFFFF" />
           
-          {/* Professional Casino Roulette Table */}
-          <CasinoRouletteTable 
-            isSpinning={isSpinning}
-            winningNumber={winningNumber}
-            selectedNumber={selectedNumber}
-            onDealerAction={handleDealerAction}
+          {/* Soft directional light */}
+          <directionalLight
+            position={[5, 10, 5]}
+            intensity={0.8}
+            color="#FFFFFF"
+            castShadow
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
           />
           
-          {/* 3D Dealer Model */}
-          <DealerModel
-            onAction={handleDealerAction}
-            isSpinning={isSpinning}
-            position={[-2, 0, 1]}
-            rotation={[0, Math.PI / 4, 0]}
-            scale={0.8}
+          {/* Subtle rim light */}
+          <directionalLight
+            position={[-5, 5, -5]}
+            intensity={0.3}
+            color="#E5E7EB"
           />
           
-          {/* Camera Controls */}
-          <OrbitControls
-            enablePan={false}
-            enableZoom={true}
-            enableRotate={true}
-            minDistance={5}
-            maxDistance={15}
-            minPolarAngle={Math.PI / 8}
-            maxPolarAngle={Math.PI / 2.2}
-            target={[0, 1, 0]}
-            autoRotate={false}
-          />
-        </Suspense>
-      </Canvas>
+          <Suspense fallback={null}>
+            {/* Minimal Environment */}
+            <group>
+              {/* Clean floor */}
+              <Plane 
+                args={[50, 50]} 
+                rotation={[-Math.PI / 2, 0, 0]} 
+                position={[0, -0.5, 0]}
+                receiveShadow
+              >
+                <meshStandardMaterial color="#F9FAFB" roughness={0.8} />
+              </Plane>
+              
+              {/* Subtle background */}
+              <Plane 
+                args={[50, 30]} 
+                position={[0, 10, -15]}
+              >
+                <meshStandardMaterial color="#F3F4F6" roughness={1} />
+              </Plane>
+            </group>
+            
+            {/* Minimal Roulette Table */}
+            <MinimalRouletteTable
+              isSpinning={isSpinning}
+              winningNumber={winningNumber}
+              selectedNumber={selectedNumber}
+            />
+            
+            {/* Camera Controls */}
+            <OrbitControls
+              enablePan={false}
+              enableZoom={true}
+              enableRotate={true}
+              minDistance={8}
+              maxDistance={20}
+              minPolarAngle={Math.PI / 6}
+              maxPolarAngle={Math.PI / 2.5}
+              target={[0, 0, 0]}
+              autoRotate={false}
+              autoRotateSpeed={0.5}
+            />
+          </Suspense>
+        </Canvas>
+      </div>
 
-      {/* Enhanced Betting Interface */}
-      <EnhancedBettingInterface
-        selectedChipValue={betAmount}
-        onChipValueChange={setBetAmount}
-        userBalance={userBalance}
-        currentPot={currentPot}
-        isSpinning={isSpinning}
-        onSpin={spinWheel}
-        onClear={clearBets}
-        betsCount={bets.length}
-        winningNumber={winningNumber}
-        onBetPlace={placeBet}
-        bets={bets}
-      />
+      {/* Clean Betting Interface - Overlay style */}
+      <div className="absolute inset-x-0 bottom-0">
+        <CleanBettingInterface
+          selectedChipValue={betAmount}
+          onChipValueChange={setBetAmount}
+          userBalance={userBalance}
+          currentPot={currentPot}
+          isSpinning={isSpinning}
+          onSpin={spinWheel}
+          onClear={clearBets}
+          betsCount={bets.length}
+          winningNumber={winningNumber}
+          onBetPlace={placeBet}
+          bets={bets}
+        />
+      </div>
 
+      {/* Winning Announcement - Minimal Style */}
+      <AnimatePresence>
+        {winningNumber !== null && !isSpinning && (
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 text-center"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">WINNING NUMBER</p>
+              <div className="text-6xl font-light text-gray-900 mb-2">{winningNumber}</div>
+              <p className="text-lg text-gray-600">
+                {winningNumber === 0 ? 'GREEN' : 
+                 RED_NUMBERS.includes(winningNumber) ? 'RED' : 'BLACK'}
+              </p>
+              {bets.some(bet => bet.numbers.includes(winningNumber)) && (
+                <motion.div 
+                  className="mt-4 text-green-600 font-medium"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Congratulations! You won!
+                </motion.div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
