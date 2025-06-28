@@ -17,6 +17,14 @@ import {
 } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
+// Page titles mapping
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard': 'DECENTRALIZED LOTTERY PLATFORM',
+  '/lottery': 'ACTIVE LOTTERIES',
+  '/roulette': 'LUXURY ROULETTE',
+  '/admin': 'ADMIN DASHBOARD'
+}
+
 function SidebarItem({ 
   icon: Icon, 
   label, 
@@ -62,11 +70,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { publicKey } = useWallet()
+  const pathname = usePathname()
   const sidebarRef = useRef<HTMLElement>(null)
   const mainContentRef = useRef<HTMLElement>(null)
   
   // Check if user is admin
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
+  
+  // Get current page title
+  const currentTitle = PAGE_TITLES[pathname] || 'DECENTRALIZED LOTTERY PLATFORM'
 
   // Animate sidebar collapse/expand
   useEffect(() => {
@@ -173,7 +185,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <Menu className="h-4 w-4" />
               </button>
               <div>
-                <div className="text-xs text-gray-400 uppercase tracking-wider">DECENTRALIZED LOTTERY PLATFORM</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">{currentTitle}</div>
               </div>
             </div>
             <div className="flex items-center">

@@ -5,8 +5,20 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text } from '@react-three/drei'
 import { HyperRealisticCasino } from './hyper-realistic-casino'
 import { CasinoRouletteTable } from './casino-roulette-table'
+import { DealerModel } from './dealer-model'
+import { EnhancedBettingInterface } from './enhanced-betting-interface'
+import { useRouletteAudio } from '@/hooks/useRouletteAudio'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as THREE from 'three'
+
+interface Bet {
+  id: string
+  type: 'straight' | 'red' | 'black' | 'odd' | 'even' | 'low' | 'high' | 'dozen1' | 'dozen2' | 'dozen3' | 'column1' | 'column2' | 'column3' | 'neighbors'
+  numbers: number[]
+  amount: number
+  payout: number
+  label: string
+}
 
 interface SimpleRoulette3DProps {
   playerWallet?: string
@@ -23,45 +35,97 @@ export function SimpleRoulette3D({ playerWallet }: SimpleRoulette3DProps) {
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null)
   const [isSpinning, setIsSpinning] = useState(false)
   const [winningNumber, setWinningNumber] = useState<number | null>(null)
-  const [userBalance, setUserBalance] = useState(100)
+  const [userBalance, setUserBalance] = useState(1000) // Increased starting balance
   const [betAmount, setBetAmount] = useState(5)
+  const [bets, setBets] = useState<Bet[]>([])
+  const [currentPot, setCurrentPot] = useState(0)
+  
+  const audio = useRouletteAudio()
 
   const getNumberColor = (num: number) => {
     if (num === 0) return '#059669'
     return RED_NUMBERS.includes(num) ? '#dc2626' : '#1f2937'
   }
 
-  const placeBet = (number: number) => {
-    if (isSpinning || betAmount > userBalance) return
-    setSelectedNumber(number)
-    setUserBalance(prev => prev - betAmount)
+  const placeBet = (bet: Bet) => {
+    if (isSpinning || bet.amount > userBalance) return
+    
+    setBets(prev => [...prev, bet])
+    setCurrentPot(prev => prev + bet.amount)
+    setUserBalance(prev => prev - bet.amount)
+    
+    // If it's a straight bet, also set selectedNumber for visual feedback
+    if (bet.type === 'straight') {
+      setSelectedNumber(bet.numbers[0])
+    }
+  }
+  
+  const clearBets = () => {
+    if (isSpinning) return
+    
+    const totalRefund = bets.reduce((sum, bet) => sum + bet.amount, 0)
+    setUserBalance(prev => prev + totalRefund)
+    setBets([])
+    setCurrentPot(0)
+    setSelectedNumber(null)
   }
 
   const spinWheel = () => {
-    if (isSpinning || selectedNumber === null) return
+    if (isSpinning || bets.length === 0) return
     
     setIsSpinning(true)
     setWinningNumber(null)
+    
+    // Play spinning sound
+    audio.playSpinSound()
+    audio.playDealerVoice("No more bets!")
     
     setTimeout(() => {
       const winner = ROULETTE_NUMBERS[Math.floor(Math.random() * ROULETTE_NUMBERS.length)]
       setWinningNumber(winner)
       
-      if (winner === selectedNumber) {
-        setUserBalance(prev => prev + (betAmount * 35))
+      // Calculate winnings
+      let totalWinnings = 0
+      let hasWon = false
+      
+      bets.forEach(bet => {
+        if (bet.numbers.includes(winner)) {
+          const payout = bet.amount * (bet.payout + 1) // +1 to include original bet
+          totalWinnings += payout
+          hasWon = true
+        }
+      })
+      
+      if (hasWon) {
+        setUserBalance(prev => prev + totalWinnings)
+        audio.playWinSound()
+        audio.playDealerVoice(`Number ${winner} wins! Congratulations!`)
+      } else {
+        audio.playLoseSound()
+        audio.playDealerVoice(`Number ${winner}. Better luck next time!`)
       }
       
       setIsSpinning(false)
       
+      // Clear bets after showing results
       setTimeout(() => {
+        setBets([])
+        setCurrentPot(0)
         setSelectedNumber(null)
         setWinningNumber(null)
-      }, 3000)
+      }, 4000)
     }, 3000)
   }
 
   const handleDealerAction = (action: 'spin' | 'throw') => {
     console.log(`Dealer performed action: ${action}`)
+    
+    // Add visual feedback or sound effects based on dealer actions
+    if (action === 'spin') {
+      console.log('Dealer is spinning the wheel...')
+    } else if (action === 'throw') {
+      console.log('Dealer is throwing the ball...')
+    }
   }
 
   return (
@@ -88,14 +152,14 @@ export function SimpleRoulette3D({ playerWallet }: SimpleRoulette3DProps) {
           })
         }}
       >
-        {/* Hyper-Realistic Casino Lighting */}
-        <ambientLight intensity={0.15} color="#FFF8DC" />
+        {/* Modern Ambient Lighting */}
+        <ambientLight intensity={0.4} color="#F8FAFC" />
         
-        {/* Main dramatic chandelier lighting */}
+        {/* Main modern ceiling lighting */}
         <pointLight
           position={[0, 6.5, 0]}
-          intensity={4}
-          color="#FFD700"
+          intensity={6}
+          color="#FFFFFF"
           distance={30}
           decay={2}
           castShadow
@@ -105,45 +169,45 @@ export function SimpleRoulette3D({ playerWallet }: SimpleRoulette3DProps) {
           shadow-camera-far={50}
         />
         
-        {/* Focused table spotlight */}
+        {/* Clean table spotlight */}
         <spotLight
           position={[0, 4, 0]}
-          intensity={8}
+          intensity={10}
           angle={Math.PI / 4}
           penumbra={0.1}
-          color="#FFFACD"
+          color="#FFFFFF"
           castShadow
           target-position={[0, 0.6, 0]}
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
         
-        {/* Side sconce lighting */}
+        {/* Modern side lighting */}
         <pointLight 
           position={[-12, 3, -8]} 
-          intensity={2} 
-          color="#FFA500" 
+          intensity={3} 
+          color="#F8FAFC" 
           distance={15}
           decay={2}
         />
         <pointLight 
           position={[12, 3, -8]} 
-          intensity={2} 
-          color="#FFA500" 
+          intensity={3} 
+          color="#F8FAFC" 
           distance={15}
           decay={2}
         />
         <pointLight 
           position={[-12, 3, 8]} 
-          intensity={2} 
-          color="#FFA500" 
+          intensity={3} 
+          color="#F8FAFC" 
           distance={15}
           decay={2}
         />
         <pointLight 
           position={[12, 3, 8]} 
-          intensity={2} 
-          color="#FFA500" 
+          intensity={3} 
+          color="#F8FAFC" 
           distance={15}
           decay={2}
         />
@@ -170,6 +234,46 @@ export function SimpleRoulette3D({ playerWallet }: SimpleRoulette3DProps) {
           color="#DAA520"
         />
         
+        {/* Dealer area lighting */}
+        <pointLight
+          position={[-2, 3, 1]}
+          intensity={6}
+          color="#FFFACD"
+          distance={12}
+          decay={1.5}
+          castShadow
+        />
+        
+        {/* Additional dealer spotlight */}
+        <spotLight
+          position={[0, 5, -2]}
+          intensity={12}
+          angle={Math.PI / 3}
+          penumbra={0.3}
+          color="#FFFFFF"
+          castShadow
+          target-position={[0, 0.8, -3]}
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+        />
+        
+        {/* Dealer rim lighting */}
+        <directionalLight
+          position={[3, 4, -3]}
+          intensity={4}
+          color="#F5F5DC"
+          castShadow
+        />
+        
+        {/* Back lighting for dealer */}
+        <pointLight
+          position={[0, 3, -5]}
+          intensity={4}
+          color="#FFE4B5"
+          distance={10}
+          decay={2}
+        />
+        
         <Suspense fallback={null}>
           {/* Hyper-Realistic Casino Environment */}
           <HyperRealisticCasino />
@@ -180,6 +284,15 @@ export function SimpleRoulette3D({ playerWallet }: SimpleRoulette3DProps) {
             winningNumber={winningNumber}
             selectedNumber={selectedNumber}
             onDealerAction={handleDealerAction}
+          />
+          
+          {/* 3D Dealer Model */}
+          <DealerModel
+            onAction={handleDealerAction}
+            isSpinning={isSpinning}
+            position={[-2, 0, 1]}
+            rotation={[0, Math.PI / 4, 0]}
+            scale={0.8}
           />
           
           {/* Camera Controls */}
@@ -197,113 +310,21 @@ export function SimpleRoulette3D({ playerWallet }: SimpleRoulette3DProps) {
         </Suspense>
       </Canvas>
 
-      {/* UI Overlay */}
-      <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm rounded-xl p-6 text-white min-w-[280px]">
-        <div className="space-y-4">
-          {/* Balance */}
-          <div className="text-center">
-            <p className="text-sm text-gray-300">Balance</p>
-            <p className="text-2xl font-bold text-green-400">${userBalance}</p>
-          </div>
+      {/* Enhanced Betting Interface */}
+      <EnhancedBettingInterface
+        selectedChipValue={betAmount}
+        onChipValueChange={setBetAmount}
+        userBalance={userBalance}
+        currentPot={currentPot}
+        isSpinning={isSpinning}
+        onSpin={spinWheel}
+        onClear={clearBets}
+        betsCount={bets.length}
+        winningNumber={winningNumber}
+        onBetPlace={placeBet}
+        bets={bets}
+      />
 
-          {/* Bet Amount */}
-          <div>
-            <p className="text-sm text-gray-300 mb-2">Bet Amount</p>
-            <div className="grid grid-cols-4 gap-2">
-              {[1, 5, 10, 25].map(amount => (
-                <button
-                  key={amount}
-                  onClick={() => setBetAmount(amount)}
-                  disabled={amount > userBalance}
-                  className={`py-2 px-3 rounded font-semibold text-sm ${
-                    betAmount === amount
-                      ? 'bg-yellow-500 text-black'
-                      : 'bg-gray-700 hover:bg-gray-600 text-white'
-                  }`}
-                >
-                  ${amount}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Number Grid */}
-          <div>
-            <p className="text-sm text-gray-300 mb-2">Select Number</p>
-            <div className="grid grid-cols-6 gap-1 text-xs">
-              {Array.from({ length: 36 }, (_, i) => i + 1).map(num => (
-                <button
-                  key={num}
-                  onClick={() => placeBet(num)}
-                  disabled={isSpinning}
-                  className={`h-8 font-bold text-white rounded transition-all ${
-                    getNumberColor(num) === '#dc2626' ? 'bg-red-600' : 'bg-gray-800'
-                  } ${selectedNumber === num ? 'ring-2 ring-yellow-400' : ''} ${
-                    winningNumber === num ? 'ring-2 ring-green-400 animate-pulse' : ''
-                  }`}
-                >
-                  {num}
-                </button>
-              ))}
-            </div>
-            
-            {/* Zero */}
-            <button
-              onClick={() => placeBet(0)}
-              disabled={isSpinning}
-              className={`w-full h-8 mt-2 font-bold text-white rounded bg-green-600 ${
-                selectedNumber === 0 ? 'ring-2 ring-yellow-400' : ''
-              } ${winningNumber === 0 ? 'ring-2 ring-green-400 animate-pulse' : ''}`}
-            >
-              0
-            </button>
-          </div>
-
-          {/* Spin Button */}
-          <button
-            onClick={spinWheel}
-            disabled={isSpinning || selectedNumber === null}
-            className={`w-full py-3 px-4 rounded-lg font-bold ${
-              isSpinning || selectedNumber === null
-                ? 'bg-gray-600 text-gray-400'
-                : 'bg-green-600 hover:bg-green-500 text-white'
-            }`}
-          >
-            {isSpinning ? 'SPINNING...' : selectedNumber !== null ? `SPIN! (Bet $${betAmount} on ${selectedNumber})` : 'SELECT NUMBER'}
-          </button>
-        </div>
-      </div>
-
-      {/* Winning Announcement */}
-      <AnimatePresence>
-        {winningNumber !== null && (
-          <motion.div
-            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-black p-8 rounded-2xl text-center"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-            >
-              <h2 className="text-4xl font-bold mb-4">WINNING NUMBER</h2>
-              <div className="text-8xl font-black mb-4">{winningNumber}</div>
-              <p className="text-xl font-semibold mb-4">
-                {winningNumber === 0 ? 'GREEN' : 
-                 RED_NUMBERS.includes(winningNumber) ? 'RED' : 'BLACK'}
-              </p>
-              {winningNumber === selectedNumber ? (
-                <p className="text-2xl font-bold text-green-800">YOU WIN! +${betAmount * 35}</p>
-              ) : (
-                <p className="text-xl font-semibold text-red-800">Better luck next time!</p>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }

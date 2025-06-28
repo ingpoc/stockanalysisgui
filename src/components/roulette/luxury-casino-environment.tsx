@@ -19,7 +19,9 @@ export function LuxuryCasinoEnvironment() {
       if (crystal) {
         const time = state.clock.elapsedTime
         const sparkle = Math.sin(time * 2 + index * 0.5) * 0.5 + 0.5
-        crystal.material.emissiveIntensity = sparkle * 0.3
+        if ('emissiveIntensity' in crystal.material) {
+          (crystal.material as any).emissiveIntensity = sparkle * 0.3
+        }
       }
     })
   })

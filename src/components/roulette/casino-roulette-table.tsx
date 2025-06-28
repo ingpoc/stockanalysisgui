@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text, Cylinder, Box } from '@react-three/drei'
-import { BeautifulDealer } from './beautiful-dealer'
+import { DealerModel } from './dealer-model'
 import * as THREE from 'three'
 
 const ROULETTE_NUMBERS = [
@@ -129,7 +129,7 @@ export function CasinoRouletteTable({
               {winningNumber === number && (
                 <mesh position={[0, 0.1, 0]}>
                   <cylinderGeometry args={[0.2, 0.2, 0.02, 16]} />
-                  <meshBasicMaterial 
+                  <meshStandardMaterial 
                     color="#FFD700" 
                     transparent 
                     opacity={0.8}
@@ -174,10 +174,13 @@ export function CasinoRouletteTable({
         </mesh>
       ))}
 
-      {/* Beautiful Female Dealer */}
-      <BeautifulDealer 
-        position={[0, 1.8, -4]}
-        animation={dealerAnimation}
+      {/* 3D GLB Dealer Model */}
+      <DealerModel 
+        position={[0, 0.8, -3]}
+        rotation={[0, 0, 0]}
+        scale={1.2}
+        isSpinning={isSpinning}
+        onAction={onDealerAction}
       />
     </group>
   )

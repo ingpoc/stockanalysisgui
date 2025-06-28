@@ -9,32 +9,32 @@ export function HyperRealisticCasino() {
   const groupRef = useRef<THREE.Group>(null)
   
   // Create procedural textures for realistic materials
-  const createCarpetTexture = () => {
+  const createModernFloorTexture = () => {
     const canvas = document.createElement('canvas')
     canvas.width = 512
     canvas.height = 512
     const ctx = canvas.getContext('2d')!
     
-    // Deep red base
-    ctx.fillStyle = '#8B0000'
+    // Light gray base with subtle texture
+    ctx.fillStyle = '#F8F9FA'
     ctx.fillRect(0, 0, 512, 512)
     
-    // Add carpet fiber texture
-    for (let i = 0; i < 5000; i++) {
+    // Add subtle marble-like veining
+    for (let i = 0; i < 100; i++) {
       const x = Math.random() * 512
       const y = Math.random() * 512
-      const alpha = Math.random() * 0.3
-      ctx.fillStyle = `rgba(139, 69, 19, ${alpha})`
-      ctx.fillRect(x, y, 1, 1)
+      const alpha = Math.random() * 0.1 + 0.05
+      ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`
+      ctx.fillRect(x, y, 2, 2)
     }
     
-    // Add golden pattern
-    ctx.strokeStyle = '#DAA520'
-    ctx.lineWidth = 2
+    // Add geometric pattern in light gray
+    ctx.strokeStyle = '#E9ECEF'
+    ctx.lineWidth = 1
     for (let x = 0; x < 512; x += 64) {
       for (let y = 0; y < 512; y += 64) {
         ctx.beginPath()
-        ctx.arc(x + 32, y + 32, 20, 0, Math.PI * 2)
+        ctx.rect(x + 8, y + 8, 48, 48)
         ctx.stroke()
       }
     }
@@ -42,54 +42,54 @@ export function HyperRealisticCasino() {
     return new THREE.CanvasTexture(canvas)
   }
   
-  const createWoodTexture = () => {
+  const createModernWoodTexture = () => {
     const canvas = document.createElement('canvas')
     canvas.width = 512
     canvas.height = 512
     const ctx = canvas.getContext('2d')!
     
-    // Wood grain base
+    // Light wood base with contemporary feel
     const gradient = ctx.createLinearGradient(0, 0, 512, 0)
-    gradient.addColorStop(0, '#8B4513')
-    gradient.addColorStop(0.3, '#A0522D')
-    gradient.addColorStop(0.7, '#8B4513')
-    gradient.addColorStop(1, '#654321')
+    gradient.addColorStop(0, '#F5F5F5')
+    gradient.addColorStop(0.3, '#E8E8E8')
+    gradient.addColorStop(0.7, '#F0F0F0')
+    gradient.addColorStop(1, '#DCDCDC')
     
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, 512, 512)
     
-    // Add wood grain lines
-    for (let i = 0; i < 50; i++) {
-      const y = (i / 50) * 512
-      ctx.strokeStyle = `rgba(101, 67, 33, ${Math.random() * 0.5 + 0.3})`
-      ctx.lineWidth = Math.random() * 3 + 1
+    // Add subtle wood grain lines
+    for (let i = 0; i < 30; i++) {
+      const y = (i / 30) * 512
+      ctx.strokeStyle = `rgba(180, 180, 180, ${Math.random() * 0.3 + 0.1})`
+      ctx.lineWidth = Math.random() * 2 + 0.5
       ctx.beginPath()
-      ctx.moveTo(0, y + Math.sin(y * 0.02) * 10)
-      ctx.lineTo(512, y + Math.sin((y + 100) * 0.02) * 10)
+      ctx.moveTo(0, y + Math.sin(y * 0.02) * 5)
+      ctx.lineTo(512, y + Math.sin((y + 100) * 0.02) * 5)
       ctx.stroke()
     }
     
     return new THREE.CanvasTexture(canvas)
   }
   
-  const createMarbleTexture = () => {
+  const createModernMarbleTexture = () => {
     const canvas = document.createElement('canvas')
     canvas.width = 512
     canvas.height = 512
     const ctx = canvas.getContext('2d')!
     
-    // Marble base
-    ctx.fillStyle = '#F5F5DC'
+    // Pure white marble base
+    ctx.fillStyle = '#FFFFFF'
     ctx.fillRect(0, 0, 512, 512)
     
-    // Add marble veins
-    for (let i = 0; i < 20; i++) {
-      ctx.strokeStyle = `rgba(169, 169, 169, ${Math.random() * 0.4 + 0.1})`
-      ctx.lineWidth = Math.random() * 4 + 1
+    // Add subtle gray veins
+    for (let i = 0; i < 15; i++) {
+      ctx.strokeStyle = `rgba(200, 200, 200, ${Math.random() * 0.2 + 0.1})`
+      ctx.lineWidth = Math.random() * 2 + 1
       ctx.beginPath()
       ctx.moveTo(Math.random() * 512, Math.random() * 512)
       
-      for (let j = 0; j < 10; j++) {
+      for (let j = 0; j < 8; j++) {
         ctx.lineTo(
           Math.random() * 512,
           Math.random() * 512
@@ -101,36 +101,36 @@ export function HyperRealisticCasino() {
     return new THREE.CanvasTexture(canvas)
   }
   
-  const createFeltTexture = () => {
+  const createModernFeltTexture = () => {
     const canvas = document.createElement('canvas')
     canvas.width = 256
     canvas.height = 256
     const ctx = canvas.getContext('2d')!
     
-    // Green felt base
-    ctx.fillStyle = '#0F4C3A'
+    // Sophisticated dark green felt
+    ctx.fillStyle = '#1F2937'
     ctx.fillRect(0, 0, 256, 256)
     
-    // Add felt fiber texture
-    for (let i = 0; i < 3000; i++) {
+    // Add subtle felt fiber texture
+    for (let i = 0; i < 2000; i++) {
       const x = Math.random() * 256
       const y = Math.random() * 256
       const brightness = Math.random() * 0.2 + 0.8
-      ctx.fillStyle = `rgba(${15 * brightness}, ${76 * brightness}, ${58 * brightness}, 0.8)`
+      ctx.fillStyle = `rgba(${31 * brightness}, ${41 * brightness}, ${55 * brightness}, 0.6)`
       ctx.fillRect(x, y, 1, 1)
     }
     
     return new THREE.CanvasTexture(canvas)
   }
   
-  const carpetTexture = useMemo(() => createCarpetTexture(), [])
-  const woodTexture = useMemo(() => createWoodTexture(), [])
-  const marbleTexture = useMemo(() => createMarbleTexture(), [])
-  const feltTexture = useMemo(() => createFeltTexture(), [])
+  const floorTexture = useMemo(() => createModernFloorTexture(), [])
+  const woodTexture = useMemo(() => createModernWoodTexture(), [])
+  const marbleTexture = useMemo(() => createModernMarbleTexture(), [])
+  const feltTexture = useMemo(() => createModernFeltTexture(), [])
   
   // Set texture properties
-  carpetTexture.wrapS = carpetTexture.wrapT = THREE.RepeatWrapping
-  carpetTexture.repeat.set(4, 4)
+  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping
+  floorTexture.repeat.set(4, 4)
   
   woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping
   woodTexture.repeat.set(2, 2)
@@ -143,14 +143,14 @@ export function HyperRealisticCasino() {
 
   return (
     <group ref={groupRef}>
-      {/* Realistic Carpet Floor */}
+      {/* Modern Floor */}
       <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[30, 30, 64, 64]} />
         <meshStandardMaterial 
-          map={carpetTexture}
-          roughness={0.9}
+          map={floorTexture}
+          roughness={0.1}
           metalness={0.0}
-          normalScale={[0.5, 0.5]}
+          normalScale={[0.2, 0.2]}
         />
       </mesh>
 
@@ -177,13 +177,13 @@ export function HyperRealisticCasino() {
           />
         </mesh>
         
-        {/* Crown molding */}
+        {/* Modern trim */}
         <mesh position={[0, 7.8, 0.2]}>
           <boxGeometry args={[30, 0.3, 0.2]} />
           <meshStandardMaterial 
-            color="#FFD700"
-            roughness={0.2}
-            metalness={0.8}
+            color="#E5E7EB"
+            roughness={0.1}
+            metalness={0.1}
           />
         </mesh>
       </group>
@@ -248,8 +248,8 @@ export function HyperRealisticCasino() {
                 <mesh key={j} position={[x, 0, z]} rotation={[0, angle, 0]}>
                   <boxGeometry args={[0.1, 6, 0.05]} />
                   <meshStandardMaterial 
-                    color="#E6E6FA"
-                    roughness={0.3}
+                    color="#F8FAFC"
+                    roughness={0.1}
                     metalness={0.0}
                   />
                 </mesh>
@@ -267,14 +267,14 @@ export function HyperRealisticCasino() {
             />
           </mesh>
           
-          {/* Gold detailing */}
+          {/* Modern accent ring */}
           <mesh position={[0, 1, 0]}>
             <torusGeometry args={[0.9, 0.08, 8, 32]} />
             <meshStandardMaterial 
-              color="#FFD700"
+              color="#9CA3AF"
               roughness={0.1}
-              metalness={0.9}
-              emissive="#B8860B"
+              metalness={0.8}
+              emissive="#6B7280"
               emissiveIntensity={0.1}
             />
           </mesh>
@@ -298,17 +298,17 @@ export function HyperRealisticCasino() {
         <RealisticChair key={i} position={pos} />
       ))}
 
-      {/* Ornate Ceiling */}
+      {/* Modern Ceiling */}
       <mesh position={[0, 8.5, 0]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[30, 24]} />
         <meshStandardMaterial 
-          color="#2F1B14"
-          roughness={0.6}
-          metalness={0.1}
+          color="#F9FAFB"
+          roughness={0.1}
+          metalness={0.0}
         />
       </mesh>
 
-      {/* Ceiling Coffers */}
+      {/* Modern Ceiling Recesses */}
       {Array.from({ length: 5 }).map((_, i) =>
         Array.from({ length: 4 }).map((_, j) => (
           <mesh 
@@ -318,8 +318,8 @@ export function HyperRealisticCasino() {
           >
             <planeGeometry args={[4, 4]} />
             <meshStandardMaterial 
-              color="#1A0E08"
-              roughness={0.8}
+              color="#F3F4F6"
+              roughness={0.1}
               metalness={0.0}
             />
           </mesh>
@@ -380,13 +380,13 @@ function RealisticRouletteTable({ feltTexture, woodTexture }: {
         />
       </mesh>
 
-      {/* Brass Separator */}
+      {/* Modern Metal Separator */}
       <mesh position={[0, 0.7, 0]}>
         <torusGeometry args={[2.8, 0.03, 8, 32]} />
         <meshStandardMaterial 
-          color="#B8860B"
+          color="#9CA3AF"
           roughness={0.1}
-          metalness={0.9}
+          metalness={0.8}
         />
       </mesh>
     </group>
@@ -404,15 +404,15 @@ function RealisticChandelier() {
 
   return (
     <group ref={chandelierRef} position={[0, 6.5, 0]}>
-      {/* Central Hub */}
+      {/* Modern Central Hub */}
       <mesh castShadow>
         <sphereGeometry args={[0.3, 32, 32]} />
         <meshStandardMaterial 
-          color="#FFD700"
+          color="#E5E7EB"
           roughness={0.1}
-          metalness={0.9}
-          emissive="#B8860B"
-          emissiveIntensity={0.2}
+          metalness={0.8}
+          emissive="#9CA3AF"
+          emissiveIntensity={0.1}
         />
       </mesh>
 
@@ -428,9 +428,9 @@ function RealisticChandelier() {
             <mesh castShadow>
               <torusGeometry args={[0.8, 0.05, 8, 16]} />
               <meshStandardMaterial 
-                color="#FFD700"
+                color="#D1D5DB"
                 roughness={0.1}
-                metalness={0.9}
+                metalness={0.8}
               />
             </mesh>
             
@@ -466,27 +466,27 @@ function RealisticChandelier() {
 function RealisticChair({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      {/* Chair Base with Tufted Leather */}
+      {/* Modern Chair Base */}
       <mesh position={[0, 0.4, 0]} castShadow>
         <cylinderGeometry args={[0.8, 0.7, 0.3, 32]} />
         <meshStandardMaterial 
-          color="#8B0000"
-          roughness={0.4}
-          metalness={0.0}
+          color="#374151"
+          roughness={0.2}
+          metalness={0.1}
         />
       </mesh>
       
-      {/* Backrest */}
+      {/* Modern Backrest */}
       <mesh position={[0, 1.2, -0.5]} castShadow>
         <boxGeometry args={[1.4, 1.2, 0.2]} />
         <meshStandardMaterial 
-          color="#8B0000"
-          roughness={0.4}
-          metalness={0.0}
+          color="#374151"
+          roughness={0.2}
+          metalness={0.1}
         />
       </mesh>
       
-      {/* Gold Studs */}
+      {/* Modern Accent Details */}
       {Array.from({ length: 8 }).map((_, i) => {
         const angle = (i / 8) * Math.PI * 2
         const x = Math.cos(angle) * 0.6
@@ -495,9 +495,9 @@ function RealisticChair({ position }: { position: [number, number, number] }) {
           <mesh key={i} position={[x, 0.4, z]}>
             <sphereGeometry args={[0.02, 8, 8]} />
             <meshStandardMaterial 
-              color="#FFD700"
+              color="#9CA3AF"
               roughness={0.1}
-              metalness={0.9}
+              metalness={0.8}
             />
           </mesh>
         )
@@ -511,9 +511,9 @@ function RealisticChair({ position }: { position: [number, number, number] }) {
         <mesh key={i} position={pos} castShadow>
           <cylinderGeometry args={[0.05, 0.05, 0.6, 16]} />
           <meshStandardMaterial 
-            color="#654321"
-            roughness={0.6}
-            metalness={0.0}
+            color="#D1D5DB"
+            roughness={0.2}
+            metalness={0.2}
           />
         </mesh>
       ))}
