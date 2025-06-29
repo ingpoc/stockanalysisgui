@@ -3,11 +3,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { PageContainer } from '@/components/layout/page-container'
-import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
-import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
 import { useAuthNavigation } from '@/lib/navigation'
 import { useLottery } from '@/hooks/useLottery'
 import { useCountUp, useFadeIn, useStaggeredFadeIn } from '@/hooks/useGSAP'
@@ -27,8 +25,6 @@ const EnhancedLotteryCard = dynamic(() =>
 
 export default function LotteryPage() {
   const [isMounted, setIsMounted] = useState(false)
-  const [showInitDialog, setShowInitDialog] = useState(false)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const { connected } = useWallet()
   const navigation = useAuthNavigation()
   const {
@@ -53,7 +49,6 @@ export default function LotteryPage() {
   }, [])
 
   // Animation refs
-  const headerRef = useFadeIn(0.2)
   const statsRef = useStaggeredFadeIn('.lottery-stat-item', 0.4)
   const cardsRef = useStaggeredFadeIn('.lottery-card', 0.6)
   
@@ -72,66 +67,28 @@ export default function LotteryPage() {
 
   return (
     <PageContainer>
-      {/* Dieter Rams Header - Pure Function */}
-      <div ref={headerRef} className="mb-16">
-        <div className="flex items-baseline justify-between pb-8 border-b border-gray-200">
-          <div>
-            <h1 className="text-2xl font-light text-gray-900 tracking-wide">
-              CRYPTO LOTTERY
-            </h1>
-            <p className="text-xs text-gray-400 uppercase tracking-wider mt-2">
-              DECENTRALIZED • SOLANA
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <button 
-              onClick={() => setShowInitDialog(true)}
-              className="px-4 py-2 text-xs text-gray-600 border border-gray-300 hover:border-gray-900 hover:text-gray-900 transition-colors duration-200 uppercase tracking-wider"
-            >
-              INITIALIZE
-            </button>
-            <button 
-              onClick={() => setShowCreateDialog(true)}
-              className="px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider"
-            >
-              CREATE
-            </button>
+      {/* Pure Data Grid - Swiss Typography with Animations */}
+      <div ref={statsRef} className="grid grid-cols-3 gap-16 mb-16">
+        <div className="lottery-stat-item">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">ACTIVE</div>
+          <div ref={activeRef} className="text-3xl font-light text-gray-900 font-mono">
+            0
           </div>
         </div>
-        
-        {/* Pure Data Grid - Swiss Typography with Animations */}
-        <div ref={statsRef} className="grid grid-cols-3 gap-16 pt-8">
-          <div className="lottery-stat-item">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">ACTIVE</div>
-            <div ref={activeRef} className="text-3xl font-light text-gray-900 font-mono">
-              0
-            </div>
+        <div className="lottery-stat-item">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TICKETS</div>
+          <div ref={ticketsRef} className="text-3xl font-light text-gray-900 font-mono">
+            0
           </div>
-          <div className="lottery-stat-item">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TICKETS</div>
-            <div ref={ticketsRef} className="text-3xl font-light text-gray-900 font-mono">
-              0
-            </div>
-          </div>
-          <div className="lottery-stat-item">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">POOL</div>
-            <div ref={poolRef} className="text-3xl font-light text-gray-900 font-mono">
-              $0.00
-            </div>
+        </div>
+        <div className="lottery-stat-item">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">POOL</div>
+          <div ref={poolRef} className="text-3xl font-light text-gray-900 font-mono">
+            $0.00
           </div>
         </div>
       </div>
 
-      <InitializeProgramDialog 
-        open={showInitDialog}
-        onOpenChange={setShowInitDialog}
-      />
-      
-      <CreateLotteryDialog 
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        onSuccess={handleLotteryRefresh}
-      />
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -163,13 +120,7 @@ export default function LotteryPage() {
           {lotteries && lotteries.length === 0 && !error && (
             <div className="col-span-full text-center py-20">
               <div className="max-w-sm mx-auto">
-                <p className="text-gray-500 mb-4">No lotteries found</p>
-                <Button 
-                  onClick={() => setShowCreateDialog(true)}
-                  className="px-6 py-2 text-sm bg-gray-900 hover:bg-gray-800 text-white transition-colors"
-                >
-                  Create First Lottery
-                </Button>
+                <p className="text-gray-500">No lotteries found</p>
               </div>
             </div>
           )}

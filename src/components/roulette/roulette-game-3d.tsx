@@ -10,12 +10,7 @@ import {
 import { Physics } from '@react-three/cannon'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
-import { RouletteTable } from './roulette-table'
-import { ZenGarden } from './zen-garden'
-import { BettingInterface } from './betting-interface'
-import { PlayerAvatars } from './player-avatars'
-import RouletteBall from './roulette-ball'
-import { SimpleRoulette3D } from './simple-roulette-3d'
+import { SimpleRouletteWheel } from './simple-roulette-wheel'
 
 interface RouletteGame3DProps {
   playerWallet?: string
@@ -141,6 +136,10 @@ export function RouletteGame3D({ playerWallet }: RouletteGame3DProps) {
     }))
   }
 
-  // Force 3D zen roulette mode only
-  return <SimpleRoulette3D playerWallet={playerWallet} />
+  // Simple elegant roulette wheel with GSAP animations
+  return (
+    <div className="w-full h-full">
+      <SimpleRouletteWheel playerWallet={playerWallet} />
+    </div>
+  )
 }

@@ -19,22 +19,17 @@ const EnhancedLotteryCard = dynamic(() =>
     ssr: false
   }
 )
-import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
-import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
 import { UserTicketsTable } from '@/components/dashboard/user-tickets-table'
 import { WinningsSummary } from '@/components/dashboard/winnings-summary'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertCircle, Dice6 } from 'lucide-react'
 import { useAuthNavigation } from '@/lib/navigation'
-import { ADMIN_WALLET } from '@/lib/constants'
 import { formatUSDC } from '@/lib/utils'
 import { useCountUp, useFadeIn, useStaggeredFadeIn } from '@/hooks/useGSAP'
 
 export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false)
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [showInitDialog, setShowInitDialog] = useState(false)
   const { connected, publicKey } = useWallet()
   const navigation = useAuthNavigation()
   const { lotteries, isLoading: lotteriesLoading } = useLottery()
@@ -46,10 +41,8 @@ export default function DashboardPage() {
     error: userDataError 
   } = useUserDashboard()
   
-  const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
 
   // Animation refs
-  const headerRef = useFadeIn(0.2)
   const statsRef = useStaggeredFadeIn('.stat-item', 0.4)
   
   // Animated counters
@@ -97,64 +90,32 @@ export default function DashboardPage() {
 
   return (
     <PageContainer>
-      {/* Dieter Rams Header - Consistent with lottery page */}
-      <div ref={headerRef} className="mb-16">
-        <div className="flex items-baseline justify-between pb-8 border-b border-gray-200">
-          <div>
-            <h1 className="text-2xl font-light text-gray-900 tracking-wide">
-              DASHBOARD
-            </h1>
-            <p className="text-xs text-gray-400 uppercase tracking-wider mt-2">
-              YOUR LOTTERY ACTIVITY AND PERFORMANCE OVERVIEW
-            </p>
-          </div>
-          <div className="flex gap-4">
-            {isAdmin && (
-              <>
-                <button 
-                  onClick={() => setShowInitDialog(true)}
-                  className="px-4 py-2 text-xs text-gray-600 border border-gray-300 hover:border-gray-900 hover:text-gray-900 transition-colors duration-200 uppercase tracking-wider"
-                >
-                  INITIALIZE
-                </button>
-                <button 
-                  onClick={() => setShowCreateDialog(true)}
-                  className="px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider"
-                >
-                  CREATE
-                </button>
-              </>
-            )}
+      {/* Pure Data Grid - Swiss Typography with Animations */}
+      <div ref={statsRef} className="grid grid-cols-4 gap-16 mb-16">
+        <div className="stat-item">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">USDC BALANCE</div>
+          <div ref={balanceRef} className="text-3xl font-light text-gray-900 font-mono">
+            {userDataLoading ? '—' : '$0.00'}
           </div>
         </div>
-        
-        {/* Pure Data Grid - Swiss Typography with Animations */}
-        <div ref={statsRef} className="grid grid-cols-4 gap-16 pt-8">
-          <div className="stat-item">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">USDC BALANCE</div>
-            <div ref={balanceRef} className="text-3xl font-light text-gray-900 font-mono">
-              {userDataLoading ? '—' : '$0.00'}
-            </div>
+        <div className="stat-item">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL TICKETS</div>
+          <div ref={ticketsRef} className="text-3xl font-light text-gray-900 font-mono">
+            {userDataLoading ? '—' : '0'}
           </div>
-          <div className="stat-item">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL TICKETS</div>
-            <div ref={ticketsRef} className="text-3xl font-light text-gray-900 font-mono">
-              {userDataLoading ? '—' : '0'}
-            </div>
+        </div>
+        <div className="stat-item">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">NET POSITION</div>
+          <div ref={netPositionRef} className={`text-3xl font-light font-mono ${
+            userBalance.netPosition >= 0 ? 'text-gray-900' : 'text-red-600'
+          }`}>
+            {userDataLoading ? '—' : '+$0.00'}
           </div>
-          <div className="stat-item">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">NET POSITION</div>
-            <div ref={netPositionRef} className={`text-3xl font-light font-mono ${
-              userBalance.netPosition >= 0 ? 'text-gray-900' : 'text-red-600'
-            }`}>
-              {userDataLoading ? '—' : '+$0.00'}
-            </div>
-          </div>
-          <div className="stat-item">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">WINNINGS</div>
-            <div ref={winningsRef} className="text-3xl font-light text-gray-900 font-mono">
-              {userDataLoading ? '—' : '$0.00'}
-            </div>
+        </div>
+        <div className="stat-item">
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">WINNINGS</div>
+          <div ref={winningsRef} className="text-3xl font-light text-gray-900 font-mono">
+            {userDataLoading ? '—' : '$0.00'}
           </div>
         </div>
       </div>
@@ -312,15 +273,7 @@ export default function DashboardPage() {
               {lotteries && lotteries.length === 0 && (
                 <div className="col-span-full text-center py-20">
                   <div className="max-w-sm mx-auto">
-                    <p className="text-gray-500 mb-4">No lotteries available</p>
-                    {isAdmin && (
-                      <button 
-                        onClick={() => setShowCreateDialog(true)}
-                        className="px-6 py-2 text-sm bg-gray-900 hover:bg-gray-800 text-white transition-colors"
-                      >
-                        Create First Lottery
-                      </button>
-                    )}
+                    <p className="text-gray-500">No lotteries available</p>
                   </div>
                 </div>
               )}
@@ -329,16 +282,6 @@ export default function DashboardPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Dialogs */}
-      <CreateLotteryDialog 
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-      />
-      
-      <InitializeProgramDialog
-        open={showInitDialog}
-        onOpenChange={setShowInitDialog}
-      />
     </PageContainer>
   )
 }

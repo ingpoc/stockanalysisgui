@@ -21,6 +21,13 @@ export const GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_GLOBAL_CONFIG_SEED || 
 export const LOTTERY_SEED = process.env.NEXT_PUBLIC_LOTTERY_SEED || 'lottery'
 export const LOTTERY_TOKEN_SEED = process.env.NEXT_PUBLIC_LOTTERY_TOKEN_SEED || 'lottery_token'
 
+// Roulette Program Configuration
+export const ROULETTE_PROGRAM_ID = process.env.NEXT_PUBLIC_ROULETTE_PROGRAM_ID || '4ZVg5wU59Tr6pKAfxkTFsF2cffGrVRM2xqt1WbPUJrUB'
+export const ROULETTE_GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_ROULETTE_GLOBAL_CONFIG_SEED || 'global_config_v2'
+export const ROULETTE_SEED = process.env.NEXT_PUBLIC_ROULETTE_SEED || 'roulette'
+export const ROULETTE_BET_SEED = process.env.NEXT_PUBLIC_ROULETTE_BET_SEED || 'bet'
+export const ROULETTE_TOKEN_SEED = process.env.NEXT_PUBLIC_ROULETTE_TOKEN_SEED || 'roulette_token'
+
 // Application Configuration
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 export const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID || ''

@@ -19,9 +19,9 @@ import { usePathname, useRouter } from "next/navigation"
 
 // Page titles mapping
 const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'DECENTRALIZED LOTTERY PLATFORM',
-  '/lottery': 'ACTIVE LOTTERIES',
-  '/roulette': 'LUXURY ROULETTE',
+  '/dashboard': 'DASHBOARD',
+  '/lottery': 'CRYPTO LOTTERY',
+  '/roulette': 'ROULETTE',
   '/admin': 'ADMIN DASHBOARD'
 }
 
@@ -185,7 +185,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <Menu className="h-4 w-4" />
               </button>
               <div>
-                <div className="text-xs text-gray-400 uppercase tracking-wider">{currentTitle}</div>
+                <h1 className="text-2xl font-light text-gray-900 tracking-wide">{currentTitle}</h1>
               </div>
             </div>
             <div className="flex items-center">

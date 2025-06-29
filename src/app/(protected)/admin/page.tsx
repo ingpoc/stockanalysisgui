@@ -12,9 +12,13 @@ import { ADMIN_WALLET } from '@/lib/constants'
 import { AdminLotteryTable } from '@/components/admin/admin-lottery-table'
 import { TreasuryDashboard } from '@/components/admin/treasury-dashboard'
 import { AdminStats } from '@/components/admin/admin-stats'
+import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog'
+import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog'
 
 export default function AdminPage() {
   const [isMounted, setIsMounted] = useState(false)
+  const [showInitDialog, setShowInitDialog] = useState(false)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
   const { connected, publicKey } = useWallet()
   const navigation = useAuthNavigation()
   const {
@@ -57,16 +61,25 @@ export default function AdminPage() {
 
   return (
     <PageContainer>
-      {/* Dieter Rams Header - Consistent with other pages */}
+      {/* Admin Controls */}
       <div className="mb-16">
-        <div className="flex items-baseline justify-between pb-8 border-b border-gray-200">
+        <div className="flex items-center justify-between pb-8 border-b border-gray-200">
           <div>
-            <h1 className="text-2xl font-light text-gray-900 tracking-wide">
-              ADMIN DASHBOARD
-            </h1>
-            <p className="text-xs text-gray-400 uppercase tracking-wider mt-2">
-              LOTTERY MANAGEMENT & TREASURY OVERVIEW
-            </p>
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-4">ADMIN CONTROLS</div>
+            <div className="flex gap-4">
+              <button 
+                onClick={() => setShowInitDialog(true)}
+                className="px-4 py-2 text-xs text-gray-600 border border-gray-300 hover:border-gray-900 hover:text-gray-900 transition-colors duration-200 uppercase tracking-wider"
+              >
+                INITIALIZE
+              </button>
+              <button 
+                onClick={() => setShowCreateDialog(true)}
+                className="px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider"
+              >
+                CREATE
+              </button>
+            </div>
           </div>
           <div className="text-right">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">ADMIN WALLET</div>
@@ -102,6 +115,16 @@ export default function AdminPage() {
           <AdminLotteryTable lotteries={lotteries || []} isLoading={isLoading} />
         </div>
       </div>
+
+      {/* Dialog Components */}
+      <InitializeProgramDialog 
+        open={showInitDialog} 
+        onOpenChange={setShowInitDialog} 
+      />
+      <CreateLotteryDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+      />
     </PageContainer>
   )
 }

@@ -3,13 +3,28 @@
 import { useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useAuthNavigation } from '@/lib/navigation'
+import { PageContainer } from '@/components/layout/page-container'
 import { RouletteGameWrapper } from '@/components/roulette/roulette-game-wrapper'
-import { Activity, TrendingUp, Clock, Trophy } from 'lucide-react'
+import { useRoulette } from '@/hooks/useRoulette'
+import { useRouletteProgram } from '@/hooks/use-roulette-program'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Activity, TrendingUp, Clock, Trophy, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function RoulettePage() {
   const [isMounted, setIsMounted] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(false)
   const { connected, publicKey } = useWallet()
   const navigation = useAuthNavigation()
+  
+  const {
+    roulettes,
+    isLoading,
+    error,
+    createRoulette,
+    isCreating
+  } = useRoulette()
 
   useEffect(() => {
     setIsMounted(true)
@@ -26,100 +41,138 @@ export default function RoulettePage() {
     return null
   }
 
-  if (!connected) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-6 py-12">
-          <div className="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-            <h1 className="text-2xl font-light text-gray-900 tracking-wide mb-2">
-              ROULETTE
-            </h1>
-            <p className="text-sm text-gray-500 uppercase tracking-wider mb-6">
-              DECENTRALIZED • SOLANA
-            </p>
-            <p className="text-gray-600 mb-8">
-              Connect your wallet to start playing
-            </p>
-          </div>
-        </div>
-      </div>
-    )
+  // Calculate real stats from blockchain data
+  const activePlayers = roulettes?.reduce((sum, roulette) => sum + roulette.totalPlayers, 0) || 0
+  const totalPot = roulettes?.reduce((sum, roulette) => sum + (roulette.totalBetAmount / 1_000_000), 0) || 0
+  const lastWinner = roulettes?.find(r => r.winningNumber !== null)?.winningNumber || null
+  const activeGames = roulettes?.filter(r => r.state === 'Open' || r.state === 'Locked').length || 0
+
+  const handleCreateRoulette = async () => {
+    try {
+      const nonce = Date.now() + Math.floor(Math.random() * 1000)
+      await createRoulette({
+        rouletteType: { european: {} } as any,
+        minBet: 1_000_000, // 1 USDC in smallest unit
+        maxBet: 100_000_000, // 100 USDC in smallest unit
+        gameDuration: 300, // 5 minutes
+        nonce
+      })
+      toast.success('Roulette game created successfully!')
+    } catch (error) {
+      console.error('Failed to create roulette:', error)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-light text-gray-900 tracking-wide">
-                ROULETTE
-              </h1>
-              <p className="text-sm text-gray-500 uppercase tracking-wider">
-                DECENTRALIZED • SOLANA
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
-                INITIALIZE
-              </button>
-              <button className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
-                CREATE
-              </button>
-            </div>
-          </div>
+    <PageContainer>
+      {/* Header with Create Button */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-light text-gray-900">Roulette</h1>
+        <Button onClick={handleCreateRoulette} disabled={isCreating}>
+          <Plus className="w-4 h-4 mr-2" />
+          {isCreating ? 'Creating...' : 'Create Game'}
+        </Button>
+      </div>
+
+      {/* Stats Grid - Real blockchain data */}
+      <div className="grid grid-cols-4 gap-16 mb-16">
+        <div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">ACTIVE PLAYERS</div>
+          <div className="text-3xl font-light text-gray-900 font-mono">{activePlayers}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">TOTAL POT</div>
+          <div className="text-3xl font-light text-gray-900 font-mono">${totalPot.toFixed(2)}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">LAST WINNER</div>
+          <div className="text-3xl font-light text-gray-900 font-mono">{lastWinner || '--'}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">ACTIVE GAMES</div>
+          <div className="text-3xl font-light text-gray-900 font-mono">{activeGames}</div>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">ACTIVE PLAYERS</p>
-                <p className="text-2xl font-light text-gray-900 mt-1">12</p>
-              </div>
-              <Activity className="w-5 h-5 text-gray-400" />
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">TOTAL POT</p>
-                <p className="text-2xl font-light text-gray-900 mt-1">$2,450</p>
-              </div>
-              <TrendingUp className="w-5 h-5 text-gray-400" />
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">LAST WINNER</p>
-                <p className="text-2xl font-light text-gray-900 mt-1">23</p>
-              </div>
-              <Trophy className="w-5 h-5 text-gray-400" />
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">TIME TO NEXT</p>
-                <p className="text-2xl font-light text-gray-900 mt-1">2:45</p>
-              </div>
-              <Clock className="w-5 h-5 text-gray-400" />
-            </div>
-          </div>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-8">
+          <div className="text-gray-500">Loading roulette games...</div>
         </div>
-      </div>
+      )}
 
-      {/* Game Container */}
-      <div className="container mx-auto px-6 pb-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <RouletteGameWrapper playerWallet={publicKey?.toBase58()} />
+      {/* Error State */}
+      {error && (
+        <div className="text-center py-8">
+          <div className="text-red-500">Error loading roulette games: {error.message}</div>
         </div>
+      )}
+
+      {/* Roulette Games List */}
+      {roulettes && roulettes.length > 0 && (
+        <div className="grid gap-6 mb-8">
+          {roulettes.map((roulette, index) => (
+            <Card key={index} className="border-gray-200">
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <span>Roulette #{index + 1}</span>
+                  <span className={`px-2 py-1 rounded text-sm ${
+                    roulette.state === 'Open' ? 'bg-green-100 text-green-800' :
+                    roulette.state === 'Locked' ? 'bg-yellow-100 text-yellow-800' :
+                    roulette.state === 'Spinning' ? 'bg-blue-100 text-blue-800' :
+                    roulette.state === 'Completed' ? 'bg-gray-100 text-gray-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {roulette.state}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-500">Type</div>
+                    <div className="font-medium">{Object.keys(roulette.rouletteType || {})[0]?.charAt(0).toUpperCase() + Object.keys(roulette.rouletteType || {})[0]?.slice(1) || 'European'}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500">Min/Max Bet</div>
+                    <div className="font-medium">${(roulette.minBet / 1_000_000).toFixed(2)} - ${(roulette.maxBet / 1_000_000).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500">Total Bets</div>
+                    <div className="font-medium">{roulette.totalBets}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500">Pot Size</div>
+                    <div className="font-medium">${(roulette.totalBetAmount / 1_000_000).toFixed(2)}</div>
+                  </div>
+                  {roulette.winningNumber !== null && (
+                    <div>
+                      <div className="text-gray-500">Winning Number</div>
+                      <div className="font-medium text-green-600">{roulette.winningNumber}</div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {roulettes && roulettes.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-4">No roulette games found</div>
+          <Button onClick={handleCreateRoulette} disabled={isCreating}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create First Game
+          </Button>
+        </div>
+      )}
+
+      {/* 3D Roulette Game - Keep existing for visual appeal */}
+      <div className="h-[600px] mt-8">
+        <RouletteGameWrapper playerWallet={publicKey?.toBase58()} />
       </div>
-    </div>
+    </PageContainer>
   )
 }
