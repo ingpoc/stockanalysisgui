@@ -28,7 +28,7 @@ export function LotteryCard({ lottery, onParticipate }: LotteryCardProps) {
   const [loading, setLoading] = useState(false)
   const { publicKey, wallet } = useWallet()
   const { connection } = useConnection()
-  const isActive = lottery.state === 'Open'
+  const isActive = lottery.state.toLowerCase() === 'open'
   const isEnded = new Date(lottery.drawTime * 1000) < new Date()
   const isWinner = lottery.winningNumbers && publicKey?.toBase58() === lottery.createdBy
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET

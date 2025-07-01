@@ -210,7 +210,9 @@ export default function DashboardPage() {
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-sm font-mono text-gray-600">#{ticket.ticketId}</span>
-                      <span className="text-sm text-gray-600 capitalize">{ticket.lotteryType}</span>
+                      <span className="text-sm text-gray-600 capitalize">
+                        {ticket.lotteryType}
+                      </span>
                       {ticket.isWinner && (
                         <span className="text-xs text-green-600 uppercase tracking-wider">WINNER</span>
                       )}

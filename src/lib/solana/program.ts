@@ -106,21 +106,8 @@ export class LotteryProgram {
       console.log("Global config initialized successfully");
     }
 
-    // Convert lottery type to enum format
-    let lotteryTypeEnum: any;
-    switch (lotteryType) {
-      case 'Daily':
-        lotteryTypeEnum = { daily: {} };
-        break;
-      case 'Weekly':
-        lotteryTypeEnum = { weekly: {} };
-        break;
-      case 'Monthly':
-        lotteryTypeEnum = { monthly: {} };
-        break;
-      default:
-        throw new Error('Invalid lottery type');
-    }
+    // The lotteryType parameter is already in discriminated union format
+    const lotteryTypeEnum = lotteryType;
 
     // Generate a unique nonce for this lottery (using timestamp + random)
     const nonce = Date.now() + Math.floor(Math.random() * 1000);
@@ -278,7 +265,7 @@ export class LotteryProgram {
     }
   }
 
-  async transitionState(lotteryPubkey: PublicKey, nextState: ProgramLotteryState): Promise<TransactionSignature> {
+  async transitionState(lotteryPubkey: PublicKey, nextState: string): Promise<TransactionSignature> {
     if (!this.program.provider.publicKey) {
       throw new Error("Wallet not connected")
     }
@@ -309,7 +296,7 @@ export class LotteryProgram {
     // Let the smart contract handle all validation
 
     // Provide specific error messages for common invalid transitions
-    if (lotteryAccount.state.open && nextState === 'Drawing') {
+    if ('open' in lotteryAccount.state && nextState === 'Drawing') {
       if (currentTime < drawTime) {
         const timeUntilDraw = drawTime - currentTime;
         const hours = Math.floor(timeUntilDraw / 3600);
@@ -586,14 +573,14 @@ export class LotteryProgram {
     }
   }
 
-  private convertLotteryType(type: any): ProgramLotteryType {
+  private convertLotteryType(type: any): string {
     if ('daily' in type) return 'Daily';
     if ('weekly' in type) return 'Weekly';
     if ('monthly' in type) return 'Monthly';
     throw new Error('Unknown lottery type');
   }
 
-  private convertLotteryState(state: any): ProgramLotteryState {
+  private convertLotteryState(state: any): string {
     if ('created' in state) return 'Created';
     if ('open' in state) return 'Open';
     if ('locked' in state) return 'Locked';

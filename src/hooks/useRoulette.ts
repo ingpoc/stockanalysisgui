@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { RouletteProgram, RouletteType, BetType } from '@/lib/solana/roulette-program'
-import type { RouletteAccount } from '@/lib/solana/roulette-program'
+import { RouletteProgram } from '@/lib/solana/roulette-program'
+import { RouletteType, BetType, RouletteAccount } from '@/types/generated/enhanced-types'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { useWallet } from './useWallet'
 import { PublicKey } from '@solana/web3.js'
@@ -11,14 +11,7 @@ import { handleProgramError } from '@/lib/utils'
 
 // Extended roulette type with UI fields
 interface RouletteWithMetadata extends RouletteAccount {
-  totalPlayers: number
-  totalBetAmount: number
-  winningNumber: number | null
-  state: string
-  rouletteType: any
-  minBet: number
-  maxBet: number
-  totalBets: number
+  // Additional UI fields (extending, not overriding)
 }
 
 export function useRoulette() {
@@ -34,29 +27,45 @@ export function useRoulette() {
 
   const program = anchorWallet ? new RouletteProgram(connection, anchorWallet) : null
 
-  // Get all roulette games
-  const { data: roulettes, isLoading, error } = useQuery<RouletteWithMetadata[], Error>({
-    queryKey: ['roulettes', publicKey],
+  // Check if program is initialized
+  const { data: isInitialized } = useQuery({
+    queryKey: ['roulette-initialized', publicKey],
     queryFn: async () => {
-      if (!program) throw new Error('Wallet not connected')
-      const accounts = await program.getAllRouletteAccounts()
-      
-      // Map accounts to include UI-friendly fields
-      return accounts.map((account: any) => ({
-        ...account,
-        totalPlayers: account.totalBets?.toNumber() || 0,
-        totalBetAmount: account.totalBetAmount?.toNumber() || 0,
-        winningNumber: account.winningNumber !== undefined ? account.winningNumber : null,
-        state: account.state ? Object.keys(account.state)[0] : 'unknown',
-        // Access nested properties safely
-        rouletteType: account.rouletteType || { european: {} },
-        minBet: account.minBet?.toNumber() || 0,
-        maxBet: account.maxBet?.toNumber() || 0,
-        totalBets: account.totalBets?.toNumber() || 0,
-      }))
+      if (!program) return false
+      return program.isInitialized()
     },
     enabled: !!program,
-    staleTime: 30000
+    staleTime: 60000 // Cache for 1 minute
+  })
+
+  // Get all roulette games
+  const { data: roulettes, isLoading, error } = useQuery<RouletteWithMetadata[], Error>({
+    queryKey: ['roulettes', publicKey, isInitialized],
+    queryFn: async () => {
+      if (!program) throw new Error('Wallet not connected')
+      if (!isInitialized) {
+        console.log('Program not initialized, returning empty array')
+        return []
+      }
+      
+      try {
+        console.log('Fetching roulette accounts...')
+        const accounts = await program.getAllRouletteAccounts()
+        console.log('Found roulette accounts:', accounts.length)
+        
+        // Map accounts to include UI-friendly fields (using correct snake_case property names)
+        return accounts.map((account: any) => ({
+          ...account,
+          // Use the actual property names from the Solana account
+        }))
+      } catch (error) {
+        console.error('Error in roulette query:', error)
+        throw error
+      }
+    },
+    enabled: !!program && isInitialized !== false,
+    staleTime: 30000,
+    retry: 1
   })
 
   // Initialize roulette program (admin only)
@@ -218,6 +227,7 @@ export function useRoulette() {
     roulettes,
     isLoading,
     error,
+    isInitialized,
     initialize: initialize.mutateAsync,
     createRoulette: createRoulette.mutateAsync,
     placeBet: placeBet.mutateAsync,

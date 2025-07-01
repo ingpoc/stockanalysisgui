@@ -32,25 +32,30 @@ export function AdminLotteryControls({ lottery, onStateChange }: AdminLotteryCon
 
   // Map capitalized states to the correct format for useLottery hook
   const mapStateToEnum = (state: string): LotteryState => {
-    return state as LotteryState
+    return state as unknown as LotteryState
   }
 
   const getAvailableStates = () => {
+    // Extract state key from discriminated union
+    const stateKey = typeof lottery.state === 'object' && lottery.state 
+      ? Object.keys(lottery.state)[0] 
+      : String(lottery.state)
+    
     // These MUST match the smart contract's can_transition_to method
-    switch (lottery.state) {
-      case 'Created':
+    switch (stateKey.toLowerCase()) {
+      case 'created':
         return ['Open', 'Cancelled']
-      case 'Open':
+      case 'open':
         return ['Locked', 'Cancelled']  // Smart contract does NOT allow Open → Drawing
-      case 'Locked':
+      case 'locked':
         return ['Drawing', 'Cancelled']
-      case 'Drawing':
+      case 'drawing':
         return ['AwaitingRandomness', 'Expired', 'Cancelled']
-      case 'AwaitingRandomness':
+      case 'awaitingrandomness':
         return ['Completed', 'Expired', 'Cancelled']
-      case 'Completed':
-      case 'Expired':
-      case 'Cancelled':
+      case 'completed':
+      case 'expired':
+      case 'cancelled':
         return []  // Terminal states
       default:
         return []

@@ -52,15 +52,24 @@ export function AdminLotteryTable({ lotteries, isLoading }: AdminLotteryTablePro
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(lottery => 
-        lottery.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lottery.lotteryType.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      filtered = filtered.filter(lottery => {
+        const lotteryTypeKey = typeof lottery.lotteryType === 'object' && lottery.lotteryType 
+          ? Object.keys(lottery.lotteryType)[0] 
+          : String(lottery.lotteryType)
+        
+        return lottery.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               lotteryTypeKey.toLowerCase().includes(searchTerm.toLowerCase())
+      })
     }
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(lottery => lottery.state === statusFilter)
+      filtered = filtered.filter(lottery => {
+        const stateKey = typeof lottery.state === 'object' && lottery.state 
+          ? Object.keys(lottery.state)[0] 
+          : String(lottery.state)
+        return stateKey.toLowerCase() === statusFilter.toLowerCase()
+      })
     }
 
     // Apply sorting
@@ -82,30 +91,36 @@ export function AdminLotteryTable({ lotteries, isLoading }: AdminLotteryTablePro
     return filtered
   }, [lotteries, searchTerm, statusFilter, sortBy])
 
-  const getStatusBadge = (state: string) => {
+  const getStatusBadge = (state: any) => {
+    // Extract state key from discriminated union
+    const stateKey = typeof state === 'object' && state 
+      ? Object.keys(state)[0] 
+      : String(state)
+    
     const statusConfig = {
-      'Open': { variant: 'default' as const, icon: CheckCircle2, color: 'text-green-600' },
-      'Locked': { variant: 'secondary' as const, icon: Pause, color: 'text-yellow-600' },
-      'Drawing': { variant: 'default' as const, icon: Clock, color: 'text-blue-600' },
-      'AwaitingRandomness': { variant: 'outline' as const, icon: Clock, color: 'text-purple-600' },
-      'Completed': { variant: 'default' as const, icon: Trophy, color: 'text-emerald-600' },
-      'Expired': { variant: 'destructive' as const, icon: AlertCircle, color: 'text-red-600' },
-      'Cancelled': { variant: 'destructive' as const, icon: AlertCircle, color: 'text-red-600' },
+      'open': { variant: 'default' as const, icon: CheckCircle2, color: 'text-green-600' },
+      'locked': { variant: 'secondary' as const, icon: Pause, color: 'text-yellow-600' },
+      'drawing': { variant: 'default' as const, icon: Clock, color: 'text-blue-600' },
+      'awaitingRandomness': { variant: 'outline' as const, icon: Clock, color: 'text-purple-600' },
+      'completed': { variant: 'default' as const, icon: Trophy, color: 'text-emerald-600' },
+      'expired': { variant: 'destructive' as const, icon: AlertCircle, color: 'text-red-600' },
+      'cancelled': { variant: 'destructive' as const, icon: AlertCircle, color: 'text-red-600' },
     }
 
-    const config = statusConfig[state as keyof typeof statusConfig] || statusConfig['Open']
+    const config = statusConfig[stateKey.toLowerCase() as keyof typeof statusConfig] || statusConfig['open']
     const IconComponent = config.icon
 
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <IconComponent className={`h-3 w-3 ${config.color}`} />
-        {state}
+        <span className="capitalize">{stateKey}</span>
       </Badge>
     )
   }
 
   const getWinnerDisplay = (lottery: LotteryInfo) => {
-    if (lottery.state !== 'Completed' || !lottery.winningNumbers) {
+    const isCompleted = typeof lottery.state === 'object' && lottery.state && 'completed' in lottery.state
+    if (!isCompleted || !lottery.winningNumbers) {
       return <span className="text-gray-400">—</span>
     }
 
@@ -231,7 +246,11 @@ export function AdminLotteryTable({ lotteries, isLoading }: AdminLotteryTablePro
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-gray-400" />
-                          <span className="capitalize">{lottery.lotteryType}</span>
+                          <span className="capitalize">
+                            {typeof lottery.lotteryType === 'object' && lottery.lotteryType 
+                              ? Object.keys(lottery.lotteryType)[0] 
+                              : String(lottery.lotteryType)}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>

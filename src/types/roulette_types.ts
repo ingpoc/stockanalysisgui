@@ -46,5 +46,26 @@ export interface RouletteAccountExtended {
   state: string;
 }
 
+// ===== ROULETTE DISPLAY HELPERS =====
+
+// Helper to get string representation of discriminated union state
+export function getRouletteStateString(state: any): string {
+  if (typeof state === 'object' && state) {
+    return Object.keys(state)[0];
+  }
+  return String(state);
+}
+
+// Helper to get display name for state (capitalized)
+export function getRouletteStateDisplayName(state: any): string {
+  const stateStr = getRouletteStateString(state);
+  return stateStr.charAt(0).toUpperCase() + stateStr.slice(1);
+}
+
+// Helper to check if state matches a specific value
+export function isRouletteStateEqual(state: any, target: string): boolean {
+  return getRouletteStateString(state).toLowerCase() === target.toLowerCase();
+}
+
 // Export the main type for compatibility
 export type { DecentralizedRoulette };

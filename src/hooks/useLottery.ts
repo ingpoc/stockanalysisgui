@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { LotteryProgram } from '@/lib/solana/program'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { useWallet } from './useWallet'
-import { LotteryType, LotteryInfo, LotteryState } from '@/types/lottery_types'
+import { LotteryType, LotteryInfo, LotteryState, getStateString } from '@/types/lottery_types'
 import { PublicKey } from '@solana/web3.js'
 import type { AnchorWallet } from '@solana/wallet-adapter-react'
 import { toast } from 'sonner'
@@ -107,8 +107,9 @@ export function useLottery() {
       if (!program) throw new Error('Wallet not connected')
       const lotteryPubkey = new PublicKey(lotteryAddress)
       
-      // State is already in the correct format ('Created', 'Open', etc.)
-      return program.transitionState(lotteryPubkey, newState)
+      // Convert state to string format
+      const stateString = getStateString(newState);
+      return program.transitionState(lotteryPubkey, stateString)
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lotteries', publicKey] })

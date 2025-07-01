@@ -4,54 +4,20 @@
     "name": "decentralized_roulette",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "Decentralized Roulette Game"
+    "description": "Created with Anchor"
   },
   "instructions": [
     {
-      "name": "initialize",
+      "name": "cancel_roulette",
       "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
-      "accounts": [
-        {
-          "name": "global_config",
-          "writable": true
-        },
-        {
-          "name": "authority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "usdc_mint"
-        },
-        {
-          "name": "treasury_token_account"
-        },
-        {
-          "name": "system_program"
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "create_roulette",
-      "discriminator": [
-        101,
-        245,
-        184,
-        13,
-        187,
-        206,
-        27,
-        229
+        213,
+        17,
+        39,
+        21,
+        111,
+        165,
+        105,
+        234
       ],
       "accounts": [
         {
@@ -59,7 +25,197 @@
           "writable": true
         },
         {
-          "name": "global_config"
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Only the global authority can cancel roulettes"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "roulette_token_account",
+          "writable": true
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "reason",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "claim_winnings",
+      "discriminator": [
+        161,
+        215,
+        24,
+        59,
+        14,
+        236,
+        242,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "roulette",
+          "writable": true
+        },
+        {
+          "name": "bet",
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "claimer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "claimer_token_account",
+          "writable": true
+        },
+        {
+          "name": "roulette_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_roulette",
+      "discriminator": [
+        76,
+        240,
+        229,
+        18,
+        219,
+        48,
+        201,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "roulette",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  108,
+                  101,
+                  116,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "creator",
@@ -75,16 +231,45 @@
         },
         {
           "name": "roulette_token_account",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  111,
+                  117,
+                  108,
+                  101,
+                  116,
+                  116,
+                  101,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "roulette"
+              }
+            ]
+          }
         },
         {
           "name": "token_program"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
-          "name": "rent"
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
@@ -115,16 +300,132 @@
       ]
     },
     {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "lock_betting",
+      "discriminator": [
+        9,
+        125,
+        7,
+        62,
+        99,
+        72,
+        131,
+        204
+      ],
+      "accounts": [
+        {
+          "name": "roulette",
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "caller",
+          "docs": [
+            "Anyone can call this instruction when the betting period ends"
+          ],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "place_bet",
       "discriminator": [
-        45,
-        110,
-        214,
-        12,
-        60,
-        102,
-        123,
-        37
+        222,
+        62,
+        67,
+        220,
+        63,
+        166,
+        126,
+        33
       ],
       "accounts": [
         {
@@ -133,10 +434,60 @@
         },
         {
           "name": "bet",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "roulette"
+              },
+              {
+                "kind": "account",
+                "path": "bettor"
+              },
+              {
+                "kind": "account",
+                "path": "roulette.total_bets",
+                "account": "RouletteAccount"
+              }
+            ]
+          }
         },
         {
-          "name": "global_config"
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "bettor",
@@ -158,7 +509,8 @@
           "name": "token_program"
         },
         {
-          "name": "system_program"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -176,238 +528,427 @@
         },
         {
           "name": "bet_numbers",
-          "type": {
-            "vec": "u8"
-          }
+          "type": "bytes"
         }
       ]
-    },
-    {
-      "name": "lock_betting",
-      "discriminator": [
-        123,
-        45,
-        67,
-        89,
-        12,
-        34,
-        56,
-        78
-      ],
-      "accounts": [
-        {
-          "name": "roulette",
-          "writable": true
-        },
-        {
-          "name": "global_config"
-        },
-        {
-          "name": "caller",
-          "signer": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "claim_winnings",
-      "discriminator": [
-        187,
-        230,
-        54,
-        100,
-        23,
-        145,
-        67,
-        89
-      ],
-      "accounts": [
-        {
-          "name": "roulette",
-          "writable": true
-        },
-        {
-          "name": "bet",
-          "writable": true
-        },
-        {
-          "name": "global_config"
-        },
-        {
-          "name": "claimer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "claimer_token_account",
-          "writable": true
-        },
-        {
-          "name": "roulette_token_account",
-          "writable": true
-        },
-        {
-          "name": "token_program"
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
     {
-      "name": "RouletteAccount",
-      "discriminator": [
-        22,
-        33,
-        44,
-        55,
-        66,
-        77,
-        88,
-        99
-      ]
-    },
-    {
       "name": "BetAccount",
       "discriminator": [
-        11,
-        22,
-        33,
-        44,
-        55,
-        66,
-        77,
-        88
+        117,
+        187,
+        165,
+        174,
+        194,
+        28,
+        119,
+        76
       ]
     },
     {
       "name": "GlobalConfig",
       "discriminator": [
-        99,
-        88,
-        77,
-        66,
-        55,
-        44,
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
+    },
+    {
+      "name": "RouletteAccount",
+      "discriminator": [
+        9,
+        161,
+        150,
+        107,
+        90,
+        243,
         33,
-        22
+        77
       ]
     }
   ],
   "events": [
     {
-      "name": "RouletteCreated",
-      "discriminator": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ]
-    },
-    {
       "name": "BetPlaced",
       "discriminator": [
-        10,
-        20,
-        30,
-        40,
-        50,
-        60,
-        70,
-        80
+        88,
+        88,
+        145,
+        226,
+        126,
+        206,
+        32,
+        0
       ]
     },
     {
       "name": "BettingLocked",
       "discriminator": [
-        15,
+        47,
+        160,
+        87,
         25,
-        35,
-        45,
-        55,
-        65,
-        75,
-        85
+        158,
+        169,
+        138,
+        225
+      ]
+    },
+    {
+      "name": "RandomnessRequested",
+      "discriminator": [
+        10,
+        64,
+        183,
+        29,
+        104,
+        63,
+        90,
+        149
+      ]
+    },
+    {
+      "name": "RouletteCancelled",
+      "discriminator": [
+        4,
+        144,
+        100,
+        100,
+        14,
+        183,
+        224,
+        215
+      ]
+    },
+    {
+      "name": "RouletteCreated",
+      "discriminator": [
+        183,
+        179,
+        244,
+        172,
+        105,
+        72,
+        4,
+        48
+      ]
+    },
+    {
+      "name": "RouletteExpired",
+      "discriminator": [
+        234,
+        9,
+        218,
+        131,
+        246,
+        72,
+        116,
+        1
+      ]
+    },
+    {
+      "name": "RouletteSpinStarted",
+      "discriminator": [
+        122,
+        205,
+        15,
+        137,
+        83,
+        247,
+        154,
+        142
+      ]
+    },
+    {
+      "name": "RouletteSpun",
+      "discriminator": [
+        7,
+        20,
+        158,
+        171,
+        79,
+        107,
+        76,
+        53
+      ]
+    },
+    {
+      "name": "RouletteStateChanged",
+      "discriminator": [
+        234,
+        150,
+        131,
+        6,
+        46,
+        54,
+        83,
+        237
       ]
     },
     {
       "name": "WinningsClaimed",
       "discriminator": [
-        90,
-        80,
+        187,
+        184,
+        29,
+        196,
+        54,
+        117,
         70,
-        60,
-        50,
-        40,
-        30,
-        20
+        150
       ]
     }
   ],
   "errors": [
     {
-      "code": 6000,
+      "code": 12000,
       "name": "InvalidBetType",
       "msg": "Invalid bet type"
     },
     {
-      "code": 6001,
+      "code": 12001,
       "name": "BetBelowMinimum",
       "msg": "Bet amount below minimum"
     },
     {
-      "code": 6002,
+      "code": 12002,
       "name": "BetExceedsMaximum",
       "msg": "Bet amount exceeds maximum"
+    },
+    {
+      "code": 12003,
+      "name": "BettingPeriodEnded",
+      "msg": "Betting period has ended"
+    },
+    {
+      "code": 12004,
+      "name": "InvalidGameState",
+      "msg": "Game is not in correct state"
+    },
+    {
+      "code": 12005,
+      "name": "InvalidBetNumbers",
+      "msg": "Invalid bet numbers for this bet type"
+    },
+    {
+      "code": 12006,
+      "name": "MaxPlayersReached",
+      "msg": "Maximum number of players reached"
+    },
+    {
+      "code": 12007,
+      "name": "RandomnessNotFulfilled",
+      "msg": "Randomness not yet fulfilled"
+    },
+    {
+      "code": 12008,
+      "name": "WinningsAlreadyClaimed",
+      "msg": "Winnings already claimed"
+    },
+    {
+      "code": 12009,
+      "name": "NotAWinningBet",
+      "msg": "Not a winning bet"
+    },
+    {
+      "code": 12010,
+      "name": "GameExpired",
+      "msg": "Game has expired"
+    },
+    {
+      "code": 12011,
+      "name": "GamePaused",
+      "msg": "Game is paused"
+    },
+    {
+      "code": 12012,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority"
+    },
+    {
+      "code": 12013,
+      "name": "InvalidRouletteType",
+      "msg": "Invalid roulette type"
+    },
+    {
+      "code": 12014,
+      "name": "GameDurationTooShort",
+      "msg": "Game duration too short"
+    },
+    {
+      "code": 12015,
+      "name": "GameDurationTooLong",
+      "msg": "Game duration too long"
+    },
+    {
+      "code": 12016,
+      "name": "InvalidStateTransition",
+      "msg": "Cannot transition to this state"
+    },
+    {
+      "code": 12017,
+      "name": "VrfClientNotInitialized",
+      "msg": "VRF client not initialized"
+    },
+    {
+      "code": 12018,
+      "name": "InvalidVrfAccount",
+      "msg": "Invalid VRF account"
+    },
+    {
+      "code": 12019,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 12020,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds"
+    },
+    {
+      "code": 12021,
+      "name": "InvalidTokenAccount",
+      "msg": "Invalid token account"
+    },
+    {
+      "code": 12022,
+      "name": "TooEarly",
+      "msg": "Too early to perform this action"
+    },
+    {
+      "code": 12023,
+      "name": "TooLate",
+      "msg": "Too late to perform this action"
+    },
+    {
+      "code": 12024,
+      "name": "InvalidNonce",
+      "msg": "Invalid nonce"
+    },
+    {
+      "code": 12025,
+      "name": "DuplicateBet",
+      "msg": "Cannot place duplicate bets"
     }
   ],
   "types": [
     {
-      "name": "RouletteType",
+      "name": "BetAccount",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "European"
+            "name": "roulette",
+            "type": "pubkey"
           },
           {
-            "name": "American"
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "bettor",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_type",
+            "type": {
+              "defined": {
+                "name": "BetType"
+              }
+            }
+          },
+          {
+            "name": "bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "bet_numbers",
+            "type": "bytes"
+          },
+          {
+            "name": "payout_multiplier",
+            "type": "u16"
+          },
+          {
+            "name": "is_winner",
+            "type": "bool"
+          },
+          {
+            "name": "payout_amount",
+            "type": "u64"
+          },
+          {
+            "name": "is_claimed",
+            "type": "bool"
+          },
+          {
+            "name": "placed_at",
+            "type": "i64"
+          },
+          {
+            "name": "claimed_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
     },
     {
-      "name": "RouletteState",
+      "name": "BetPlaced",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "Created"
+            "name": "roulette_id",
+            "type": "pubkey"
           },
           {
-            "name": "Open"
+            "name": "bet_id",
+            "type": "u64"
           },
           {
-            "name": "Locked"
+            "name": "bettor",
+            "type": "pubkey"
           },
           {
-            "name": "Spinning"
+            "name": "bet_type",
+            "type": {
+              "defined": {
+                "name": "BetType"
+              }
+            }
           },
           {
-            "name": "AwaitingRandomness"
+            "name": "bet_amount",
+            "type": "u64"
           },
           {
-            "name": "Completed"
+            "name": "bet_numbers",
+            "type": "bytes"
           },
           {
-            "name": "Expired"
+            "name": "total_bets",
+            "type": "u64"
           },
           {
-            "name": "Cancelled"
+            "name": "total_bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -467,6 +1008,531 @@
           },
           {
             "name": "ThirdColumn"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BettingLocked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_bets",
+            "type": "u64"
+          },
+          {
+            "name": "total_bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_players",
+            "type": "u64"
+          },
+          {
+            "name": "spin_time",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_fee_percentage",
+            "type": "u16"
+          },
+          {
+            "name": "is_paused",
+            "type": "bool"
+          },
+          {
+            "name": "min_game_duration",
+            "type": "i64"
+          },
+          {
+            "name": "max_game_duration",
+            "type": "i64"
+          },
+          {
+            "name": "min_bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "max_players_per_game",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RandomnessRequested",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "vrf_client",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_type",
+            "type": {
+              "defined": {
+                "name": "RouletteType"
+              }
+            }
+          },
+          {
+            "name": "min_bet",
+            "type": "u64"
+          },
+          {
+            "name": "max_bet",
+            "type": "u64"
+          },
+          {
+            "name": "game_duration",
+            "type": "i64"
+          },
+          {
+            "name": "betting_duration",
+            "type": "i64"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "betting_end_time",
+            "type": "i64"
+          },
+          {
+            "name": "spin_time",
+            "type": "i64"
+          },
+          {
+            "name": "reveal_time",
+            "type": "i64"
+          },
+          {
+            "name": "end_time",
+            "type": "i64"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "RouletteState"
+              }
+            }
+          },
+          {
+            "name": "total_bets",
+            "type": "u64"
+          },
+          {
+            "name": "total_bet_amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_players",
+            "type": "u64"
+          },
+          {
+            "name": "winning_number",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "last_bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "created_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "global_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "vrf_client",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "vrf_randomness",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "vrf_request_key",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "randomness_fulfilled",
+            "type": "bool"
+          },
+          {
+            "name": "total_payouts",
+            "type": "u64"
+          },
+          {
+            "name": "house_edge_collected",
+            "type": "u64"
+          },
+          {
+            "name": "treasury_fee_collected",
+            "type": "u64"
+          },
+          {
+            "name": "is_settled",
+            "type": "bool"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "completed_at",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "reason",
+            "type": "string"
+          },
+          {
+            "name": "total_refunds",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "roulette_type",
+            "type": {
+              "defined": {
+                "name": "RouletteType"
+              }
+            }
+          },
+          {
+            "name": "min_bet",
+            "type": "u64"
+          },
+          {
+            "name": "max_bet",
+            "type": "u64"
+          },
+          {
+            "name": "game_duration",
+            "type": "i64"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "betting_end_time",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteExpired",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_refunds",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteSpinStarted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "vrf_client",
+            "type": "pubkey"
+          },
+          {
+            "name": "vrf_request_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteSpun",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "winning_number",
+            "type": "u8"
+          },
+          {
+            "name": "total_winners",
+            "type": "u64"
+          },
+          {
+            "name": "total_payouts",
+            "type": "u64"
+          },
+          {
+            "name": "house_edge_collected",
+            "type": "u64"
+          },
+          {
+            "name": "treasury_fee_collected",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Locked"
+          },
+          {
+            "name": "Spinning"
+          },
+          {
+            "name": "AwaitingRandomness"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Expired"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteStateChanged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_state",
+            "type": {
+              "defined": {
+                "name": "RouletteState"
+              }
+            }
+          },
+          {
+            "name": "new_state",
+            "type": {
+              "defined": {
+                "name": "RouletteState"
+              }
+            }
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouletteType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "European"
+          },
+          {
+            "name": "American"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WinningsClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "roulette_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "bet_id",
+            "type": "u64"
+          },
+          {
+            "name": "winner",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout_amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }

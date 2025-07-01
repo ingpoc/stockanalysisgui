@@ -52,7 +52,7 @@ export default function AdminPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Access Denied</AlertTitle>
           <AlertDescription>
-            You don't have administrator privileges. Only the admin wallet can access this page.
+            You don&apos;t have administrator privileges. Only the admin wallet can access this page.
           </AlertDescription>
         </Alert>
       </PageContainer>

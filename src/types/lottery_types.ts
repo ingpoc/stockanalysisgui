@@ -62,12 +62,12 @@ export interface LotteryInfoDetailed {
 // Simple LotteryInfo interface for UI components (flat structure)
 export interface LotteryInfo {
   address: string;
-  lotteryType: LotteryTypeIDL;
+  lotteryType: string; // UI uses string representation
   ticketPrice: number;
   drawTime: number;
   prizePool: number;
   totalTickets: number;
-  state: LotteryStateIDL;
+  state: string; // UI uses string representation  
   createdBy: string;
   globalConfig: string;
   winningNumbers: string | null;
@@ -185,6 +185,46 @@ export function isValidStateTransition(current: LotteryStateIDL, next: LotterySt
   const currentKey = Object.keys(current)[0];
   const nextKey = Object.keys(next)[0];
   return VALID_STATE_TRANSITIONS[currentKey].includes(nextKey);
+}
+
+// ===== DISPLAY HELPERS =====
+
+// Helper to get string representation of discriminated union state
+export function getStateString(state: LotteryStateIDL): string {
+  if (typeof state === 'object' && state) {
+    return Object.keys(state)[0];
+  }
+  return String(state);
+}
+
+// Helper to get display name for state (capitalized)
+export function getStateDisplayName(state: LotteryStateIDL): string {
+  const stateStr = getStateString(state);
+  return stateStr.charAt(0).toUpperCase() + stateStr.slice(1);
+}
+
+// Helper to get string representation of discriminated union type
+export function getTypeString(type: LotteryTypeIDL): string {
+  if (typeof type === 'object' && type) {
+    return Object.keys(type)[0];
+  }
+  return String(type);
+}
+
+// Helper to get display name for type (capitalized)
+export function getTypeDisplayName(type: LotteryTypeIDL): string {
+  const typeStr = getTypeString(type);
+  return typeStr.charAt(0).toUpperCase() + typeStr.slice(1);
+}
+
+// Helper to check if state matches a specific value
+export function isStateEqual(state: LotteryStateIDL, target: string): boolean {
+  return getStateString(state).toLowerCase() === target.toLowerCase();
+}
+
+// Helper to check if type matches a specific value
+export function isTypeEqual(type: LotteryTypeIDL, target: string): boolean {
+  return getTypeString(type).toLowerCase() === target.toLowerCase();
 }
 
 // ===== DISPLAY HELPERS =====

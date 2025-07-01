@@ -121,7 +121,9 @@ export function WinningsSummary({ userTickets, userStats, userBalance, isLoading
                       </span>
                     </div>
                     <div className="text-xs text-gray-600">
-                      <span className="capitalize">{ticket.lotteryType} Lottery</span>
+                      <span className="capitalize">
+                        {ticket.lotteryType} Lottery
+                      </span>
                       <span className="text-gray-400 mx-2">•</span>
                       <span>Draw: {formatDistanceToNow(ticket.drawTime)}</span>
                     </div>

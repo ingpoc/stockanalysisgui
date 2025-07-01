@@ -53,7 +53,9 @@ export default function LotteryPage() {
   const cardsRef = useStaggeredFadeIn('.lottery-card', 0.6)
   
   // Animated counters
-  const activeLotteriesCount = lotteries?.filter(l => l.state === 'Open').length || 0
+  const activeLotteriesCount = lotteries?.filter(l => 
+    typeof l.state === 'object' && l.state && 'open' in l.state
+  ).length || 0
   const totalTicketsCount = lotteries?.reduce((sum, l) => sum + l.totalTickets, 0) || 0
   const totalPoolAmount = lotteries?.reduce((sum, l) => sum + l.prizePool, 0) || 0
   

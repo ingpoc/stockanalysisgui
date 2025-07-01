@@ -271,7 +271,9 @@ export function UserTicketsTable({ userTickets, isLoading }: UserTicketsTablePro
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        <span className="capitalize">{ticket.lotteryType}</span>
+                        <span className="capitalize">
+                          {ticket.lotteryType}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>

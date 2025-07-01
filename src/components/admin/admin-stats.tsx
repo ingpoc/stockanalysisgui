@@ -29,8 +29,19 @@ export function AdminStats({ lotteries, isLoading }: AdminStatsProps) {
 
     const totalTicketsSold = lotteries.reduce((sum, lottery) => sum + lottery.totalTickets, 0)
     const totalPrizePool = lotteries.reduce((sum, lottery) => sum + lottery.prizePool, 0)
-    const activeLotteries = lotteries.filter(l => ['Open', 'Locked'].includes(l.state)).length
-    const completedLotteries = lotteries.filter(l => l.state === 'Completed').length
+    const activeLotteries = lotteries.filter(l => {
+      const stateKey = typeof l.state === 'object' && l.state 
+        ? Object.keys(l.state)[0] 
+        : String(l.state)
+      return ['open', 'locked'].includes(stateKey.toLowerCase())
+    }).length
+    
+    const completedLotteries = lotteries.filter(l => {
+      const stateKey = typeof l.state === 'object' && l.state 
+        ? Object.keys(l.state)[0] 
+        : String(l.state)
+      return stateKey.toLowerCase() === 'completed'
+    }).length
     
     // Calculate total commissions (assuming 2% fee rate)
     const totalRevenue = lotteries.reduce((sum, lottery) => 

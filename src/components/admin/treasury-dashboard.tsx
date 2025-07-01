@@ -43,7 +43,7 @@ export function TreasuryDashboard({ lotteries, isLoading }: TreasuryDashboardPro
     const commissionsByLottery = lotteries.map(lottery => {
       const revenue = lottery.totalTickets * lottery.ticketPrice
       const commission = revenue * commissionRate
-      const isClaimable = lottery.state === 'Completed'
+      const isClaimable = typeof lottery.state === 'object' && lottery.state && 'completed' in lottery.state
       
       totalCommissions += commission
       if (isClaimable) {
@@ -228,19 +228,25 @@ export function TreasuryDashboard({ lotteries, isLoading }: TreasuryDashboardPro
                       {item.lotteryId.slice(0, 8)}...
                     </TableCell>
                     <TableCell className="capitalize">
-                      {item.lotteryType}
+                      {typeof item.lotteryType === 'object' && item.lotteryType 
+                        ? Object.keys(item.lotteryType)[0] 
+                        : String(item.lotteryType)}
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        variant={item.state === 'Completed' ? 'default' : 'secondary'}
+                        variant={(typeof item.state === 'object' && item.state && 'completed' in item.state) ? 'default' : 'secondary'}
                         className="flex items-center gap-1 w-fit"
                       >
-                        {item.state === 'Completed' ? (
+                        {(typeof item.state === 'object' && item.state && 'completed' in item.state) ? (
                           <CheckCircle2 className="h-3 w-3" />
                         ) : (
                           <AlertCircle className="h-3 w-3" />
                         )}
-                        {item.state}
+                        <span className="capitalize">
+                          {typeof item.state === 'object' && item.state 
+                            ? Object.keys(item.state)[0] 
+                            : String(item.state)}
+                        </span>
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm">

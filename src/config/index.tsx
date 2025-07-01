@@ -24,17 +24,15 @@ export function WalletConnectionProvider({ children }: { children: ReactNode }) 
     []
   )
 
-  const modalProvider = createElement(WalletModalProvider, { children })
-  const walletProvider = createElement(WalletProvider, { 
-    wallets, 
-    autoConnect: true,
-    children: modalProvider 
-  })
-  
-  return createElement(ConnectionProvider, {
-    endpoint: RPC_ENDPOINT,
-    children: walletProvider
-  })
+  return (
+    <ConnectionProvider endpoint={RPC_ENDPOINT}>
+      <WalletProvider wallets={wallets} autoConnect={true}>
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  )
 }
 
 // Export commonly used values

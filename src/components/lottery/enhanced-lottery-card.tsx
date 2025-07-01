@@ -31,7 +31,7 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
     isBuying
   } = useLottery()
 
-  const isActive = lottery.state === 'Open'
+  const isActive = typeof lottery.state === 'object' && lottery.state && 'open' in lottery.state
   const drawDate = new Date(lottery.drawTime * 1000)
   const isEnded = drawDate < new Date()
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET
@@ -162,13 +162,21 @@ export function EnhancedLotteryCard({ lottery, onParticipate }: LotteryCardProps
       <div className="p-6 pb-0">
         <div className="flex items-baseline justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-gray-400 text-sm">{getLotteryIndicator(lottery.lotteryType)}</span>
+            <span className="text-gray-400 text-sm">
+              {getLotteryIndicator(typeof lottery.lotteryType === 'object' && lottery.lotteryType 
+                ? Object.keys(lottery.lotteryType)[0] 
+                : String(lottery.lotteryType))}
+            </span>
             <h3 className="text-base font-normal text-gray-900 tracking-wide">
-              {lottery.lotteryType.toUpperCase()}
+              {(typeof lottery.lotteryType === 'object' && lottery.lotteryType 
+                ? Object.keys(lottery.lotteryType)[0] 
+                : String(lottery.lotteryType)).toUpperCase()}
             </h3>
           </div>
           <span className={`text-xs tracking-wider ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
-            {lottery.state.toUpperCase()}
+            {(typeof lottery.state === 'object' && lottery.state 
+              ? Object.keys(lottery.state)[0] 
+              : String(lottery.state)).toUpperCase()}
           </span>
         </div>
         

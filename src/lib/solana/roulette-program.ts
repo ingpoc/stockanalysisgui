@@ -11,6 +11,13 @@ import {
 import { 
   DecentralizedRoulette as ProgramIDL,
 } from '@/types/decentralized_roulette'
+import { 
+  RouletteType, 
+  BetType,
+  RouletteState,
+  RouletteAccount,
+  BetAccount
+} from '@/types/generated/enhanced-types'
 import {
   ROULETTE_PROGRAM_ID as PROGRAM_ID,
   USDC_MINT,
@@ -23,12 +30,7 @@ import {
 // Import the IDL
 const IDL = require('./decentralized_roulette.json') as ProgramIDL & Idl
 
-// Extract types from the IDL
-export type RouletteAccount = ProgramIDL['accounts'][0]
-export type BetAccount = ProgramIDL['accounts'][1]
-export type RouletteType = ProgramIDL['types'][0]
-export type RouletteState = ProgramIDL['types'][1]
-export type BetType = ProgramIDL['types'][2]
+// Types are imported from generated types
 
 type ProgramType = Program<ProgramIDL>
 
@@ -52,7 +54,7 @@ export const BET_SEED = ROULETTE_BET_SEED
 export const ROULETTE_TOKEN_SEED_STRING = ROULETTE_TOKEN_SEED
 
 export class RouletteProgram {
-  private program: ProgramType
+  private _program: ProgramType | null = null
   private connection: Connection
   private wallet: AnchorWallet
   public readonly programId = ROULETTE_PROGRAM_ID
@@ -60,15 +62,43 @@ export class RouletteProgram {
   constructor(connection: Connection, wallet: AnchorWallet) {
     this.connection = connection
     this.wallet = wallet
-    const provider = new AnchorProvider(
-      connection,
-      wallet,
-      AnchorProvider.defaultOptions()
-    )
-    this.program = new Program(
-      IDL,
-      provider
-    ) as ProgramType
+    console.log('RouletteProgram constructor called - deferring program creation')
+  }
+
+  private async initializeProgram(): Promise<ProgramType> {
+    if (this._program) {
+      return this._program
+    }
+
+    try {
+      const provider = new AnchorProvider(
+        this.connection,
+        this.wallet,
+        AnchorProvider.defaultOptions()
+      )
+      
+      console.log('Creating roulette program with IDL...', { 
+        programId: PROGRAM_ID,
+        idlName: IDL.metadata?.name || 'decentralized_roulette',
+        idlVersion: IDL.metadata?.version || '0.1.0'
+      })
+      
+      // Create program using IDL (which contains the program ID)
+      this._program = new Program(
+        IDL,
+        provider
+      ) as ProgramType
+      
+      console.log('Roulette program created successfully')
+      return this._program
+    } catch (error) {
+      console.error('Error creating roulette program:', error)
+      throw error
+    }
+  }
+
+  private get program(): Promise<ProgramType> {
+    return this.initializeProgram()
   }
 
   // Get the global config PDA
@@ -77,6 +107,27 @@ export class RouletteProgram {
       [Buffer.from(GLOBAL_CONFIG_SEED)],
       this.programId
     )
+  }
+
+  // Check if the program is initialized
+  async isInitialized(): Promise<boolean> {
+    try {
+      const [globalConfigPDA] = this.getGlobalConfigPDA()
+      const program = await this.program
+      const globalConfig = await (program.account as any).globalConfig.fetch(globalConfigPDA)
+      console.log('Global config found, program is initialized:', globalConfig)
+      return true
+    } catch (error: any) {
+      // This is expected for uninitialized programs - the globalConfig account won't exist
+      if (error?.message?.includes('Account does not exist') || 
+          error?.message?.includes('Account not found') ||
+          error?.toString().includes('Invalid account discriminator')) {
+        console.log('Program not initialized yet - globalConfig account does not exist')
+        return false
+      }
+      console.log('Unexpected error checking initialization:', error)
+      return false
+    }
   }
 
   // Get roulette account PDA
@@ -117,25 +168,32 @@ export class RouletteProgram {
 
   // Initialize the roulette program (admin only)
   async initialize(): Promise<TransactionSignature> {
-    if (!this.program.provider.publicKey) {
+    const program = await this.program
+    if (!program.provider.publicKey) {
       throw new Error('Wallet not connected')
     }
 
     const [globalConfigPDA] = this.getGlobalConfigPDA()
     const usdcMint = process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' ? USDC_MINT_ADDRESS : USDC_MINT_DEVNET // Use devnet USDC for testing
 
-    // Get treasury token account
+    // Get treasury token account - should be owned by the authority (admin wallet)
     const treasuryTokenAccount = await getAssociatedTokenAddress(
       usdcMint,
-      globalConfigPDA,
-      true // allowOwnerOffCurve
+      program.provider.publicKey // Use authority wallet as owner, not globalConfigPDA
     )
 
-    return await this.program.methods
+    console.log('Initializing roulette program with:', {
+      globalConfigPDA: globalConfigPDA.toString(),
+      authority: program.provider.publicKey.toString(),
+      usdcMint: usdcMint.toString(),
+      treasuryTokenAccount: treasuryTokenAccount.toString()
+    })
+
+    return await program.methods
       .initialize()
       .accounts({
         globalConfig: globalConfigPDA,
-        authority: this.program.provider.publicKey,
+        authority: program.provider.publicKey,
         usdcMint: usdcMint,
         treasuryTokenAccount: treasuryTokenAccount,
         systemProgram: SystemProgram.programId,
@@ -151,26 +209,27 @@ export class RouletteProgram {
     gameDuration: number,
     nonce: number
   ): Promise<TransactionSignature> {
-    if (!this.program.provider.publicKey) {
+    const program = await this.program
+    if (!program.provider.publicKey) {
       throw new Error('Wallet not connected')
     }
 
     const [globalConfigPDA] = this.getGlobalConfigPDA()
-    const [roulettePDA] = this.getRoulettePDA(this.program.provider.publicKey, nonce)
+    const [roulettePDA] = this.getRoulettePDA(program.provider.publicKey, nonce)
     const [rouletteTokenPDA] = this.getRouletteTokenPDA(roulettePDA)
     
     const usdcMint = process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' ? USDC_MINT_ADDRESS : USDC_MINT_DEVNET
     const creatorTokenAccount = await getAssociatedTokenAddress(
       usdcMint,
-      this.program.provider.publicKey
+      program.provider.publicKey
     )
 
     // Convert enum to the format expected by the program
-    const programRouletteType = (rouletteType as any).european 
+    const programRouletteType = rouletteType === RouletteType.European
       ? { european: {} } 
       : { american: {} }
 
-    return await this.program.methods
+    return await program.methods
       .createRoulette(
         programRouletteType,
         new BN(minBet),
@@ -181,7 +240,7 @@ export class RouletteProgram {
       .accounts({
         roulette: roulettePDA,
         globalConfig: globalConfigPDA,
-        creator: this.program.provider.publicKey,
+        creator: program.provider.publicKey,
         usdcMint: usdcMint,
         creatorTokenAccount: creatorTokenAccount,
         rouletteTokenAccount: rouletteTokenPDA,
@@ -199,29 +258,35 @@ export class RouletteProgram {
     betAmount: number,
     betNumbers: number[]
   ): Promise<TransactionSignature> {
-    if (!this.program.provider.publicKey) {
+    const program = await this.program
+    if (!program.provider.publicKey) {
       throw new Error('Wallet not connected')
     }
 
     // Get current roulette state to determine bet ID
-    // @ts-expect-error
-    const rouletteAccount = await this.program.account["rouletteAccount"].fetch(roulette) as any
+    let rouletteAccount: any
+    try {
+      rouletteAccount = await (program.account as any).rouletteAccount.fetch(roulette) as any
+    } catch (error) {
+      console.error('Failed to fetch roulette account from address:', roulette.toString())
+      throw new Error(`Roulette account not found. Address: ${roulette.toString()}. Make sure the roulette game exists and is properly created.`)
+    }
     const betId = rouletteAccount.total_bets.toNumber()
 
     const [globalConfigPDA] = this.getGlobalConfigPDA()
-    const [betPDA] = this.getBetPDA(roulette, this.program.provider.publicKey, betId)
+    const [betPDA] = this.getBetPDA(roulette, program.provider.publicKey, betId)
     const [rouletteTokenPDA] = this.getRouletteTokenPDA(roulette)
     
     const usdcMint = process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' ? USDC_MINT_ADDRESS : USDC_MINT_DEVNET
     const bettorTokenAccount = await getAssociatedTokenAddress(
       usdcMint,
-      this.program.provider.publicKey
+      program.provider.publicKey
     )
 
     // Convert enum to the format expected by the program
     const programBetType = this.convertBetTypeToProgram(betType)
 
-    return (this.program.methods as any)
+    return (program.methods as any)
       .placeBet(
         programBetType,
         new BN(betAmount),
@@ -231,7 +296,7 @@ export class RouletteProgram {
         roulette: roulette,
         bet: betPDA,
         globalConfig: globalConfigPDA,
-        bettor: this.program.provider.publicKey,
+        bettor: program.provider.publicKey,
         usdcMint: usdcMint,
         bettorTokenAccount: bettorTokenAccount,
         rouletteTokenAccount: rouletteTokenPDA,
@@ -243,18 +308,19 @@ export class RouletteProgram {
 
   // Lock betting for a roulette game
   async lockBetting(roulette: PublicKey): Promise<TransactionSignature> {
-    if (!this.program.provider.publicKey) {
+    const program = await this.program
+    if (!program.provider.publicKey) {
       throw new Error('Wallet not connected')
     }
 
     const [globalConfigPDA] = this.getGlobalConfigPDA()
 
-    return await this.program.methods
+    return await program.methods
       .lockBetting()
       .accounts({
         roulette: roulette,
         globalConfig: globalConfigPDA,
-        caller: this.program.provider.publicKey,
+        caller: program.provider.publicKey,
       } as any)
       .rpc()
   }
@@ -264,7 +330,8 @@ export class RouletteProgram {
     roulette: PublicKey,
     bet: PublicKey
   ): Promise<TransactionSignature> {
-    if (!this.program.provider.publicKey) {
+    const program = await this.program
+    if (!program.provider.publicKey) {
       throw new Error('Wallet not connected')
     }
 
@@ -274,16 +341,16 @@ export class RouletteProgram {
     const usdcMint = process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' ? USDC_MINT_ADDRESS : USDC_MINT_DEVNET
     const claimerTokenAccount = await getAssociatedTokenAddress(
       usdcMint,
-      this.program.provider.publicKey
+      program.provider.publicKey
     )
 
-    return await this.program.methods
+    return await program.methods
       .claimWinnings()
       .accounts({
         roulette: roulette,
         bet: bet,
         globalConfig: globalConfigPDA,
-        claimer: this.program.provider.publicKey,
+        claimer: program.provider.publicKey,
         claimerTokenAccount: claimerTokenAccount,
         rouletteTokenAccount: rouletteTokenPDA,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -294,8 +361,8 @@ export class RouletteProgram {
   // Fetch roulette account data
   async fetchRouletteAccount(roulette: PublicKey): Promise<RouletteAccount | null> {
     try {
-      // @ts-expect-error
-      const account = await this.program.account["rouletteAccount"].fetch(roulette) as any
+      const program = await this.program
+      const account = await (program.account as any).rouletteAccount.fetch(roulette) as any
       return account
     } catch (error) {
       console.error('Error fetching roulette account:', error)
@@ -306,8 +373,8 @@ export class RouletteProgram {
   // Fetch bet account data
   async fetchBetAccount(bet: PublicKey): Promise<BetAccount | null> {
     try {
-      // @ts-expect-error
-      const account = await this.program.account["betAccount"].fetch(bet) as any
+      const program = await this.program
+      const account = await (program.account as any).betAccount.fetch(bet) as any
       return account
     } catch (error) {
       console.error('Error fetching bet account:', error)
@@ -318,8 +385,17 @@ export class RouletteProgram {
   // Get all roulette accounts
   async getAllRouletteAccounts(): Promise<RouletteAccount[]> {
     try {
-      // @ts-expect-error
-      const accounts = await this.program.account["rouletteAccount"].all() as any[]
+      // Check if program is initialized first
+      const initialized = await this.isInitialized()
+      if (!initialized) {
+        console.log('Roulette program not initialized yet')
+        return []
+      }
+
+      console.log('Attempting to fetch roulette accounts...')
+      const program = await this.program
+      const accounts = await (program.account as any).rouletteAccount.all() as any[]
+      console.log('Successfully fetched accounts:', accounts.length)
       return accounts.map(account => account.account)
     } catch (error) {
       console.error('Error fetching all roulette accounts:', error)
@@ -330,8 +406,8 @@ export class RouletteProgram {
   // Get bets for a specific roulette
   async getBetsForRoulette(roulette: PublicKey): Promise<BetAccount[]> {
     try {
-      // @ts-expect-error
-      const accounts = await this.program.account["betAccount"].all([
+      const program = await this.program
+      const accounts = await (program.account as any).betAccount.all([
         {
           memcmp: {
             offset: 8, // Skip discriminator
@@ -349,8 +425,8 @@ export class RouletteProgram {
   // Get user's bets
   async getUserBets(user: PublicKey): Promise<BetAccount[]> {
     try {
-      // @ts-expect-error
-      const accounts = await this.program.account["betAccount"].all([
+      const program = await this.program
+      const accounts = await (program.account as any).betAccount.all([
         {
           memcmp: {
             offset: 8 + 32 + 8, // Skip discriminator + roulette + betId

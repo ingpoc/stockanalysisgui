@@ -95,13 +95,13 @@ const getDurationHours = (type: string) => {
 const convertToLotteryType = (formType: string): LotteryType => {
   switch (formType) {
     case 'daily':
-      return 'Daily'
+      return 'Daily' as unknown as LotteryType
     case 'weekly':
-      return 'Weekly'
+      return 'Weekly' as unknown as LotteryType
     case 'monthly':
-      return 'Monthly'
+      return 'Monthly' as unknown as LotteryType
     default:
-      return 'Daily'
+      return 'Daily' as unknown as LotteryType
   }
 }
 

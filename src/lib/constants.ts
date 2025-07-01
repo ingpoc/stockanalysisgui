@@ -1,36 +1,74 @@
 /**
  * Application Constants
  * 
- * This file centralizes all constants and environment variables used throughout the application.
- * Always use these constants instead of directly accessing process.env to ensure consistency
- * and make it easier to update values in the future.
+ * Static values that never change between environments.
+ * Environment variables are accessed directly via process.env.
  */
 
-// Blockchain Configuration
-export const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet'
-export const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com'
-export const SOLANA_DEVNET_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_DEVNET_RPC_URL || 'https://api.devnet.solana.com'
-export const SOLANA_MAINNET_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_MAINNET_RPC_URL || 'https://api.mainnet-beta.solana.com'
+// Environment Variables (from .env.local)
+export const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK!
+export const LOTTERY_PROGRAM_ID = process.env.NEXT_PUBLIC_LOTTERY_PROGRAM_ID!
+export const ROULETTE_PROGRAM_ID = process.env.NEXT_PUBLIC_ROULETTE_PROGRAM_ID!
+export const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT!
+export const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET!
+export const TREASURY_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET! // Treasury is same as admin wallet
+export const GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_GLOBAL_CONFIG_SEED!
+export const ROULETTE_GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_ROULETTE_GLOBAL_CONFIG_SEED!
+export const SOLANA_RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL!
 
-// Lottery Program Configuration
-export const ADMIN_WALLET = process.env.NEXT_PUBLIC_ADMIN_WALLET || '7Q3UBDfjZgNJNCQBdJrji33f2FvtJ1z3DErcAV6hFsf4'
-export const TREASURY_WALLET = process.env.NEXT_PUBLIC_TREASURY_WALLET || ADMIN_WALLET
-export const LOTTERY_PROGRAM_ID = process.env.NEXT_PUBLIC_LOTTERY_PROGRAM_ID || '9SL8XkX3pvqZ2fjiLMhCFfQn7Gfmpd9ru8rtHFsAPVgq'
-export const USDC_MINT = process.env.NEXT_PUBLIC_USDC_MINT || 'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'
-export const GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_GLOBAL_CONFIG_SEED || 'global_config_v2'
-export const LOTTERY_SEED = process.env.NEXT_PUBLIC_LOTTERY_SEED || 'lottery'
-export const LOTTERY_TOKEN_SEED = process.env.NEXT_PUBLIC_LOTTERY_TOKEN_SEED || 'lottery_token'
+// PDA Seeds (static, never change)
+export const LOTTERY_SEED = 'lottery'
+export const LOTTERY_TOKEN_SEED = 'lottery_token'
+export const ROULETTE_SEED = 'roulette'
+export const ROULETTE_BET_SEED = 'bet'
+export const ROULETTE_TOKEN_SEED = 'roulette_token'
+export const TICKET_SEED = 'ticket'
 
-// Roulette Program Configuration
-export const ROULETTE_PROGRAM_ID = process.env.NEXT_PUBLIC_ROULETTE_PROGRAM_ID || '4ZVg5wU59Tr6pKAfxkTFsF2cffGrVRM2xqt1WbPUJrUB'
-export const ROULETTE_GLOBAL_CONFIG_SEED = process.env.NEXT_PUBLIC_ROULETTE_GLOBAL_CONFIG_SEED || 'global_config_v2'
-export const ROULETTE_SEED = process.env.NEXT_PUBLIC_ROULETTE_SEED || 'roulette'
-export const ROULETTE_BET_SEED = process.env.NEXT_PUBLIC_ROULETTE_BET_SEED || 'bet'
-export const ROULETTE_TOKEN_SEED = process.env.NEXT_PUBLIC_ROULETTE_TOKEN_SEED || 'roulette_token'
+// Token Configuration
+export const USDC_DECIMALS = 6
 
-// Application Configuration
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-export const PROJECT_ID = process.env.NEXT_PUBLIC_PROJECT_ID || ''
+// UI Constants
+export const DEFAULT_THEME = 'light'
+export const ANIMATION_DURATION = 300
 
-// Feature Flags - Lottery is always enabled now
-export const ENABLE_CRYPTO_LOTTERY = true 
+// Business Logic Constants
+export const MIN_TICKET_PRICE = 0.1 // USDC
+export const MAX_TICKET_PRICE = 1000 // USDC
+export const MIN_BET_AMOUNT = 0.01 // USDC
+export const MAX_BET_AMOUNT = 10000 // USDC
+
+// State Transitions
+export const VALID_LOTTERY_STATES = [
+  'Created',
+  'Open', 
+  'Locked',
+  'Drawing',
+  'AwaitingRandomness',
+  'Completed',
+  'Expired',
+  'Cancelled'
+] as const
+
+export const VALID_ROULETTE_STATES = [
+  'Created',
+  'Open',
+  'Locked', 
+  'Spinning',
+  'AwaitingRandomness',
+  'Completed',
+  'Expired',
+  'Cancelled'
+] as const
+
+// Feature Flags (static)
+export const ENABLE_CRYPTO_LOTTERY = true
+export const ENABLE_ROULETTE = true
+
+// Network Constants
+export const SOLANA_DEVNET_RPC = 'https://api.devnet.solana.com'
+export const SOLANA_MAINNET_RPC = 'https://api.mainnet-beta.solana.com'
+
+// Time Constants  
+export const SECONDS_PER_DAY = 24 * 60 * 60
+export const SECONDS_PER_WEEK = 7 * SECONDS_PER_DAY
+export const SECONDS_PER_MONTH = 30 * SECONDS_PER_DAY
