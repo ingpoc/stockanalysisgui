@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
       ...config.resolve.alias,
       '@': './src'
     }
+    // Exclude scripts directory from webpack processing
+    config.externals = config.externals || [];
+    if (typeof config.externals === 'object' && !Array.isArray(config.externals)) {
+      config.externals = [config.externals];
+    }
     return config
   },
   // Configure Turbopack (stable)

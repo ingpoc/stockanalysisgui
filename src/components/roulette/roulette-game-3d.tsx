@@ -1,145 +1,132 @@
-'use client'
+import { useEffect, useState } from 'react';
+import { useRoulette } from '@/hooks/useRoulette';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { SimpleRouletteWheel } from './simple-roulette-wheel';
+import type { Bet, BetType } from './simple-roulette-wheel';
 
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { 
-  OrbitControls, 
-  Environment, 
-  ContactShadows
-} from '@react-three/drei'
-import { Physics } from '@react-three/cannon'
-import * as THREE from 'three'
-import { gsap } from 'gsap'
-import { SimpleRouletteWheel } from './simple-roulette-wheel'
-
-interface RouletteGame3DProps {
-  playerWallet?: string
-}
-
-interface Bet {
-  id: string
-  player: string
-  amount: number
-  number: number
-  position: [number, number, number]
+export interface RouletteGame3DProps {
+  playerWallet?: string;
+  onPlaceBet?: (bet: Omit<Bet, 'player'>) => Promise<void>;
 }
 
 interface GameState {
-  isSpinning: boolean
-  currentPot: number
-  winningNumber: number | null
-  bets: Bet[]
-  players: string[]
+  state: 'idle' | 'open' | 'locked' | 'spinning' | 'revealing' | 'settled';
+  winningNumber: number | null;
+  spinTime: number;
+  revealTime: number;
+  endTime?: number;
 }
 
-export function RouletteGame3D({ playerWallet }: RouletteGame3DProps) {
+export function RouletteGame3D({
+  playerWallet,
+  onPlaceBet,
+}: RouletteGame3DProps) {
+  const { roulettes } = useRoulette();
+  const [currentGame, setCurrentGame] = useState<any>(null);
   const [gameState, setGameState] = useState<GameState>({
-    isSpinning: false,
-    currentPot: 0,
+    state: 'idle',
     winningNumber: null,
-    bets: [],
-    players: playerWallet ? [playerWallet] : []
-  })
+    spinTime: 0,
+    revealTime: 0,
+  });
 
-  const [selectedChipValue, setSelectedChipValue] = useState(1)
-  const [userBalance, setUserBalance] = useState(100) // Mock balance
-
-  // No error boundary - force 3D mode to work
   useEffect(() => {
-    console.log('3D Zen Roulette component loaded successfully')
-  }, [])
+    if (!roulettes || roulettes.length === 0) return;
 
-  // Handle placing bets
-  const placeBet = (number: number, position: [number, number, number]) => {
-    if (!playerWallet || selectedChipValue > userBalance || gameState.isSpinning) return
+    const now = Date.now() / 1000;
+    const activeGame = roulettes.find((game: any) => {
+      return (
+        game.state === 'open' ||
+        game.state === 'locked' ||
+        game.state === 'spinning' ||
+        (game.endTime && game.endTime > now)
+      );
+    });
 
-    const newBet: Bet = {
-      id: `${playerWallet}-${number}-${Date.now()}`,
-      player: playerWallet,
-      amount: selectedChipValue,
-      number,
-      position
-    }
+    if (activeGame) {
+      setCurrentGame(activeGame);
 
-    setGameState(prev => ({
-      ...prev,
-      bets: [...prev.bets, newBet],
-      currentPot: prev.currentPot + selectedChipValue
-    }))
+      // Convert BN to number if needed
+      const toNumber = (value: any): number => {
+        return typeof value?.toNumber === 'function'
+          ? value.toNumber()
+          : value || 0;
+      };
 
-    setUserBalance(prev => prev - selectedChipValue)
-  }
+      // Ensure we're working with a plain object and not a class instance
+      const gameStateValue =
+        typeof activeGame.state === 'object' && activeGame.state !== null
+          ? activeGame.state
+          : { state: activeGame.state };
 
-  // Handle roulette spin
-  const spinRoulette = () => {
-    if (gameState.isSpinning || gameState.bets.length === 0) return
+      const newGameState: GameState = {
+        state:
+          typeof gameStateValue.state === 'string'
+            ? (gameStateValue.state as GameState['state'])
+            : 'idle',
+        winningNumber:
+          activeGame.winningNumber !== undefined
+            ? Number(activeGame.winningNumber)
+            : null,
+        spinTime: toNumber(activeGame.spinTime),
+        revealTime: toNumber(activeGame.revealTime),
+        endTime: toNumber(activeGame.endTime),
+      };
 
-    setGameState(prev => ({ ...prev, isSpinning: true, winningNumber: null }))
-  }
-
-  // Handle ball settling and determine winner
-  const handleBallSettled = (winningNumber: number) => {
-    setGameState(prev => {
-      const winners = prev.bets.filter(bet => bet.number === winningNumber)
-      const commission = prev.currentPot * 0.02
-      const prizePool = prev.currentPot - commission
-
-      // Distribute winnings (simplified - in real app would use smart contract)
-      if (winners.length > 0) {
-        const payoutPerWinner = prizePool / winners.length
-        console.log(`Winning number: ${winningNumber}`)
-        console.log(`Winners: ${winners.length}`)
-        console.log(`Payout per winner: $${payoutPerWinner.toFixed(2)}`)
-        
-        // Award winnings to current player if they won
-        const playerWinnings = winners
-          .filter(bet => bet.player === playerWallet)
-          .reduce((sum, bet) => sum + (payoutPerWinner * 35), 0) // 35:1 payout for single numbers
-        
-        if (playerWinnings > 0) {
-          setUserBalance(balance => balance + playerWinnings)
-        }
-      }
-
-      // Clear game after a delay to show results
-      setTimeout(() => {
-        setGameState(prevState => ({
-          ...prevState,
-          bets: [],
-          currentPot: 0,
-          winningNumber: null,
-          isSpinning: false
-        }))
-      }, 3000)
-
-      return {
+      setGameState(prev => ({
         ...prev,
-        winningNumber,
-        isSpinning: false
-      }
-    })
-  }
+        ...newGameState,
+        // Only update winning number if we have a new one
+        winningNumber:
+          newGameState.winningNumber !== null
+            ? newGameState.winningNumber
+            : prev.winningNumber,
+      }));
+    }
+  }, [roulettes]);
 
-  // Clear all bets
-  const clearBets = () => {
-    if (gameState.isSpinning) return
-    
-    const totalRefund = gameState.bets
-      .filter(bet => bet.player === playerWallet)
-      .reduce((sum, bet) => sum + bet.amount, 0)
-    
-    setUserBalance(prev => prev + totalRefund)
-    setGameState(prev => ({
-      ...prev,
-      bets: prev.bets.filter(bet => bet.player !== playerWallet),
-      currentPot: prev.currentPot - totalRefund
-    }))
-  }
+  const handleSpinComplete = () => {
+    // Spin complete, ready for next game
+  };
 
-  // Simple elegant roulette wheel with GSAP animations
+  const handlePlaceBet = async (bet: Omit<Bet, 'player'>) => {
+    if (gameState.state !== 'open' || !playerWallet || !onPlaceBet) return;
+
+    try {
+      // Create a new bet object with the player wallet
+      const betWithPlayer: Bet = {
+        ...bet,
+        player: playerWallet,
+      };
+      await onPlaceBet(betWithPlayer);
+    } catch (err) {
+      throw err; // Re-throw to handle in the SimpleRouletteWheel component
+    }
+  };
+
   return (
-    <div className="w-full h-full">
-      <SimpleRouletteWheel playerWallet={playerWallet} />
+    <div className='w-full h-full'>
+      <SimpleRouletteWheel
+        playerWallet={playerWallet}
+        gameState={gameState}
+        onPlaceBet={handlePlaceBet}
+        onSpinComplete={handleSpinComplete}
+        isSpinning={gameState.state === 'spinning'}
+        winningNumber={gameState.winningNumber}
+      />
+
+      <div className='absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg'>
+        <div className='text-sm'>
+          Status:{' '}
+          <span className='font-medium capitalize'>{gameState.state}</span>
+        </div>
+        {gameState.winningNumber !== null && (
+          <div className='text-sm mt-1'>
+            Last Number:{' '}
+            <span className='font-medium'>{gameState.winningNumber}</span>
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }

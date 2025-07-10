@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.git/
+dist/
+build/
+*.log
+*.tsbuildinfo
+coverage/
+public/
+.env*
+*.config.js
+*.config.ts
+target/
+Cargo.lock

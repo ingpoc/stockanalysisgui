@@ -1,13 +1,11 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export function handleProgramError(error: any): string {
-  console.error('Program error details:', error);
-  
   // Check for wallet errors
   if (error.name === 'WalletSignTransactionError') {
     if (error.message.includes('failed to sign transaction')) {
@@ -18,50 +16,53 @@ export function handleProgramError(error: any): string {
     }
     return 'Wallet error: Unable to sign the transaction. Please check your wallet and try again.';
   }
-  
+
   // Check for specific error messages
   if (error.message) {
     // Check for transaction already processed error
     if (error.message.includes('This transaction has already been processed')) {
       return 'This transaction has already been processed. The operation may have completed successfully.';
     }
-    
+
     // Check for oracle account not provided error
     if (error.message.includes("Account 'oracleAccount' not provided")) {
-      return "Oracle account not provided. This is required for Drawing and Cancelled state transitions.";
+      return 'Oracle account not provided. This is required for Drawing and Cancelled state transitions.';
     }
-    
+
     // Check if it's an account allocation error (duplicate lottery)
     if (error.message.includes('already in use')) {
       return 'A lottery of this type already exists for this time period. Please wait for the current one to complete.';
     }
-    
+
     // Check for seeds constraint violation
-    if (error.message.includes('seeds constraint was violated') || error.message.includes('provided seeds do not result in a valid address')) {
+    if (
+      error.message.includes('seeds constraint was violated') ||
+      error.message.includes('provided seeds do not result in a valid address')
+    ) {
       return 'A lottery creation conflict occurred. Please wait a moment and try again. This can happen if multiple lotteries are created at the same time.';
     }
-    
+
     // Check if it's a global config initialization error
     if (error.message.includes('Global config account already initialized')) {
       return 'The program is already initialized. You can proceed to create lotteries.';
     }
-    
+
     // Check if it's an account not found error
     if (error.message.includes('Account not found')) {
       return 'Required account not found. Please check your wallet connection and try again.';
     }
-    
+
     // Check for insufficient funds
     if (error.message.includes('insufficient funds')) {
       return 'Insufficient funds for this operation. Please check your balance.';
     }
-    
+
     // Check for transaction simulation failures
     if (error.message.includes('Transaction simulation failed')) {
       return 'Transaction simulation failed. This could be due to insufficient funds or other program constraints.';
     }
   }
-  
+
   // Check if it's an Anchor error with specific lottery error codes
   if (error.code) {
     // Handle Anchor system error codes
@@ -126,7 +127,10 @@ export function handleProgramError(error: any): string {
   }
 
   // Check if it's a network error
-  if (error.message?.includes('network') || error.message?.includes('connection')) {
+  if (
+    error.message?.includes('network') ||
+    error.message?.includes('connection')
+  ) {
     return 'Network error. Please check your connection and try again';
   }
 
@@ -143,15 +147,18 @@ export function shortenAddress(address: string, chars = 4): string {
  * @param decimals The number of decimal places to show (default: 2)
  * @returns Formatted USD value as a string
  */
-export function formatUSDC(value: number | undefined, decimals: number = 2): string {
+export function formatUSDC(
+  value: number | undefined,
+  decimals: number = 2
+): string {
   if (value === undefined || value === null || value === 0) {
     return '$0.00';
   }
-  
+
   // Value is already in USDC format (converted in getLotteries method)
   return `$${value.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
+    maximumFractionDigits: decimals,
   })}`;
 }
 
@@ -200,4 +207,30 @@ export function formatDistanceToNow(date: Date): string {
   } else {
     return date.toLocaleDateString();
   }
+}
+
+/**
+ * Parse USDC input from UI to token amount
+ * @param value String value from UI input
+ * @returns Number in token amount (lamports for USDC)
+ */
+export function parseUSDC(value: string): number {
+  const numValue = parseFloat(value);
+  if (isNaN(numValue)) return 0;
+  return Math.floor(numValue * 1_000_000); // Convert to 6 decimal places
+}
+
+/**
+ * Format timestamp to readable date
+ * @param timestamp Unix timestamp
+ * @returns Formatted date string
+ */
+export function formatTimestamp(timestamp: number): string {
+  return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

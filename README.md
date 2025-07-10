@@ -43,12 +43,14 @@ src/
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone <repository-url>
    cd crypto-lottery-frontend
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    # or
@@ -56,11 +58,13 @@ src/
    ```
 
 3. Copy environment variables:
+
    ```bash
    cp .env.example .env.local
    ```
 
 4. Configure your environment variables in `.env.local`:
+
    ```bash
    # App Configuration
    NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -80,6 +84,7 @@ src/
    ```
 
 5. Run the development server:
+
    ```bash
    npm run dev
    # or
@@ -206,18 +211,21 @@ anchor deploy
 ## Roadmap
 
 ### Phase 1: Core Lottery ✅
+
 - [x] Basic lottery functionality
 - [x] Ticket purchasing
 - [x] Winner selection
 - [x] Prize claiming
 
 ### Phase 2: Enhanced Features 🚧
+
 - [ ] Multiple lottery types
 - [ ] Advanced admin features
 - [ ] Better UX/UI improvements
 - [ ] Mobile optimization
 
 ### Phase 3: Prediction Markets 🔜
+
 - [ ] Binary outcome markets
 - [ ] AMM-based pricing
 - [ ] Real-world event integration

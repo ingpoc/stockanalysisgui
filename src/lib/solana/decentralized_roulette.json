@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "cancel_roulette",
-      "discriminator": [
-        213,
-        17,
-        39,
-        21,
-        111,
-        165,
-        105,
-        234
-      ],
+      "discriminator": [213, 17, 39, 21, 111, 165, 105, 234],
       "accounts": [
         {
           "name": "roulette",
@@ -31,22 +22,8 @@
               {
                 "kind": "const",
                 "value": [
-                  103,
-                  108,
-                  111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103,
-                  95,
-                  118,
-                  50
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
                 ]
               }
             ]
@@ -54,9 +31,7 @@
         },
         {
           "name": "authority",
-          "docs": [
-            "Only the global authority can cancel roulettes"
-          ],
+          "docs": ["Only the global authority can cancel roulettes"],
           "writable": true,
           "signer": true
         },
@@ -81,16 +56,7 @@
     },
     {
       "name": "claim_winnings",
-      "discriminator": [
-        161,
-        215,
-        24,
-        59,
-        14,
-        236,
-        242,
-        221
-      ],
+      "discriminator": [161, 215, 24, 59, 14, 236, 242, 221],
       "accounts": [
         {
           "name": "roulette",
@@ -107,22 +73,8 @@
               {
                 "kind": "const",
                 "value": [
-                  103,
-                  108,
-                  111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103,
-                  95,
-                  118,
-                  50
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
                 ]
               }
             ]
@@ -148,17 +100,95 @@
       "args": []
     },
     {
-      "name": "create_roulette",
-      "discriminator": [
-        76,
-        240,
-        229,
-        18,
-        219,
-        48,
-        201,
-        83
+      "name": "create_next_game",
+      "discriminator": [254, 203, 41, 48, 208, 12, 135, 205],
+      "accounts": [
+        {
+          "name": "new_roulette",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [114, 111, 117, 108, 101, 116, 116, 101]
+              },
+              {
+                "kind": "account",
+                "path": "caller"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "usdc_mint",
+          "docs": ["USDC mint account"]
+        },
+        {
+          "name": "roulette_token_account",
+          "docs": ["New roulette token account (PDA)"],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114, 111, 117, 108, 101, 116, 116, 101, 95, 116, 111, 107,
+                  101, 110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "new_roulette"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
       ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_roulette",
+      "discriminator": [76, 240, 229, 18, 219, 48, 201, 83],
       "accounts": [
         {
           "name": "roulette",
@@ -167,16 +197,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  114,
-                  111,
-                  117,
-                  108,
-                  101,
-                  116,
-                  116,
-                  101
-                ]
+                "value": [114, 111, 117, 108, 101, 116, 116, 101]
               },
               {
                 "kind": "account",
@@ -196,22 +217,8 @@
               {
                 "kind": "const",
                 "value": [
-                  103,
-                  108,
-                  111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103,
-                  95,
-                  118,
-                  50
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
                 ]
               }
             ]
@@ -237,20 +244,8 @@
               {
                 "kind": "const",
                 "value": [
-                  114,
-                  111,
-                  117,
-                  108,
-                  101,
-                  116,
-                  116,
-                  101,
-                  95,
-                  116,
-                  111,
-                  107,
-                  101,
-                  110
+                  114, 111, 117, 108, 101, 116, 116, 101, 95, 116, 111, 107,
+                  101, 110
                 ]
               },
               {
@@ -301,16 +296,7 @@
     },
     {
       "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
       "accounts": [
         {
           "name": "global_config",
@@ -320,23 +306,32 @@
               {
                 "kind": "const",
                 "value": [
-                  103,
-                  108,
-                  111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103,
-                  95,
-                  118,
-                  50
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
                 ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "first_roulette",
+          "docs": [
+            "First roulette game created automatically on initialization"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [114, 111, 117, 108, 101, 116, 116, 101]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "const",
+                "value": [1, 0, 0, 0, 0, 0, 0, 0]
               }
             ]
           }
@@ -354,24 +349,44 @@
           "writable": true
         },
         {
+          "name": "first_roulette_token_account",
+          "docs": [
+            "First roulette token account (PDA) - will be created when needed"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114, 111, 117, 108, 101, 116, 116, 101, 95, 116, 111, 107,
+                  101, 110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "first_roulette"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
       "name": "lock_betting",
-      "discriminator": [
-        9,
-        125,
-        7,
-        62,
-        99,
-        72,
-        131,
-        204
-      ],
+      "discriminator": [9, 125, 7, 62, 99, 72, 131, 204],
       "accounts": [
         {
           "name": "roulette",
@@ -384,22 +399,8 @@
               {
                 "kind": "const",
                 "value": [
-                  103,
-                  108,
-                  111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103,
-                  95,
-                  118,
-                  50
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
                 ]
               }
             ]
@@ -417,16 +418,7 @@
     },
     {
       "name": "place_bet",
-      "discriminator": [
-        222,
-        62,
-        67,
-        220,
-        63,
-        166,
-        126,
-        33
-      ],
+      "discriminator": [222, 62, 67, 220, 63, 166, 126, 33],
       "accounts": [
         {
           "name": "roulette",
@@ -439,11 +431,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  98,
-                  101,
-                  116
-                ]
+                "value": [98, 101, 116]
               },
               {
                 "kind": "account",
@@ -468,22 +456,8 @@
               {
                 "kind": "const",
                 "value": [
-                  103,
-                  108,
-                  111,
-                  98,
-                  97,
-                  108,
-                  95,
-                  99,
-                  111,
-                  110,
-                  102,
-                  105,
-                  103,
-                  95,
-                  118,
-                  50
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
                 ]
               }
             ]
@@ -531,179 +505,200 @@
           "type": "bytes"
         }
       ]
+    },
+    {
+      "name": "process_automation",
+      "discriminator": [39, 37, 141, 84, 96, 46, 228, 253],
+      "accounts": [
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "caller",
+          "docs": ["Anyone can call this instruction to process automation"],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "process_game_lifecycle",
+      "discriminator": [48, 156, 192, 208, 251, 26, 129, 87],
+      "accounts": [
+        {
+          "name": "roulette",
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "caller",
+          "docs": ["Anyone can call this instruction"],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle_randomness",
+      "discriminator": [209, 111, 84, 239, 14, 4, 26, 251],
+      "accounts": [
+        {
+          "name": "roulette",
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "randomness",
+          "docs": ["Randomness account that contains the randomness"]
+        },
+        {
+          "name": "roulette_token_account",
+          "writable": true
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "caller",
+          "docs": ["Anyone can call this instruction to settle the randomness"],
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "spin_roulette",
+      "discriminator": [6, 130, 248, 38, 161, 155, 17, 30],
+      "accounts": [
+        {
+          "name": "roulette",
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "randomness",
+          "docs": ["Randomness account for random number generation"],
+          "writable": true
+        },
+        {
+          "name": "caller",
+          "docs": [
+            "Anyone can call this instruction when the spin time arrives"
+          ],
+          "signer": true
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
     {
       "name": "BetAccount",
-      "discriminator": [
-        117,
-        187,
-        165,
-        174,
-        194,
-        28,
-        119,
-        76
-      ]
+      "discriminator": [117, 187, 165, 174, 194, 28, 119, 76]
     },
     {
       "name": "GlobalConfig",
-      "discriminator": [
-        149,
-        8,
-        156,
-        202,
-        160,
-        252,
-        176,
-        217
-      ]
+      "discriminator": [149, 8, 156, 202, 160, 252, 176, 217]
     },
     {
       "name": "RouletteAccount",
-      "discriminator": [
-        9,
-        161,
-        150,
-        107,
-        90,
-        243,
-        33,
-        77
-      ]
+      "discriminator": [9, 161, 150, 107, 90, 243, 33, 77]
     }
   ],
   "events": [
     {
       "name": "BetPlaced",
-      "discriminator": [
-        88,
-        88,
-        145,
-        226,
-        126,
-        206,
-        32,
-        0
-      ]
+      "discriminator": [88, 88, 145, 226, 126, 206, 32, 0]
     },
     {
       "name": "BettingLocked",
-      "discriminator": [
-        47,
-        160,
-        87,
-        25,
-        158,
-        169,
-        138,
-        225
-      ]
+      "discriminator": [47, 160, 87, 25, 158, 169, 138, 225]
     },
     {
       "name": "RandomnessRequested",
-      "discriminator": [
-        10,
-        64,
-        183,
-        29,
-        104,
-        63,
-        90,
-        149
-      ]
+      "discriminator": [10, 64, 183, 29, 104, 63, 90, 149]
     },
     {
       "name": "RouletteCancelled",
-      "discriminator": [
-        4,
-        144,
-        100,
-        100,
-        14,
-        183,
-        224,
-        215
-      ]
+      "discriminator": [4, 144, 100, 100, 14, 183, 224, 215]
     },
     {
       "name": "RouletteCreated",
-      "discriminator": [
-        183,
-        179,
-        244,
-        172,
-        105,
-        72,
-        4,
-        48
-      ]
+      "discriminator": [183, 179, 244, 172, 105, 72, 4, 48]
     },
     {
       "name": "RouletteExpired",
-      "discriminator": [
-        234,
-        9,
-        218,
-        131,
-        246,
-        72,
-        116,
-        1
-      ]
+      "discriminator": [234, 9, 218, 131, 246, 72, 116, 1]
     },
     {
       "name": "RouletteSpinStarted",
-      "discriminator": [
-        122,
-        205,
-        15,
-        137,
-        83,
-        247,
-        154,
-        142
-      ]
+      "discriminator": [122, 205, 15, 137, 83, 247, 154, 142]
     },
     {
       "name": "RouletteSpun",
-      "discriminator": [
-        7,
-        20,
-        158,
-        171,
-        79,
-        107,
-        76,
-        53
-      ]
+      "discriminator": [7, 20, 158, 171, 79, 107, 76, 53]
     },
     {
       "name": "RouletteStateChanged",
-      "discriminator": [
-        234,
-        150,
-        131,
-        6,
-        46,
-        54,
-        83,
-        237
-      ]
+      "discriminator": [234, 150, 131, 6, 46, 54, 83, 237]
     },
     {
       "name": "WinningsClaimed",
-      "discriminator": [
-        187,
-        184,
-        29,
-        196,
-        54,
-        117,
-        70,
-        150
-      ]
+      "discriminator": [187, 184, 29, 196, 54, 117, 70, 150]
     }
   ],
   "errors": [
@@ -1225,10 +1220,7 @@
             "name": "vrf_randomness",
             "type": {
               "option": {
-                "array": [
-                  "u8",
-                  32
-                ]
+                "array": ["u8", 32]
               }
             }
           },
@@ -1359,6 +1351,10 @@
           {
             "name": "roulette_id",
             "type": "pubkey"
+          },
+          {
+            "name": "reason",
+            "type": "string"
           },
           {
             "name": "total_refunds",

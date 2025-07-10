@@ -1,5 +1,5 @@
-import { generateNonce } from 'siwe'
+import { generateNonce } from 'siwe';
 
 export async function GET() {
-  return Response.json({ nonce: generateNonce() })
-} 
+  return Response.json({ nonce: generateNonce() });
+}

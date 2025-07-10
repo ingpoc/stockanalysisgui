@@ -1,8 +1,15 @@
-import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react'
-import { PublicKey } from '@solana/web3.js'
+import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 
 export function useWallet() {
-  const { publicKey, connected, connecting, disconnect, signTransaction, signAllTransactions } = useSolanaWallet()
+  const {
+    publicKey,
+    connected,
+    connecting,
+    disconnect,
+    signTransaction,
+    signAllTransactions,
+  } = useSolanaWallet();
 
   return {
     address: publicKey?.toBase58() || null,
@@ -12,5 +19,5 @@ export function useWallet() {
     publicKey: publicKey || null,
     signTransaction,
     signAllTransactions,
-  }
-} 
+  };
+}

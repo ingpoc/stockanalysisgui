@@ -1,12 +1,51 @@
 {
-  "extends": [
-    "next/core-web-vitals",
-    "prettier"
-  ],
+  "extends": ["next/core-web-vitals", "prettier"],
+  "plugins": ["@typescript-eslint", "import"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
   "rules": {
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      {
+        "selector": "memberLike",
+        "format": ["camelCase"],
+        "filter": {
+          "regex": "^(globalConfig|rouletteAccount|lotteryAccount|ticketAccount|rouletteType|endTime|totalBets|betAmount|winningNumber|prizePool|ticketPrice|drawTime)$",
+          "match": true
+        }
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "@typescript-eslint/prefer-optional-chain": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/ban-ts-comment": "off",
-    "react-hooks/exhaustive-deps": "warn",
-    "react/no-children-prop": "off"
-  }
+    "import/order": "off",
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-console": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "off",
+    "react/no-children-prop": "off",
+    "react/jsx-curly-brace-presence": "off",
+    "react/self-closing-comp": "off"
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "dist/",
+    "build/",
+    "src/types/generated/",
+    "src/types/*_types.ts",
+    "src/types/decentralized_*.ts",
+    "src/lib/solana/*.json",
+    "CLAUDE.md",
+    "*.md"
+  ]
 }

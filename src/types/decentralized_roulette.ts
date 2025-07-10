@@ -5,477 +5,396 @@
  * IDL can be found at `target/idl/decentralized_roulette.json`.
  */
 export type DecentralizedRoulette = {
-  "address": "4ZVg5wU59Tr6pKAfxkTFsF2cffGrVRM2xqt1WbPUJrUB",
-  "metadata": {
-    "name": "decentralizedRoulette",
-    "version": "0.1.0",
-    "spec": "0.1.0",
-    "description": "Decentralized Roulette Game"
-  },
-  "instructions": [
+  address: '4ZVg5wU59Tr6pKAfxkTFsF2cffGrVRM2xqt1WbPUJrUB';
+  metadata: {
+    name: 'decentralizedRoulette';
+    version: '0.1.0';
+    spec: '0.1.0';
+    description: 'Decentralized Roulette Game';
+  };
+  instructions: [
     {
-      "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
-      "accounts": [
+      name: 'initialize';
+      discriminator: [175, 175, 109, 31, 13, 152, 155, 237];
+      accounts: [
         {
-          "name": "globalConfig",
-          "writable": true
+          name: 'globalConfig';
+          writable: true;
         },
         {
-          "name": "authority",
-          "writable": true,
-          "signer": true
+          name: 'authority';
+          writable: true;
+          signer: true;
         },
         {
-          "name": "usdcMint"
+          name: 'usdcMint';
         },
         {
-          "name": "treasuryTokenAccount"
+          name: 'treasuryTokenAccount';
         },
         {
-          "name": "systemProgram"
-        }
-      ],
-      "args": []
+          name: 'systemProgram';
+        },
+      ];
+      args: [];
     },
     {
-      "name": "createRoulette",
-      "discriminator": [
-        101,
-        245,
-        184,
-        13,
-        187,
-        206,
-        27,
-        229
-      ],
-      "accounts": [
+      name: 'createRoulette';
+      discriminator: [76, 240, 229, 18, 219, 48, 208, 12];
+      accounts: [
         {
-          "name": "roulette",
-          "writable": true
+          name: 'roulette';
+          writable: true;
         },
         {
-          "name": "globalConfig"
+          name: 'globalConfig';
         },
         {
-          "name": "creator",
-          "writable": true,
-          "signer": true
+          name: 'creator';
+          writable: true;
+          signer: true;
         },
         {
-          "name": "usdcMint"
+          name: 'usdcMint';
         },
         {
-          "name": "creatorTokenAccount",
-          "writable": true
+          name: 'creatorTokenAccount';
         },
         {
-          "name": "rouletteTokenAccount",
-          "writable": true
+          name: 'rouletteTokenAccount';
+          writable: true;
         },
         {
-          "name": "tokenProgram"
+          name: 'tokenProgram';
         },
         {
-          "name": "systemProgram"
+          name: 'systemProgram';
         },
         {
-          "name": "rent"
-        }
-      ],
-      "args": [
+          name: 'rent';
+        },
+      ];
+      args: [
         {
-          "name": "rouletteType",
-          "type": {
-            "defined": {
-              "name": "rouletteType"
-            }
-          }
+          name: 'rouletteType';
+          type: {
+            defined: {
+              name: 'RouletteType';
+            };
+          };
         },
         {
-          "name": "minBet",
-          "type": "u64"
+          name: 'minBet';
+          type: 'u64';
         },
         {
-          "name": "maxBet",
-          "type": "u64"
+          name: 'maxBet';
+          type: 'u64';
         },
         {
-          "name": "gameDuration",
-          "type": "i64"
+          name: 'gameDuration';
+          type: 'i64';
         },
         {
-          "name": "nonce",
-          "type": "u64"
-        }
-      ]
+          name: 'nonce';
+          type: 'u64';
+        },
+      ];
     },
     {
-      "name": "placeBet",
-      "discriminator": [
-        45,
-        110,
-        214,
-        12,
-        60,
-        102,
-        123,
-        37
-      ],
-      "accounts": [
+      name: 'placeBet';
+      discriminator: [123, 45, 67, 89, 12, 34, 56, 78];
+      accounts: [
         {
-          "name": "roulette",
-          "writable": true
+          name: 'roulette';
+          writable: true;
         },
         {
-          "name": "bet",
-          "writable": true
+          name: 'bet';
+          writable: true;
         },
         {
-          "name": "globalConfig"
+          name: 'globalConfig';
         },
         {
-          "name": "bettor",
-          "writable": true,
-          "signer": true
+          name: 'bettor';
+          writable: true;
+          signer: true;
         },
         {
-          "name": "usdcMint"
+          name: 'usdcMint';
         },
         {
-          "name": "bettorTokenAccount",
-          "writable": true
+          name: 'bettorTokenAccount';
+          writable: true;
         },
         {
-          "name": "rouletteTokenAccount",
-          "writable": true
+          name: 'rouletteTokenAccount';
+          writable: true;
         },
         {
-          "name": "tokenProgram"
+          name: 'tokenProgram';
         },
         {
-          "name": "systemProgram"
-        }
-      ],
-      "args": [
+          name: 'systemProgram';
+        },
+      ];
+      args: [
         {
-          "name": "betType",
-          "type": {
-            "defined": {
-              "name": "betType"
-            }
-          }
+          name: 'betType';
+          type: {
+            defined: {
+              name: 'BetType';
+            };
+          };
         },
         {
-          "name": "betAmount",
-          "type": "u64"
+          name: 'betAmount';
+          type: 'u64';
         },
         {
-          "name": "betNumbers",
-          "type": {
-            "vec": "u8"
-          }
-        }
-      ]
+          name: 'betNumbers';
+          type: {
+            vec: 'u8';
+          };
+        },
+      ];
     },
     {
-      "name": "lockBetting",
-      "discriminator": [
-        123,
-        45,
-        67,
-        89,
-        12,
-        34,
-        56,
-        78
-      ],
-      "accounts": [
+      name: 'lockBetting';
+      discriminator: [123, 45, 67, 89, 12, 34, 56, 78];
+      accounts: [
         {
-          "name": "roulette",
-          "writable": true
+          name: 'roulette';
+          writable: true;
         },
         {
-          "name": "globalConfig"
+          name: 'globalConfig';
         },
         {
-          "name": "caller",
-          "signer": true
-        }
-      ],
-      "args": []
+          name: 'caller';
+          signer: true;
+        },
+      ];
+      args: [];
     },
     {
-      "name": "claimWinnings",
-      "discriminator": [
-        187,
-        230,
-        54,
-        100,
-        23,
-        145,
-        67,
-        89
-      ],
-      "accounts": [
+      name: 'claimWinnings';
+      discriminator: [187, 230, 54, 100, 23, 145, 67, 89];
+      accounts: [
         {
-          "name": "roulette",
-          "writable": true
+          name: 'roulette';
+          writable: true;
         },
         {
-          "name": "bet",
-          "writable": true
+          name: 'bet';
+          writable: true;
         },
         {
-          "name": "globalConfig"
+          name: 'globalConfig';
         },
         {
-          "name": "claimer",
-          "writable": true,
-          "signer": true
+          name: 'claimer';
+          writable: true;
+          signer: true;
         },
         {
-          "name": "claimerTokenAccount",
-          "writable": true
+          name: 'claimerTokenAccount';
+          writable: true;
         },
         {
-          "name": "rouletteTokenAccount",
-          "writable": true
+          name: 'rouletteTokenAccount';
+          writable: true;
         },
         {
-          "name": "tokenProgram"
-        }
-      ],
-      "args": []
-    }
-  ],
-  "accounts": [
-    {
-      "name": "rouletteAccount",
-      "discriminator": [
-        22,
-        33,
-        44,
-        55,
-        66,
-        77,
-        88,
-        99
-      ]
+          name: 'tokenProgram';
+        },
+      ];
+      args: [];
     },
     {
-      "name": "betAccount",
-      "discriminator": [
-        11,
-        22,
-        33,
-        44,
-        55,
-        66,
-        77,
-        88
-      ]
+      name: 'cancelRoulette';
+      discriminator: [49, 134, 191, 126, 36, 130, 7, 145];
+      accounts: [
+        {
+          name: 'roulette';
+          writable: true;
+        },
+        {
+          name: 'globalConfig';
+        },
+        {
+          name: 'authority';
+          signer: true;
+        },
+      ];
+      args: [
+        {
+          name: 'reason';
+          type: 'string';
+        },
+      ];
     },
     {
-      "name": "globalConfig",
-      "discriminator": [
-        99,
-        88,
-        77,
-        66,
-        55,
-        44,
-        33,
-        22
-      ]
-    }
-  ],
-  "events": [
-    {
-      "name": "rouletteCreated",
-      "discriminator": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ]
+      name: 'processGameLifecycle';
+      discriminator: [48, 156, 192, 208, 251, 26, 129, 87];
+      accounts: [
+        {
+          name: 'roulette';
+          writable: true;
+        },
+        {
+          name: 'globalConfig';
+        },
+        {
+          name: 'caller';
+          signer: true;
+        },
+      ];
+      args: [];
     },
     {
-      "name": "betPlaced",
-      "discriminator": [
-        10,
-        20,
-        30,
-        40,
-        50,
-        60,
-        70,
-        80
-      ]
+      name: 'createNextGame';
+      discriminator: [254, 203, 41, 48, 208, 12, 135, 205];
+      accounts: [
+        {
+          name: 'newRoulette';
+          writable: true;
+        },
+        {
+          name: 'globalConfig';
+        },
+        {
+          name: 'caller';
+          writable: true;
+          signer: true;
+        },
+        {
+          name: 'usdcMint';
+        },
+        {
+          name: 'rouletteTokenAccount';
+          writable: true;
+        },
+        {
+          name: 'tokenProgram';
+        },
+        {
+          name: 'systemProgram';
+        },
+        {
+          name: 'rent';
+        },
+      ];
+      args: [
+        {
+          name: 'nonce';
+          type: 'u64';
+        },
+      ];
     },
     {
-      "name": "bettingLocked",
-      "discriminator": [
-        15,
-        25,
-        35,
-        45,
-        55,
-        65,
-        75,
-        85
-      ]
+      name: 'processAutomation';
+      discriminator: [39, 37, 141, 84, 96, 46, 228, 253];
+      accounts: [
+        {
+          name: 'globalConfig';
+        },
+        {
+          name: 'caller';
+          signer: true;
+        },
+      ];
+      args: [];
+    },
+  ];
+  accounts: [
+    {
+      name: 'BetAccount';
+      discriminator: [117, 187, 195, 89, 124, 167, 83, 89];
     },
     {
-      "name": "winningsClaimed",
-      "discriminator": [
-        90,
-        80,
-        70,
-        60,
-        50,
-        40,
-        30,
-        20
-      ]
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "invalidBetType",
-      "msg": "Invalid bet type"
+      name: 'GlobalConfig';
+      discriminator: [34, 78, 123, 156, 190, 234, 45, 67];
     },
     {
-      "code": 6001,
-      "name": "betBelowMinimum",
-      "msg": "Bet amount below minimum"
+      name: 'RouletteAccount';
+      discriminator: [89, 123, 167, 201, 78, 134, 189, 223];
+    },
+  ];
+  types: [
+    {
+      name: 'RouletteType';
+      type: {
+        kind: 'enum';
+        variants: [
+          {
+            name: 'european';
+          },
+          {
+            name: 'american';
+          },
+        ];
+      };
     },
     {
-      "code": 6002,
-      "name": "betExceedsMaximum",
-      "msg": "Bet amount exceeds maximum"
-    }
-  ],
-  "types": [
-    {
-      "name": "rouletteType",
-      "type": {
-        "kind": "enum",
-        "variants": [
+      name: 'BetType';
+      type: {
+        kind: 'enum';
+        variants: [
           {
-            "name": "european"
+            name: 'straight';
           },
           {
-            "name": "american"
-          }
-        ]
-      }
+            name: 'split';
+          },
+          {
+            name: 'street';
+          },
+          {
+            name: 'corner';
+          },
+          {
+            name: 'sixLine';
+          },
+          {
+            name: 'red';
+          },
+          {
+            name: 'black';
+          },
+          {
+            name: 'even';
+          },
+          {
+            name: 'odd';
+          },
+          {
+            name: 'low';
+          },
+          {
+            name: 'high';
+          },
+          {
+            name: 'firstTwelve';
+          },
+          {
+            name: 'secondTwelve';
+          },
+          {
+            name: 'thirdTwelve';
+          },
+          {
+            name: 'firstColumn';
+          },
+          {
+            name: 'secondColumn';
+          },
+          {
+            name: 'thirdColumn';
+          },
+        ];
+      };
     },
-    {
-      "name": "rouletteState",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "created"
-          },
-          {
-            "name": "open"
-          },
-          {
-            "name": "locked"
-          },
-          {
-            "name": "spinning"
-          },
-          {
-            "name": "awaitingRandomness"
-          },
-          {
-            "name": "completed"
-          },
-          {
-            "name": "expired"
-          },
-          {
-            "name": "cancelled"
-          }
-        ]
-      }
-    },
-    {
-      "name": "betType",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "straight"
-          },
-          {
-            "name": "split"
-          },
-          {
-            "name": "street"
-          },
-          {
-            "name": "corner"
-          },
-          {
-            "name": "sixLine"
-          },
-          {
-            "name": "red"
-          },
-          {
-            "name": "black"
-          },
-          {
-            "name": "even"
-          },
-          {
-            "name": "odd"
-          },
-          {
-            "name": "low"
-          },
-          {
-            "name": "high"
-          },
-          {
-            "name": "firstTwelve"
-          },
-          {
-            "name": "secondTwelve"
-          },
-          {
-            "name": "thirdTwelve"
-          },
-          {
-            "name": "firstColumn"
-          },
-          {
-            "name": "secondColumn"
-          },
-          {
-            "name": "thirdColumn"
-          }
-        ]
-      }
-    }
-  ]
+  ];
 };

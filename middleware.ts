@@ -7,17 +7,16 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // Public paths that don't require authentication
-  const isPublicPath = path === '/auth/login' || 
-                      path === '/auth/register' || 
-                      path.startsWith('/api/auth');
+  const isPublicPath =
+    path === '/auth/login' ||
+    path === '/auth/register' ||
+    path.startsWith('/api/auth');
 
   const hasSession = request.cookies.has('next-auth.session-token');
 
   // Redirect unauthenticated users to login page
   if (!hasSession && !isPublicPath) {
-    const searchParams = new URLSearchParams([
-      ['returnTo', path],
-    ]);
+    const searchParams = new URLSearchParams([['returnTo', path]]);
     return NextResponse.redirect(
       new URL(`/auth/login?${searchParams}`, request.url)
     );
@@ -37,4 +36,4 @@ export const config = {
     // Match all routes except static files and api routes that don't need auth
     '/((?!_next/static|_next/image|favicon.ico|api/public).*)',
   ],
-}; 
+};

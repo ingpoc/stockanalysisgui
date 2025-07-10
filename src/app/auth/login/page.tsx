@@ -1,84 +1,93 @@
-'use client'
+'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useWallet } from '@solana/wallet-adapter-react'
-import { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { useAuthNavigation, isValidReturnUrl } from '@/lib/navigation'
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useAuthNavigation, isValidReturnUrl } from '@/lib/navigation';
 
-require('@solana/wallet-adapter-react-ui/styles.css')
+require('@solana/wallet-adapter-react-ui/styles.css');
 
 // Dynamically load wallet button to avoid SSR hydration mismatch
 const WalletMultiButton = dynamic(
-  () => import('@solana/wallet-adapter-react-ui').then(mod => mod.WalletMultiButton),
+  () =>
+    import('@solana/wallet-adapter-react-ui').then(
+      mod => mod.WalletMultiButton
+    ),
   { ssr: false }
-)
+);
 
 // Lazy load feature cards
-const FeatureCards = dynamic(() => import('@/components/auth/feature-cards').then(mod => mod.FeatureCards), {
-  loading: () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="animate-pulse bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50">
-          <div className="h-8 w-8 bg-primary/20 rounded mb-4" />
-          <div className="h-6 w-32 bg-primary/20 rounded mb-2" />
-          <div className="h-4 w-full bg-primary/10 rounded" />
-        </div>
-      ))}
-    </div>
-  ),
-  ssr: false
-})
+const FeatureCards = dynamic(
+  () => import('@/components/auth/feature-cards').then(mod => mod.FeatureCards),
+  {
+    loading: () => (
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className='animate-pulse bg-card/50 backdrop-blur-sm p-6 rounded-xl border border-border/50'
+          >
+            <div className='h-8 w-8 bg-primary/20 rounded mb-4' />
+            <div className='h-6 w-32 bg-primary/20 rounded mb-2' />
+            <div className='h-4 w-full bg-primary/10 rounded' />
+          </div>
+        ))}
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export default function LoginPage() {
-  const { connected, connecting } = useWallet()
-  const searchParams = useSearchParams()
-  const navigation = useAuthNavigation()
+  const { connected, connecting } = useWallet();
+  const searchParams = useSearchParams();
+  const navigation = useAuthNavigation();
   // Prevent SSR/CSR mismatch by only rendering client-only parts after mount
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (connecting) {
-      return
+      return;
     }
 
     if (connected) {
-      const returnUrl = searchParams.get('returnTo')
+      const returnUrl = searchParams.get('returnTo');
       if (returnUrl && isValidReturnUrl(returnUrl)) {
-        navigation.toProtectedRoute(returnUrl)
+        navigation.toProtectedRoute(returnUrl);
       } else {
-        navigation.toDashboard()
+        navigation.toDashboard();
       }
     }
-  }, [connected, connecting, navigation, searchParams])
+  }, [connected, connecting, navigation, searchParams]);
 
   if (connecting) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center space-y-4">
+      <div className='flex min-h-screen items-center justify-center bg-background'>
+        <div className='text-center space-y-4'>
           <LoadingSpinner />
-          <p className="text-muted-foreground mt-4">
-            Connecting wallet...
-          </p>
+          <p className='text-muted-foreground mt-4'>Connecting wallet...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+    <div className='min-h-screen bg-background flex flex-col lg:flex-row'>
       {/* Left side - Hero/Features */}
-      <div className="relative lg:w-1/2 bg-gradient-to-br from-primary/5 via-primary/10 to-background p-8 lg:p-12 flex items-center">
-        <div className="relative z-10 w-full max-w-2xl mx-auto">
-          <div className="text-center lg:text-left space-y-8">
+      <div className='relative lg:w-1/2 bg-gradient-to-br from-primary/5 via-primary/10 to-background p-8 lg:p-12 flex items-center'>
+        <div className='relative z-10 w-full max-w-2xl mx-auto'>
+          <div className='text-center lg:text-left space-y-8'>
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight">
+              <h1 className='text-4xl lg:text-5xl font-bold tracking-tight'>
                 Crypto
-                <span className="text-primary"> Lottery</span>
+                <span className='text-primary'> Lottery</span>
               </h1>
-              <p className="mt-4 text-lg text-muted-foreground">
+              <p className='mt-4 text-lg text-muted-foreground'>
                 Decentralized lottery platform powered by Solana blockchain
               </p>
             </div>
@@ -88,25 +97,25 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Login */}
-      <div className="lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold">Welcome Back</h2>
-            <p className="mt-2 text-muted-foreground">
+      <div className='lg:w-1/2 flex items-center justify-center p-8 lg:p-12'>
+        <div className='w-full max-w-md space-y-8'>
+          <div className='text-center'>
+            <h2 className='text-3xl font-bold'>Welcome Back</h2>
+            <p className='mt-2 text-muted-foreground'>
               Connect your wallet to continue
             </p>
           </div>
-          <div className="flex justify-center">
+          <div className='flex justify-center'>
             {mounted && (
               <WalletMultiButton
-                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                className='bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
                 style={{
                   height: '48px',
                   padding: '0 32px',
                   borderRadius: '8px',
                   fontSize: '16px',
                   fontWeight: 500,
-                  border: 'none'
+                  border: 'none',
                 }}
               />
             )}
@@ -114,5 +123,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

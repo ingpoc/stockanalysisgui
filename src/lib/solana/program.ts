@@ -1,13 +1,20 @@
-import { Program, AnchorProvider, BN, Idl } from '@coral-xyz/anchor'
-import { Connection, PublicKey, SystemProgram, TransactionSignature, SYSVAR_RENT_PUBKEY, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js'
-import { AnchorWallet } from '@solana/wallet-adapter-react'
-import { 
-  TOKEN_PROGRAM_ID, 
+import { Program, AnchorProvider, BN, Idl } from '@coral-xyz/anchor';
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  TransactionSignature,
+  SYSVAR_RENT_PUBKEY,
+  SYSVAR_CLOCK_PUBKEY,
+} from '@solana/web3.js';
+import { AnchorWallet } from '@solana/wallet-adapter-react';
+import {
+  TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
-  getAccount
-} from '@solana/spl-token'
+  getAccount,
+} from '@solana/spl-token';
 import {
   LotteryType as ProgramLotteryType,
   LotteryState as ProgramLotteryState,
@@ -17,47 +24,46 @@ import {
   formatUSDC,
   parseUSDC,
   formatTimestamp,
-  LotteryInfo
-} from '@/types/lottery_types'
+  LotteryInfo,
+} from '@/types/lottery_types';
 // Import the UI types for compatibility
 
 // Import the IDL
-import { DecentralizedLottery as ProgramIDL } from '@/types/decentralized_lottery'
-const IDL = require('./decentralized_lottery.json') as ProgramIDL & Idl
+import { DecentralizedLottery as ProgramIDL } from '@/types/decentralized_lottery';
+const IDL = require('./decentralized_lottery.json') as ProgramIDL & Idl;
 
-type ProgramType = Program<ProgramIDL>
+type ProgramType = Program<ProgramIDL>;
 
 export class LotteryProgram {
-  private program: ProgramType
-  private connection: Connection
-  private wallet: AnchorWallet
+  private program: ProgramType;
+  private connection: Connection;
+  private wallet: AnchorWallet;
 
   constructor(connection: Connection, wallet: AnchorWallet) {
-    this.connection = connection
-    this.wallet = wallet
+    this.connection = connection;
+    this.wallet = wallet;
     const provider = new AnchorProvider(
       connection,
       wallet,
       AnchorProvider.defaultOptions()
-    )
-    this.program = new Program(
-      IDL,
-      provider
-    ) as ProgramType
+    );
+    this.program = new Program(IDL, provider) as ProgramType;
   }
 
   async initialize(): Promise<TransactionSignature> {
     if (!this.program.provider.publicKey) {
-      throw new Error("Wallet not connected")
+      throw new Error('Wallet not connected');
     }
 
     const [globalConfig] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config_v2")],
+      [Buffer.from('global_config_v2')],
       this.program.programId
     );
 
     // USDC mint address (devnet)
-    const usdcMint = new PublicKey("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr");
+    const usdcMint = new PublicKey(
+      'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'
+    );
 
     // Treasury token account - for now use admin's USDC account
     const treasuryTokenAccount = await getAssociatedTokenAddress(
@@ -74,7 +80,7 @@ export class LotteryProgram {
         treasuryTokenAccount,
         systemProgram: SystemProgram.programId,
       } as any)
-      .rpc()
+      .rpc();
   }
 
   async createLottery(
@@ -84,15 +90,17 @@ export class LotteryProgram {
     targetPrizePool: number = 0
   ): Promise<TransactionSignature> {
     if (!this.program.provider.publicKey) {
-      throw new Error("Wallet not connected")
+      throw new Error('Wallet not connected');
     }
 
     // Convert values to appropriate units (USDC has 6 decimals)
     const ticketPriceInSmallestUnit = Math.floor(ticketPrice * 1_000_000);
-    const targetPrizePoolInSmallestUnit = Math.floor(targetPrizePool * 1_000_000);
+    const targetPrizePoolInSmallestUnit = Math.floor(
+      targetPrizePool * 1_000_000
+    );
 
     const [globalConfig] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config_v2")],
+      [Buffer.from('global_config_v2')],
       this.program.programId
     );
 
@@ -101,9 +109,7 @@ export class LotteryProgram {
       await this.program.account.globalConfig.fetch(globalConfig);
     } catch (error) {
       // Global config doesn't exist, initialize it first
-      console.log("Global config not found, initializing...");
       await this.initialize();
-      console.log("Global config initialized successfully");
     }
 
     // The lotteryType parameter is already in discriminated union format
@@ -113,57 +119,39 @@ export class LotteryProgram {
     const nonce = Date.now() + Math.floor(Math.random() * 1000);
     const nonceBuffer = Buffer.allocUnsafe(8);
     nonceBuffer.writeBigInt64LE(BigInt(nonce), 0);
-    
+
     // Calculate PDA using deployed program seeds: ["lottery", creator.key(), nonce]
     const [lotteryAccount] = PublicKey.findProgramAddressSync(
       [
-        Buffer.from("lottery"),
+        Buffer.from('lottery'),
         this.program.provider.publicKey!.toBuffer(),
-        nonceBuffer
+        nonceBuffer,
       ],
       this.program.programId
     );
 
-    console.log("🎯 Creating lottery with:", {
-      lotteryType,
-      ticketPrice,
-      drawTime,
-      targetPrizePool,
-      lotteryAccount: lotteryAccount.toString(),
-      creator: this.program.provider.publicKey!.toString()
-    });
-
     // Calculate lottery token account PDA
     const [lotteryTokenAccount] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("lottery_token"),
-        lotteryAccount.toBuffer()
-      ],
+      [Buffer.from('lottery_token'), lotteryAccount.toBuffer()],
       this.program.programId
     );
 
     // USDC mint address (devnet)
-    const usdcMint = new PublicKey("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr");
+    const usdcMint = new PublicKey(
+      'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'
+    );
 
-    // Get creator's USDC token account  
+    // Get creator's USDC token account
     const creatorTokenAccount = await getAssociatedTokenAddress(
       usdcMint,
       this.program.provider.publicKey!
     );
 
-    console.log("🔍 Creator token account:", creatorTokenAccount.toString());
-    
     // Check if creator token account exists
     try {
-      const creatorTokenAccountInfo = await this.connection.getAccountInfo(creatorTokenAccount);
-      console.log("📊 Creator token account info:", {
-        exists: !!creatorTokenAccountInfo,
-        owner: creatorTokenAccountInfo?.owner.toString(),
-        isTokenAccount: creatorTokenAccountInfo?.owner.equals(TOKEN_PROGRAM_ID)
-      });
-    } catch (error) {
-      console.log("❌ Error checking creator token account:", error);
-    }
+      const creatorTokenAccountInfo =
+        await this.connection.getAccountInfo(creatorTokenAccount);
+    } catch (error) {}
 
     return await this.program.methods
       .createLottery(
@@ -184,18 +172,20 @@ export class LotteryProgram {
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
       } as any)
-      .rpc()
+      .rpc();
   }
 
   async buyTicket(lotteryAddress: string): Promise<TransactionSignature> {
     if (!this.program.provider.publicKey) {
-      throw new Error("Wallet not connected")
+      throw new Error('Wallet not connected');
     }
 
     const lotteryPubkey = new PublicKey(lotteryAddress);
-    
+
     // Get lottery account to determine next ticket ID and nonce
-    const lotteryAccount = await this.program.account.lotteryAccount.fetch(lotteryPubkey) as any;
+    const lotteryAccount = (await this.program.account.lotteryAccount.fetch(
+      lotteryPubkey
+    )) as any;
     const nextTicketId = parseInt(lotteryAccount.lastTicketId) + 1;
 
     // Create ticket ID buffer using little-endian bytes (to match backend)
@@ -203,29 +193,27 @@ export class LotteryProgram {
     ticketIdBuffer.writeBigInt64LE(BigInt(nextTicketId), 0);
 
     const [ticketAccount] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("ticket"),
-        lotteryPubkey.toBuffer(),
-        ticketIdBuffer
-      ],
+      [Buffer.from('ticket'), lotteryPubkey.toBuffer(), ticketIdBuffer],
       this.program.programId
     );
 
     const [globalConfig] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config_v2")],
+      [Buffer.from('global_config_v2')],
       this.program.programId
     );
-    
+
     // Get global config to fetch USDC mint
-    const globalConfigAccount = await this.program.account.globalConfig.fetch(globalConfig) as any;
+    const globalConfigAccount = (await this.program.account.globalConfig.fetch(
+      globalConfig
+    )) as any;
     const usdcMint = new PublicKey(globalConfigAccount.usdcMint);
-    
+
     // Get user's USDC token account
     const userTokenAccount = await getAssociatedTokenAddress(
       usdcMint,
       this.program.provider.publicKey
     );
-    
+
     // Get lottery creator's USDC token account (where lottery funds are stored)
     const lotteryCreator = new PublicKey(lotteryAccount.authority);
     const lotteryTokenAccount = await getAssociatedTokenAddress(
@@ -242,7 +230,7 @@ export class LotteryProgram {
           globalConfig,
           user: this.program.provider.publicKey,
           userTokenAccount,
-          lotteryTokenAccount, 
+          lotteryTokenAccount,
           usdcMint,
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -251,48 +239,36 @@ export class LotteryProgram {
         .rpc({
           skipPreflight: false,
           preflightCommitment: 'confirmed',
-          commitment: 'confirmed'
-        })
+          commitment: 'confirmed',
+        });
     } catch (error: any) {
       // Check for duplicate transaction errors
-      if (error.message?.includes('already been processed') || 
-          error.message?.includes('Transaction simulation failed') ||
-          error.message?.includes('duplicate')) {
-        console.log('Ticket purchase transaction was already processed successfully');
+      if (
+        error.message?.includes('already been processed') ||
+        error.message?.includes('Transaction simulation failed') ||
+        error.message?.includes('duplicate')
+      ) {
         return 'duplicate_transaction_success';
       }
       throw error;
     }
   }
 
-  async transitionState(lotteryPubkey: PublicKey, nextState: string): Promise<TransactionSignature> {
+  async transitionState(
+    lotteryPubkey: PublicKey,
+    nextState: string
+  ): Promise<TransactionSignature> {
     if (!this.program.provider.publicKey) {
-      throw new Error("Wallet not connected")
+      throw new Error('Wallet not connected');
     }
 
     // Get lottery account to check current state and draw time
-    const lotteryAccount = await this.program.account.lotteryAccount.fetch(lotteryPubkey) as any;
+    const lotteryAccount = (await this.program.account.lotteryAccount.fetch(
+      lotteryPubkey
+    )) as any;
     const currentTime = Math.floor(Date.now() / 1000);
     const drawTime = parseInt(lotteryAccount.drawTime);
-    
-    console.log('🔍 State Transition Debug Info:', {
-      lotteryAddress: lotteryPubkey.toString(),
-      currentState: Object.keys(lotteryAccount.state)[0],
-      targetState: nextState,
-      currentTime: new Date(currentTime * 1000).toLocaleString(),
-      drawTime: new Date(drawTime * 1000).toLocaleString(),
-      totalTickets: parseInt(lotteryAccount.totalTickets),
-      authority: lotteryAccount.authority.toString(),
-      signer: this.program.provider.publicKey.toString(),
-      isAdmin: lotteryAccount.authority.equals(this.program.provider.publicKey),
-      globalConfig: lotteryAccount.globalConfig.toString(),
-      autoTransition: lotteryAccount.autoTransition,
-      isPrizePoolLocked: lotteryAccount.isPrizePoolLocked,
-      targetPrizePool: parseInt(lotteryAccount.targetPrizePool),
-      prizePool: parseInt(lotteryAccount.prizePool),
-      createdAt: new Date(parseInt(lotteryAccount.createdAt) * 1000).toLocaleString()
-    });
-    
+
     // Let the smart contract handle all validation
 
     // Provide specific error messages for common invalid transitions
@@ -303,65 +279,62 @@ export class LotteryProgram {
         const minutes = Math.floor((timeUntilDraw % 3600) / 60);
         throw new Error(
           `Cannot transition to Drawing state until draw time is reached. ` +
-          `Draw time is scheduled in ${hours}h ${minutes}m. ` +
-          `Current time: ${new Date(currentTime * 1000).toLocaleString()}, ` +
-          `Draw time: ${new Date(drawTime * 1000).toLocaleString()}`
+            `Draw time is scheduled in ${hours}h ${minutes}m. ` +
+            `Current time: ${new Date(currentTime * 1000).toLocaleString()}, ` +
+            `Draw time: ${new Date(drawTime * 1000).toLocaleString()}`
         );
       }
-      
+
       // Check if minimum tickets requirement might be failing
       if (parseInt(lotteryAccount.totalTickets) < 1) {
         throw new Error(
           `Cannot transition to Drawing state with ${lotteryAccount.totalTickets} tickets. ` +
-          `The smart contract may require at least 1 ticket to be sold before drawing.`
+            `The smart contract may require at least 1 ticket to be sold before drawing.`
         );
       }
-      
+
       // Check if user is the admin/authority
       if (!lotteryAccount.authority.equals(this.program.provider.publicKey)) {
         throw new Error(
           `Only the lottery authority can transition states. ` +
-          `Authority: ${lotteryAccount.authority.toString()}, ` +
-          `Signer: ${this.program.provider.publicKey.toString()}`
+            `Authority: ${lotteryAccount.authority.toString()}, ` +
+            `Signer: ${this.program.provider.publicKey.toString()}`
         );
       }
-      
     }
 
     const [globalConfig] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config_v2")],
+      [Buffer.from('global_config_v2')],
       this.program.programId
     );
 
     // Fetch global config to get the actual admin
     let globalAdmin: PublicKey;
     try {
-      const globalConfigAccount = await this.program.account.globalConfig.fetch(globalConfig);
+      const globalConfigAccount =
+        await this.program.account.globalConfig.fetch(globalConfig);
       globalAdmin = (globalConfigAccount as any).admin;
-      console.log('🔍 Global Admin Info:', {
-        globalConfigAddress: globalConfig.toString(),
-        globalAdmin: globalAdmin.toString(),
-        currentSigner: this.program.provider.publicKey.toString(),
-        isGlobalAdmin: globalAdmin.equals(this.program.provider.publicKey)
-      });
     } catch (error) {
-      console.error('❌ Failed to fetch global config:', error);
-      throw new Error('Failed to fetch global config. Ensure the program is initialized.');
+      throw new Error(
+        'Failed to fetch global config. Ensure the program is initialized.'
+      );
     }
 
     // Check if current user is global admin OR lottery authority
     const isGlobalAdmin = globalAdmin.equals(this.program.provider.publicKey);
-    const isLotteryAuthority = lotteryAccount.authority.equals(this.program.provider.publicKey);
-    
+    const isLotteryAuthority = lotteryAccount.authority.equals(
+      this.program.provider.publicKey
+    );
+
     if (!isGlobalAdmin && !isLotteryAuthority) {
       throw new Error(
         `Only the global admin or lottery authority can transition lottery states. ` +
-        `Global Admin: ${globalAdmin.toString()}, ` +
-        `Lottery Authority: ${lotteryAccount.authority.toString()}, ` +
-        `Current Signer: ${this.program.provider.publicKey.toString()}`
+          `Global Admin: ${globalAdmin.toString()}, ` +
+          `Lottery Authority: ${lotteryAccount.authority.toString()}, ` +
+          `Current Signer: ${this.program.provider.publicKey.toString()}`
       );
     }
-    
+
     // Use the appropriate admin account
     const adminToUse = isGlobalAdmin ? globalAdmin : lotteryAccount.authority;
 
@@ -402,32 +375,34 @@ export class LotteryProgram {
         .accounts({
           lotteryAccount: lotteryPubkey,
           globalConfig,
-          admin: adminToUse,  // Use global admin if available, otherwise lottery authority
+          admin: adminToUse, // Use global admin if available, otherwise lottery authority
           systemProgram: SystemProgram.programId,
-          clock: SYSVAR_CLOCK_PUBKEY,  // Add Clock sysvar for time validation
+          clock: SYSVAR_CLOCK_PUBKEY, // Add Clock sysvar for time validation
         } as any)
         .rpc({
           skipPreflight: false,
           preflightCommitment: 'confirmed',
-          commitment: 'confirmed'
-        })
+          commitment: 'confirmed',
+        });
     } catch (error: any) {
       // Check for duplicate transaction errors
-      if (error.message?.includes('already been processed') || 
-          error.message?.includes('Transaction simulation failed') ||
-          error.message?.includes('duplicate')) {
+      if (
+        error.message?.includes('already been processed') ||
+        error.message?.includes('Transaction simulation failed') ||
+        error.message?.includes('duplicate')
+      ) {
         // Transaction was actually successful but we got a duplicate submission error
-        console.log('Transaction was already processed successfully');
         // Return a fake transaction signature since the transaction actually succeeded
         return 'duplicate_transaction_success';
       }
-      
+
       // Enhanced error handling for InvalidStateTransition
-      if (error.code === 6023) { // InvalidStateTransition
+      if (error.code === 6023) {
+        // InvalidStateTransition
         const currentState = Object.keys(lotteryAccount.state)[0];
         throw new Error(
           `Invalid state transition from '${currentState}' to '${nextState}'. ` +
-          `Check the lottery's current state and draw time requirements.`
+            `Check the lottery's current state and draw time requirements.`
         );
       }
       throw error;
@@ -436,11 +411,11 @@ export class LotteryProgram {
 
   async selectWinner(lotteryPubkey: PublicKey): Promise<TransactionSignature> {
     if (!this.program.provider.publicKey) {
-      throw new Error("Wallet not connected")
+      throw new Error('Wallet not connected');
     }
 
     const [globalConfig] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config_v2")],
+      [Buffer.from('global_config_v2')],
       this.program.programId
     );
 
@@ -452,16 +427,19 @@ export class LotteryProgram {
         admin: this.program.provider.publicKey,
         systemProgram: SystemProgram.programId,
       } as any)
-      .rpc()
+      .rpc();
   }
 
-  async claimPrize(lotteryPubkey: PublicKey, ticketPubkey: PublicKey): Promise<TransactionSignature> {
+  async claimPrize(
+    lotteryPubkey: PublicKey,
+    ticketPubkey: PublicKey
+  ): Promise<TransactionSignature> {
     if (!this.program.provider.publicKey) {
-      throw new Error("Wallet not connected")
+      throw new Error('Wallet not connected');
     }
 
     const [globalConfig] = PublicKey.findProgramAddressSync(
-      [Buffer.from("global_config_v2")],
+      [Buffer.from('global_config_v2')],
       this.program.programId
     );
 
@@ -474,54 +452,54 @@ export class LotteryProgram {
         winner: this.program.provider.publicKey,
         systemProgram: SystemProgram.programId,
       } as any)
-      .rpc()
+      .rpc();
   }
 
   async getLotteries(): Promise<LotteryInfo[]> {
     // Get all lottery accounts
     const lotteryAccounts = await this.program.account.lotteryAccount.all();
-    
+
     // Filter out lotteries that use the old PDA derivation pattern
     const validLotteries = await Promise.all(
-      lotteryAccounts.map(async (account) => {
+      lotteryAccounts.map(async account => {
         const data = account.account as any;
-        
+
         // Check if this lottery PDA matches the current nonce-based derivation
         try {
           const nonce = parseInt(data.nonce);
           const nonceBuffer = Buffer.allocUnsafe(8);
           nonceBuffer.writeBigInt64LE(BigInt(nonce), 0);
-          
+
           const [expectedPDA] = PublicKey.findProgramAddressSync(
             [
-              Buffer.from("lottery"),
+              Buffer.from('lottery'),
               new PublicKey(data.authority).toBuffer(),
-              nonceBuffer
+              nonceBuffer,
             ],
             this.program.programId
           );
-          
+
           // If the PDA matches, this lottery uses the new pattern
           if (expectedPDA.equals(account.publicKey)) {
             return { account, data, isValid: true };
           } else {
-            console.log(`⚠️ Skipping lottery ${account.publicKey.toString()} - uses old PDA pattern`);
             return { account, data, isValid: false };
           }
         } catch (error) {
-          console.log(`❌ Error validating lottery ${account.publicKey.toString()}:`, error);
           return { account, data, isValid: false };
         }
       })
     );
-    
+
     return validLotteries
       .filter(item => item.isValid)
       .map(({ account, data }) => {
         // Convert from program data to UI-friendly format
-        const lotteryTypeFromProgram = this.convertLotteryType(data.lotteryType);
+        const lotteryTypeFromProgram = this.convertLotteryType(
+          data.lotteryType
+        );
         const stateFromProgram = this.convertLotteryState(data.state);
-        
+
         return {
           address: account.publicKey.toString(),
           lotteryType: lotteryTypeFromProgram,
@@ -532,7 +510,9 @@ export class LotteryProgram {
           state: stateFromProgram,
           createdBy: data.authority.toString(),
           globalConfig: data.globalConfig.toString(),
-          winningNumbers: data.winningNumbers ? data.winningNumbers.toString() : null,
+          winningNumbers: data.winningNumbers
+            ? data.winningNumbers.toString()
+            : null,
           targetPrizePool: parseInt(data.targetPrizePool) / 1_000_000, // Convert from smallest unit
         };
       });
@@ -541,34 +521,22 @@ export class LotteryProgram {
   async isProgramInitialized(): Promise<boolean> {
     try {
       const [globalConfig] = PublicKey.findProgramAddressSync(
-        [Buffer.from("global_config_v2")],
+        [Buffer.from('global_config_v2')],
         this.program.programId
       );
 
-      console.log("🔍 Checking global_config PDA:", globalConfig.toString());
-
       // Get account info to check ownership first
       const accountInfo = await this.connection.getAccountInfo(globalConfig);
-      
-      console.log("📊 Account info:", {
-        exists: !!accountInfo,
-        owner: accountInfo?.owner.toString(),
-        expectedOwner: this.program.programId.toString(),
-        isOwnedByProgram: accountInfo?.owner.equals(this.program.programId)
-      });
-      
+
       // Check if account exists and is owned by our program
       if (!accountInfo || !accountInfo.owner.equals(this.program.programId)) {
-        console.log("❌ Account not owned by program or doesn't exist");
         return false;
       }
 
       // If owned by our program, try to fetch and deserialize
       await this.program.account.globalConfig.fetch(globalConfig);
-      console.log("✅ Program is initialized");
       return true;
     } catch (error) {
-      console.log("❌ Error checking initialization:", error);
       return false;
     }
   }
@@ -592,9 +560,12 @@ export class LotteryProgram {
     throw new Error('Unknown lottery state');
   }
 
-  private async getOrCreateAssociatedTokenAccount(mint: PublicKey, owner: PublicKey): Promise<PublicKey> {
+  private async getOrCreateAssociatedTokenAccount(
+    mint: PublicKey,
+    owner: PublicKey
+  ): Promise<PublicKey> {
     const associatedTokenAddress = await getAssociatedTokenAddress(mint, owner);
-    
+
     try {
       // Try to get the account info
       await getAccount(this.connection, associatedTokenAddress);
@@ -611,67 +582,67 @@ export class LotteryProgram {
     if (error.code && error.code >= 6000) {
       // Program errors
       const programErrorCodes: { [key: number]: string } = {
-        6000: "Lottery type not supported",
-        6001: "Invalid ticket price",
-        6002: "Invalid prize pool",
-        6003: "Lottery draw time invalid",
-        6004: "Ticket purchase amount invalid",
-        6005: "Ticket purchase limit reached",
-        6006: "Lottery is not open",
-        6007: "Lottery is drawing",
-        6008: "Lottery is completed",
-        6009: "Lottery is expired",
-        6010: "Invalid lottery state",
-        6011: "Invalid account owner",
-        6012: "Invalid instruction input",
-        6013: "Safe Math Error",
-        6014: "Prize claim time expired",
-        6015: "Invalid prize tier",
-        6016: "Treasury withdrawal time lock not yet reached",
-        6017: "Invalid treasury multisig",
-        6018: "Token transfer failed",
-        6019: "Invalid token account",
-        6020: "Oracle price feed error",
-        6021: "Randomness generation failed",
-        6022: "Unauthorized access",
-        6023: "Invalid state transition",
-        6024: "Lottery cannot be cancelled in current state",
-        6025: "Only admin can perform this action",
-        6026: "Lottery is cancelled",
-        6027: "Lottery is not open for ticket purchases",
-        6028: "Lottery prize has already been claimed",
-        6029: "Failed to derive PDA",
-        6030: "Provided ticket PDA does not match the winning ticket stored in the lottery",
-        6031: "The provided ticket has already been claimed or refunded",
-        6032: "Lottery is not in a state where refunds can be claimed (must be Cancelled or Expired)",
-        6033: "The input parameters are invalid",
-        6034: "The ticket sale has ended",
-        6035: "The lottery has already been drawn",
-        6036: "There are no tickets in this lottery",
-        6037: "Insufficient tickets sold to proceed with the draw",
-        6038: "The lottery has not been drawn yet",
-        6039: "The specified ticket is not eligible for refund",
-        6040: "The lottery has not expired yet",
-        6041: "VRF account is invalid",
-        6042: "Insufficient funds for this operation",
-        6043: "Arithmetic overflow error",
-        6044: "Ticket does not belong to this lottery",
-        6045: "No winner has been selected yet",
-        6046: "The prize pool is empty",
-        6047: "Insufficient funds in the prize pool",
-        6048: "Invalid mint address",
-        6049: "Randomness has already been fulfilled",
-        6050: "VRF request key is not set",
-        6051: "VRF account mismatch",
-        6052: "Randomness is not fulfilled",
-        6053: "Randomness is not available",
-        6054: "Winner has already been selected",
-        6055: "No tickets were sold",
-        6056: "Draw time has not been reached yet",
-        6057: "VRF client is not set",
-        6058: "VRF callback has not timed out yet"
+        6000: 'Lottery type not supported',
+        6001: 'Invalid ticket price',
+        6002: 'Invalid prize pool',
+        6003: 'Lottery draw time invalid',
+        6004: 'Ticket purchase amount invalid',
+        6005: 'Ticket purchase limit reached',
+        6006: 'Lottery is not open',
+        6007: 'Lottery is drawing',
+        6008: 'Lottery is completed',
+        6009: 'Lottery is expired',
+        6010: 'Invalid lottery state',
+        6011: 'Invalid account owner',
+        6012: 'Invalid instruction input',
+        6013: 'Safe Math Error',
+        6014: 'Prize claim time expired',
+        6015: 'Invalid prize tier',
+        6016: 'Treasury withdrawal time lock not yet reached',
+        6017: 'Invalid treasury multisig',
+        6018: 'Token transfer failed',
+        6019: 'Invalid token account',
+        6020: 'Oracle price feed error',
+        6021: 'Randomness generation failed',
+        6022: 'Unauthorized access',
+        6023: 'Invalid state transition',
+        6024: 'Lottery cannot be cancelled in current state',
+        6025: 'Only admin can perform this action',
+        6026: 'Lottery is cancelled',
+        6027: 'Lottery is not open for ticket purchases',
+        6028: 'Lottery prize has already been claimed',
+        6029: 'Failed to derive PDA',
+        6030: 'Provided ticket PDA does not match the winning ticket stored in the lottery',
+        6031: 'The provided ticket has already been claimed or refunded',
+        6032: 'Lottery is not in a state where refunds can be claimed (must be Cancelled or Expired)',
+        6033: 'The input parameters are invalid',
+        6034: 'The ticket sale has ended',
+        6035: 'The lottery has already been drawn',
+        6036: 'There are no tickets in this lottery',
+        6037: 'Insufficient tickets sold to proceed with the draw',
+        6038: 'The lottery has not been drawn yet',
+        6039: 'The specified ticket is not eligible for refund',
+        6040: 'The lottery has not expired yet',
+        6041: 'VRF account is invalid',
+        6042: 'Insufficient funds for this operation',
+        6043: 'Arithmetic overflow error',
+        6044: 'Ticket does not belong to this lottery',
+        6045: 'No winner has been selected yet',
+        6046: 'The prize pool is empty',
+        6047: 'Insufficient funds in the prize pool',
+        6048: 'Invalid mint address',
+        6049: 'Randomness has already been fulfilled',
+        6050: 'VRF request key is not set',
+        6051: 'VRF account mismatch',
+        6052: 'Randomness is not fulfilled',
+        6053: 'Randomness is not available',
+        6054: 'Winner has already been selected',
+        6055: 'No tickets were sold',
+        6056: 'Draw time has not been reached yet',
+        6057: 'VRF client is not set',
+        6058: 'VRF callback has not timed out yet',
       };
-      
+
       return programErrorCodes[error.code] || `Program error ${error.code}`;
     }
 
@@ -679,7 +650,7 @@ export class LotteryProgram {
       return error.message;
     }
 
-    return "Unknown error occurred";
+    return 'Unknown error occurred';
   }
 
   private async getUSDCMint(): Promise<PublicKey> {
@@ -688,7 +659,8 @@ export class LotteryProgram {
         [Buffer.from('global_config_v2')],
         this.program.programId
       );
-      const globalConfigAccount = await this.program.account.globalConfig.fetch(globalConfig) as any;
+      const globalConfigAccount =
+        (await this.program.account.globalConfig.fetch(globalConfig)) as any;
       return globalConfigAccount.usdcMint;
     } catch (error) {
       // Fallback to devnet USDC mint
@@ -698,21 +670,23 @@ export class LotteryProgram {
 
   // User ticket and winnings methods for dashboard
 
-  async getUserTickets(userPubkey?: PublicKey): Promise<Array<{
-    ticketId: number;
-    lotteryId: string;
-    lotteryType: string;
-    ticketPrice: number;
-    purchasedAt: Date;
-    lotteryState: string;
-    isWinner: boolean;
-    prizeAmount?: number;
-    drawTime: Date;
-  }>> {
+  async getUserTickets(userPubkey?: PublicKey): Promise<
+    Array<{
+      ticketId: number;
+      lotteryId: string;
+      lotteryType: string;
+      ticketPrice: number;
+      purchasedAt: Date;
+      lotteryState: string;
+      isWinner: boolean;
+      prizeAmount?: number;
+      drawTime: Date;
+    }>
+  > {
     try {
       const user = userPubkey || this.program.provider.publicKey;
       if (!user) {
-        throw new Error("No user public key provided");
+        throw new Error('No user public key provided');
       }
 
       // Get all ticket accounts owned by the user
@@ -720,27 +694,29 @@ export class LotteryProgram {
         {
           memcmp: {
             offset: 8 + 32, // Skip discriminator + lotteryId, offset to owner field
-            bytes: user.toBase58()
-          }
-        }
+            bytes: user.toBase58(),
+          },
+        },
       ]);
-
-      console.log(`Found ${ticketAccounts.length} tickets for user ${user.toBase58()}`);
 
       // Get lottery details for each ticket
       const userTickets = await Promise.all(
-        ticketAccounts.map(async (ticketAccount) => {
+        ticketAccounts.map(async ticketAccount => {
           try {
             const ticket = ticketAccount.account as any;
             const lotteryPubkey = ticket.lotteryId;
-            
+
             // Fetch lottery details
-            const lotteryAccount = await this.program.account.lotteryAccount.fetch(lotteryPubkey) as any;
-            
+            const lotteryAccount =
+              (await this.program.account.lotteryAccount.fetch(
+                lotteryPubkey
+              )) as any;
+
             // Check if this ticket is the winning ticket
-            const isWinner = lotteryAccount.winningTicket && 
-                           lotteryAccount.winningTicket.equals(ticketAccount.publicKey);
-            
+            const isWinner =
+              lotteryAccount.winningTicket &&
+              lotteryAccount.winningTicket.equals(ticketAccount.publicKey);
+
             // Calculate prize amount if winner
             let prizeAmount = 0;
             if (isWinner && lotteryAccount.state.completed) {
@@ -758,10 +734,9 @@ export class LotteryProgram {
               lotteryState: Object.keys(lotteryAccount.state)[0],
               isWinner,
               prizeAmount: isWinner ? prizeAmount : undefined,
-              drawTime: formatTimestamp(lotteryAccount.drawTime)
+              drawTime: formatTimestamp(lotteryAccount.drawTime),
             };
           } catch (error) {
-            console.error("Error processing ticket:", error);
             return null;
           }
         })
@@ -769,7 +744,6 @@ export class LotteryProgram {
 
       return userTickets.filter(ticket => ticket !== null) as any[];
     } catch (error) {
-      console.error("Error fetching user tickets:", error);
       return [];
     }
   }
@@ -783,27 +757,37 @@ export class LotteryProgram {
     try {
       const userPubkey = this.program.provider.publicKey;
       if (!userPubkey) {
-        throw new Error("Wallet not connected");
+        throw new Error('Wallet not connected');
       }
 
       // Get USDC balance
       const usdcMint = await this.getUSDCMint();
-      const userTokenAccount = await getAssociatedTokenAddress(usdcMint, userPubkey);
-      
+      const userTokenAccount = await getAssociatedTokenAddress(
+        usdcMint,
+        userPubkey
+      );
+
       let usdcBalance = 0;
       try {
-        const tokenAccount = await getAccount(this.connection, userTokenAccount);
+        const tokenAccount = await getAccount(
+          this.connection,
+          userTokenAccount
+        );
         usdcBalance = formatUSDC(Number(tokenAccount.amount));
-      } catch (error) {
-        console.log("No USDC token account found for user");
-      }
+      } catch (error) {}
 
       // Get user tickets to calculate spending and winnings
       const userTickets = await this.getUserTickets(userPubkey);
-      
-      const totalSpent = userTickets.reduce((sum, ticket) => sum + ticket.ticketPrice, 0);
-      const totalWinnings = userTickets.reduce((sum, ticket) => 
-        sum + (ticket.isWinner && ticket.prizeAmount ? ticket.prizeAmount : 0), 0
+
+      const totalSpent = userTickets.reduce(
+        (sum, ticket) => sum + ticket.ticketPrice,
+        0
+      );
+      const totalWinnings = userTickets.reduce(
+        (sum, ticket) =>
+          sum +
+          (ticket.isWinner && ticket.prizeAmount ? ticket.prizeAmount : 0),
+        0
       );
       const netPosition = totalWinnings - totalSpent;
 
@@ -811,15 +795,14 @@ export class LotteryProgram {
         usdcBalance,
         totalSpent,
         totalWinnings,
-        netPosition
+        netPosition,
       };
     } catch (error) {
-      console.error("Error fetching user balance:", error);
       return {
         usdcBalance: 0,
         totalSpent: 0,
         totalWinnings: 0,
-        netPosition: 0
+        netPosition: 0,
       };
     }
   }
@@ -833,17 +816,21 @@ export class LotteryProgram {
   }> {
     try {
       const userTickets = await this.getUserTickets();
-      
+
       const totalTickets = userTickets.length;
-      const activeLotteries = userTickets.filter(ticket => 
-        ['Open', 'Locked', 'Drawing', 'AwaitingRandomness'].includes(ticket.lotteryState)
+      const activeLotteries = userTickets.filter(ticket =>
+        ['Open', 'Locked', 'Drawing', 'AwaitingRandomness'].includes(
+          ticket.lotteryState
+        )
       ).length;
-      const completedLotteries = userTickets.filter(ticket => 
-        ticket.lotteryState === 'Completed'
+      const completedLotteries = userTickets.filter(
+        ticket => ticket.lotteryState === 'Completed'
       ).length;
       const wonLotteries = userTickets.filter(ticket => ticket.isWinner).length;
       const pendingWinnings = userTickets
-        .filter(ticket => ticket.isWinner && ticket.lotteryState === 'Completed')
+        .filter(
+          ticket => ticket.isWinner && ticket.lotteryState === 'Completed'
+        )
         .reduce((sum, ticket) => sum + (ticket.prizeAmount || 0), 0);
 
       return {
@@ -851,17 +838,16 @@ export class LotteryProgram {
         activeLotteries,
         completedLotteries,
         wonLotteries,
-        pendingWinnings
+        pendingWinnings,
       };
     } catch (error) {
-      console.error("Error fetching user stats:", error);
       return {
         totalTickets: 0,
         activeLotteries: 0,
         completedLotteries: 0,
         wonLotteries: 0,
-        pendingWinnings: 0
+        pendingWinnings: 0,
       };
     }
   }
-} 
+}
