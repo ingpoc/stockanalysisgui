@@ -147,6 +147,41 @@ export function useRoulette() {
           );
           anchorEventListeners.push(createdListener);
 
+          // Listen to RouletteStateChanged events (for auto-transitions)
+          const stateChangedListener = programInstance.addEventListener(
+            'rouletteStateChanged',
+            (event: any, slot: number) => {
+              console.log('🎰 [ANCHOR EVENT] RouletteStateChanged |', {
+                slot,
+                rouletteId: event.rouletteId?.toString(),
+                oldState: event.oldState,
+                newState: event.newState,
+                timestamp: new Date(event.timestamp * 1000).toLocaleString(),
+              });
+              
+              // Trigger UI refresh for state transitions
+              queryClient.invalidateQueries({ queryKey: ['roulettes'] });
+            }
+          );
+          anchorEventListeners.push(stateChangedListener);
+
+          // Listen to RouletteSpinStarted events (for spin initiation)
+          const spinStartedListener = programInstance.addEventListener(
+            'rouletteSpinStarted',
+            (event: any, slot: number) => {
+              console.log('🎰 [ANCHOR EVENT] RouletteSpinStarted |', {
+                slot,
+                rouletteId: event.rouletteId?.toString(),
+                vrfClient: event.vrfClient?.toString(),
+                timestamp: new Date(event.timestamp * 1000).toLocaleString(),
+              });
+              
+              // Trigger UI refresh for spin start
+              queryClient.invalidateQueries({ queryKey: ['roulettes'] });
+            }
+          );
+          anchorEventListeners.push(spinStartedListener);
+
           console.log(
             '🎰 [EVENT SETUP] Anchor event listeners registered:',
             anchorEventListeners.length
@@ -302,6 +337,33 @@ export function useRoulette() {
       });
     };
   }, [program, connection, queryClient]);
+
+  // Polling fallback for active games
+  useEffect(() => {
+    if (!roulettes) return;
+
+    // Check if there are any active games that need polling
+    const hasActiveGames = roulettes.some(game => {
+      const state = game.state;
+      const stateKey = typeof state === 'object' ? Object.keys(state)[0] : state;
+      return ['open', 'locked', 'spinning', 'awaitingRandomness'].includes(stateKey?.toLowerCase());
+    });
+
+    if (!hasActiveGames) return;
+
+    console.log('🎰 [POLLING] Starting polling for active games...');
+    
+    // Poll every 5 seconds during active games
+    const pollingInterval = setInterval(() => {
+      console.log('🎰 [POLLING] Refreshing roulette data...');
+      queryClient.invalidateQueries({ queryKey: ['roulettes'] });
+    }, 5000);
+
+    return () => {
+      console.log('🎰 [POLLING] Stopping polling for active games...');
+      clearInterval(pollingInterval);
+    };
+  }, [roulettes, queryClient]);
 
   // Check if program is initialized
   const { data: isInitialized } = useQuery({
