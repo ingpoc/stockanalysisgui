@@ -338,33 +338,6 @@ export function useRoulette() {
     };
   }, [program, connection, queryClient]);
 
-  // Polling fallback for active games
-  useEffect(() => {
-    if (!roulettes) return;
-
-    // Check if there are any active games that need polling
-    const hasActiveGames = roulettes.some(game => {
-      const state = game.state;
-      const stateKey = typeof state === 'object' ? Object.keys(state)[0] : state;
-      return ['open', 'locked', 'spinning', 'awaitingRandomness'].includes(stateKey?.toLowerCase());
-    });
-
-    if (!hasActiveGames) return;
-
-    console.log('🎰 [POLLING] Starting polling for active games...');
-    
-    // Poll every 5 seconds during active games
-    const pollingInterval = setInterval(() => {
-      console.log('🎰 [POLLING] Refreshing roulette data...');
-      queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-    }, 5000);
-
-    return () => {
-      console.log('🎰 [POLLING] Stopping polling for active games...');
-      clearInterval(pollingInterval);
-    };
-  }, [roulettes, queryClient]);
-
   // Check if program is initialized
   const { data: isInitialized } = useQuery({
     queryKey: ['roulette-initialized', publicKey],
@@ -495,6 +468,33 @@ export function useRoulette() {
     staleTime: 30000,
     retry: 1,
   });
+
+  // Polling fallback for active games
+  useEffect(() => {
+    if (!roulettes) return;
+
+    // Check if there are any active games that need polling
+    const hasActiveGames = roulettes.some(game => {
+      const state = game.state;
+      const stateKey = typeof state === 'object' ? Object.keys(state)[0] : state;
+      return ['open', 'locked', 'spinning', 'awaitingRandomness'].includes(stateKey?.toLowerCase());
+    });
+
+    if (!hasActiveGames) return;
+
+    console.log('🎰 [POLLING] Starting polling for active games...');
+    
+    // Poll every 5 seconds during active games
+    const pollingInterval = setInterval(() => {
+      console.log('🎰 [POLLING] Refreshing roulette data...');
+      queryClient.invalidateQueries({ queryKey: ['roulettes'] });
+    }, 5000);
+
+    return () => {
+      console.log('🎰 [POLLING] Stopping polling for active games...');
+      clearInterval(pollingInterval);
+    };
+  }, [roulettes, queryClient]);
 
   // Initialize roulette program (admin only)
   const initialize = useMutation({
