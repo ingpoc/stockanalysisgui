@@ -643,6 +643,68 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "emergency_pause_toggle",
+      "discriminator": [167, 45, 234, 198, 89, 123, 45, 201],
+      "accounts": [
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "docs": ["Only the global authority can pause/unpause"],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "pause",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "force_end_game",
+      "discriminator": [23, 89, 156, 78, 234, 45, 123, 89],
+      "accounts": [
+        {
+          "name": "roulette",
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
+                  95, 118, 50
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "docs": ["Only the global authority can force end games"],
+          "signer": true
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -699,6 +761,10 @@
     {
       "name": "WinningsClaimed",
       "discriminator": [187, 184, 29, 196, 54, 117, 70, 150]
+    },
+    {
+      "name": "EmergencyPause",
+      "discriminator": [123, 45, 201, 89, 167, 234, 78, 156]
     }
   ],
   "errors": [
@@ -1525,6 +1591,30 @@
           {
             "name": "payout_amount",
             "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EmergencyPause",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "previous_state",
+            "type": "bool"
+          },
+          {
+            "name": "new_state",
+            "type": "bool"
           },
           {
             "name": "timestamp",
