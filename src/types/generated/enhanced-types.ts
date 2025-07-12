@@ -1,42 +1,42 @@
 // Enhanced Auto-generated types from IDL
 
-import { PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { PublicKey } from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
 
 export enum BetType {
-  Straight = "Straight",
-  Split = "Split",
-  Street = "Street",
-  Corner = "Corner",
-  SixLine = "SixLine",
-  Red = "Red",
-  Black = "Black",
-  Even = "Even",
-  Odd = "Odd",
-  Low = "Low",
-  High = "High",
-  FirstTwelve = "FirstTwelve",
-  SecondTwelve = "SecondTwelve",
-  ThirdTwelve = "ThirdTwelve",
-  FirstColumn = "FirstColumn",
-  SecondColumn = "SecondColumn",
-  ThirdColumn = "ThirdColumn",
+  Straight = 'Straight',
+  Split = 'Split',
+  Street = 'Street',
+  Corner = 'Corner',
+  SixLine = 'SixLine',
+  Red = 'Red',
+  Black = 'Black',
+  Even = 'Even',
+  Odd = 'Odd',
+  Low = 'Low',
+  High = 'High',
+  FirstTwelve = 'FirstTwelve',
+  SecondTwelve = 'SecondTwelve',
+  ThirdTwelve = 'ThirdTwelve',
+  FirstColumn = 'FirstColumn',
+  SecondColumn = 'SecondColumn',
+  ThirdColumn = 'ThirdColumn',
 }
 
 export enum RouletteState {
-  Created = "Created",
-  Open = "Open",
-  Locked = "Locked",
-  Spinning = "Spinning",
-  AwaitingRandomness = "AwaitingRandomness",
-  Completed = "Completed",
-  Expired = "Expired",
-  Cancelled = "Cancelled",
+  Created = 'Created',
+  Open = 'Open',
+  Locked = 'Locked',
+  Spinning = 'Spinning',
+  AwaitingRandomness = 'AwaitingRandomness',
+  Completed = 'Completed',
+  Expired = 'Expired',
+  Cancelled = 'Cancelled',
 }
 
 export enum RouletteType {
-  European = "European",
-  American = "American",
+  European = 'European',
+  American = 'American',
 }
 
 export interface BetAccount {
@@ -109,8 +109,7 @@ export interface Cancel_rouletteArgs {
   reason: string;
 }
 
-export interface Claim_winningsArgs {
-}
+export interface Claim_winningsArgs {}
 
 export interface Create_rouletteArgs {
   roulette_type: RouletteType;
@@ -120,11 +119,9 @@ export interface Create_rouletteArgs {
   nonce: BN;
 }
 
-export interface InitializeArgs {
-}
+export interface InitializeArgs {}
 
-export interface Lock_bettingArgs {
-}
+export interface Lock_bettingArgs {}
 
 export interface Place_betArgs {
   bet_type: BetType;
@@ -210,4 +207,3 @@ export enum ProgramError {
   InvalidNonce = 12024,
   DuplicateBet = 12025,
 }
-

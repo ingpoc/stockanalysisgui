@@ -27,8 +27,16 @@ export default function RoulettePage() {
   const { connected, publicKey } = useWallet();
   const navigation = useAuthNavigation();
 
-  const { roulettes, isLoading, error, isInitialized, placeBet, isPlacingBet } =
-    useRoulette();
+  const { 
+    roulettes, 
+    isLoading, 
+    error, 
+    isInitialized, 
+    placeBet, 
+    isPlacingBet, 
+    processAutomation, 
+    isProcessingAutomation 
+  } = useRoulette();
 
   useEffect(() => {
     setIsMounted(true);
@@ -306,6 +314,27 @@ export default function RoulettePage() {
             <span className='ml-2 text-orange-600'>
               → Contact admin to initialize the roulette program
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* DEBUG: Manual Automation Trigger (Temporary) */}
+      {activeGame && process.env.NODE_ENV === 'development' && (
+        <div className='mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
+          <div className='flex items-center justify-between'>
+            <div className='text-sm'>
+              <strong>🔧 DEBUG:</strong> Manual automation trigger for testing
+              <div className='text-xs text-gray-600 mt-1'>
+                Game: {activeGame.publicKey?.slice(0, 8)}... | State: {getRouletteStateDisplayName(activeGame.state)}
+              </div>
+            </div>
+            <button
+              onClick={() => processAutomation()}
+              disabled={isProcessingAutomation}
+              className='px-4 py-2 text-xs text-white bg-blue-600 border border-blue-600 hover:bg-blue-700 transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
+            >
+              {isProcessingAutomation ? 'PROCESSING...' : 'TRIGGER AUTOMATION'}
+            </button>
           </div>
         </div>
       )}

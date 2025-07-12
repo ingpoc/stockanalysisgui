@@ -1,6 +1,6 @@
 /**
  * Roulette Types
- * 
+ *
  * This file contains UI-friendly types, helpers, and utilities for the
  * decentralized roulette program.
  */
@@ -16,13 +16,19 @@ type IdlAccounts = DecentralizedRoulette['accounts'];
 type IdlTypes = DecentralizedRoulette['types'];
 
 // Find specific account types by their name
-type ExtractAccount<T extends { name: string }[], N extends string> = T extends readonly [...infer Rest, infer Last]
+type ExtractAccount<
+  T extends { name: string }[],
+  N extends string,
+> = T extends readonly [...infer Rest, infer Last]
   ? Last extends { name: N }
     ? Last
     : ExtractAccount<Rest extends { name: string }[] ? Rest : [], N>
   : never;
 
-type ExtractType<T extends { name: string }[], N extends string> = T extends readonly [...infer Rest, infer Last]
+type ExtractType<
+  T extends { name: string }[],
+  N extends string,
+> = T extends readonly [...infer Rest, infer Last]
   ? Last extends { name: N }
     ? Last
     : ExtractType<Rest extends { name: string }[] ? Rest : [], N>

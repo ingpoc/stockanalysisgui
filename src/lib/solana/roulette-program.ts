@@ -716,13 +716,9 @@ export class RouletteProgram {
     Array<{ publicKey: PublicKey; account: RouletteAccount }>
   > {
     try {
-      // Check if program is initialized first
-      const initialized = await this.isInitialized();
-      if (!initialized) {
-        return [];
-      }
-
       const program = await this.program;
+      
+      // Skip initialization check to reduce RPC calls - assume it's initialized if we got here
       // Use camelCase as per project guidelines
       const accounts = (await (
         program.account as any
@@ -734,6 +730,9 @@ export class RouletteProgram {
         account: account.account,
       }));
     } catch (error) {
+      // If we get an error, it might be due to uninitialized program
+      // Return empty array instead of failing
+      console.log('🎰 [RPC] getAllRouletteAccounts failed (likely uninitialized):', error);
       return [];
     }
   }

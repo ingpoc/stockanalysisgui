@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { PageContainer } from '@/components/layout/page-container';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Trophy, DollarSign, Users, Clock } from 'lucide-react';
 import { useAuthNavigation } from '@/lib/navigation';
 import { useLottery } from '@/hooks/useLottery';
@@ -13,6 +14,8 @@ import { ADMIN_WALLET } from '@/lib/constants';
 import { AdminLotteryTable } from '@/components/admin/admin-lottery-table';
 import { TreasuryDashboard } from '@/components/admin/treasury-dashboard';
 import { AdminStats } from '@/components/admin/admin-stats';
+import { RouletteStats } from '@/components/admin/roulette-stats';
+import { ProcessStuckGames } from '@/components/admin/process-stuck-games';
 import { InitializeProgramDialog } from '@/components/lottery/initialize-program-dialog';
 import { CreateLotteryDialog } from '@/components/lottery/create-lottery-dialog';
 import { toast } from 'sonner';
@@ -135,122 +138,152 @@ export default function AdminPage() {
         </Alert>
       )}
 
-      {/* Admin Stats Overview */}
-      <AdminStats lotteries={lotteries || []} isLoading={isLoading} />
-
-      {/* Clean Sections */}
-      <div className='space-y-16'>
-        {/* Roulette Management */}
-        <div>
-          <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
-            ROULETTE MANAGEMENT
+      {/* Tabbed Content */}
+      <Tabs defaultValue="roulette" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="roulette">Roulette Management</TabsTrigger>
+          <TabsTrigger value="lottery">Lottery Management</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="roulette" className="space-y-16">
+          {/* Roulette Stats */}
+          <div>
+            <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
+              ROULETTE STATISTICS
+            </div>
+            <RouletteStats roulettes={roulettes || []} isLoading={rouletteLoading} />
           </div>
 
-          {rouletteError && (
-            <Alert variant='destructive' className='mb-6'>
-              <AlertCircle className='h-4 w-4' />
-              <AlertTitle>Roulette Error</AlertTitle>
-              <AlertDescription>
-                {rouletteError instanceof Error
-                  ? rouletteError.message
-                  : 'An unknown error occurred'}
-              </AlertDescription>
-            </Alert>
-          )}
+          {/* Roulette Management */}
+          <div>
+            <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
+              ROULETTE MANAGEMENT
+            </div>
 
-          <div className='bg-white border border-gray-200 rounded-lg p-6'>
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-6'>
-              <div>
-                <div className='text-xs text-gray-400 uppercase tracking-wider mb-2'>
-                  PROGRAM STATUS
-                </div>
-                <div
-                  className={`text-sm font-medium ${
-                    rouletteInitialized === true
-                      ? 'text-gray-900'
+            {rouletteError && (
+              <Alert variant='destructive' className='mb-6'>
+                <AlertCircle className='h-4 w-4' />
+                <AlertTitle>Roulette Error</AlertTitle>
+                <AlertDescription>
+                  {rouletteError instanceof Error
+                    ? rouletteError.message
+                    : 'An unknown error occurred'}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className='bg-white border border-gray-200 rounded-lg p-6'>
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-6'>
+                <div>
+                  <div className='text-xs text-gray-400 uppercase tracking-wider mb-2'>
+                    PROGRAM STATUS
+                  </div>
+                  <div
+                    className={`text-sm font-medium ${
+                      rouletteInitialized === true
+                        ? 'text-gray-900'
+                        : rouletteInitialized === false
+                          ? 'text-gray-500'
+                          : 'text-gray-400'
+                    }`}
+                  >
+                    {rouletteInitialized === true
+                      ? 'Initialized'
                       : rouletteInitialized === false
-                        ? 'text-gray-500'
-                        : 'text-gray-400'
-                  }`}
+                        ? 'Not Initialized'
+                        : 'Checking...'}
+                  </div>
+                </div>
+
+                <div>
+                  <div className='text-xs text-gray-400 uppercase tracking-wider mb-2'>
+                    ACTIVE GAMES
+                  </div>
+                  <div className='text-sm font-medium text-gray-900'>
+                    {rouletteLoading
+                      ? 'Loading...'
+                      : Array.isArray(roulettes)
+                        ? roulettes.length
+                        : 0}
+                  </div>
+                </div>
+
+                <div>
+                  <div className='text-xs text-gray-400 uppercase tracking-wider mb-2'>
+                    AUTOMATION
+                  </div>
+                  <div className='text-sm font-medium text-gray-900'>
+                    Program Level
+                  </div>
+                </div>
+              </div>
+
+              <div className='flex gap-3'>
+                <button
+                  onClick={handleInitializeRoulette}
+                  disabled={isInitializingRoulette}
+                  className='px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
                 >
-                  {rouletteInitialized === true
-                    ? 'Initialized'
-                    : rouletteInitialized === false
-                      ? 'Not Initialized'
-                      : 'Checking...'}
-                </div>
-              </div>
+                  {isInitializingRoulette
+                    ? 'INITIALIZING...'
+                    : rouletteInitialized
+                      ? 'REINITIALIZE ROULETTE'
+                      : 'INITIALIZE ROULETTE'}
+                </button>
 
-              <div>
-                <div className='text-xs text-gray-400 uppercase tracking-wider mb-2'>
-                  ACTIVE GAMES
-                </div>
-                <div className='text-sm font-medium text-gray-900'>
-                  {rouletteLoading
-                    ? 'Loading...'
-                    : Array.isArray(roulettes)
-                      ? roulettes.length
-                      : 0}
-                </div>
-              </div>
-
-              <div>
-                <div className='text-xs text-gray-400 uppercase tracking-wider mb-2'>
-                  AUTOMATION
-                </div>
-                <div className='text-sm font-medium text-gray-900'>
-                  Program Level
-                </div>
+                <button
+                  onClick={handleCreateFirstGame}
+                  disabled={isCreatingNext || !rouletteInitialized}
+                  className='px-4 py-2 text-xs text-white bg-green-600 border border-green-600 hover:bg-green-700 hover:border-green-700 transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
+                >
+                  {isCreatingNext ? 'CREATING...' : 'CREATE FIRST GAME'}
+                </button>
+                {/* System runs automatically after initialization */}
               </div>
             </div>
+          </div>
 
-            <div className='flex gap-3'>
-              <button
-                onClick={handleInitializeRoulette}
-                disabled={isInitializingRoulette}
-                className='px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
-              >
-                {isInitializingRoulette
-                  ? 'INITIALIZING...'
-                  : rouletteInitialized
-                    ? 'REINITIALIZE ROULETTE'
-                    : 'INITIALIZE ROULETTE'}
-              </button>
-
-              <button
-                onClick={handleCreateFirstGame}
-                disabled={isCreatingNext || !rouletteInitialized}
-                className='px-4 py-2 text-xs text-white bg-green-600 border border-green-600 hover:bg-green-700 hover:border-green-700 transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
-              >
-                {isCreatingNext ? 'CREATING...' : 'CREATE FIRST GAME'}
-              </button>
-              {/* System runs automatically after initialization */}
+          {/* Process Stuck Games */}
+          <div>
+            <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
+              STUCK GAMES RECOVERY
             </div>
+            <ProcessStuckGames />
           </div>
-        </div>
+        </TabsContent>
 
-        {/* Treasury Dashboard */}
-        <div>
-          <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
-            TREASURY OVERVIEW
+        <TabsContent value="lottery" className="space-y-16">
+          {/* Lottery Stats */}
+          <div>
+            <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
+              LOTTERY STATISTICS
+            </div>
+            <AdminStats lotteries={lotteries || []} isLoading={isLoading} />
           </div>
-          <TreasuryDashboard
-            lotteries={lotteries || []}
-            isLoading={isLoading}
-          />
-        </div>
 
-        {/* Lottery Management Table */}
-        <div>
-          <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
-            LOTTERY MANAGEMENT
+          {/* Treasury Dashboard */}
+          <div>
+            <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
+              TREASURY OVERVIEW
+            </div>
+            <TreasuryDashboard
+              lotteries={lotteries || []}
+              isLoading={isLoading}
+            />
           </div>
-          <AdminLotteryTable
-            lotteries={lotteries || []}
-            isLoading={isLoading}
-          />
-        </div>
-      </div>
+
+          {/* Lottery Management Table */}
+          <div>
+            <div className='text-xs text-gray-400 uppercase tracking-wider mb-8'>
+              LOTTERY MANAGEMENT
+            </div>
+            <AdminLotteryTable
+              lotteries={lotteries || []}
+              isLoading={isLoading}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog Components */}
       <InitializeProgramDialog

@@ -37,14 +37,28 @@ export function useRoulette() {
 
   // Set up program event listeners using proper Solana WebSocket architecture
   useEffect(() => {
-    if (!program || !connection) return;
+    console.log('🎰 [EVENT SETUP] useEffect triggered', { 
+      hasProgram: !!program, 
+      hasConnection: !!connection 
+    });
+    
+    if (!program || !connection) {
+      console.log('🎰 [EVENT SETUP] Missing dependencies, skipping setup');
+      return;
+    }
 
     const subscriptionIds: number[] = [];
     const anchorEventListeners: number[] = [];
 
     const setupEventListeners = async () => {
       try {
+        console.log('🎰 [EVENT SETUP] Getting program instance...');
         const programInstance = await (program as any).program;
+        
+        if (!programInstance) {
+          console.log('🎰 [EVENT SETUP] No program instance available');
+          return;
+        }
 
         console.log(
           '🎰 [EVENT SETUP] Initializing event listeners for program:',
@@ -74,7 +88,7 @@ export function useRoulette() {
               );
               console.warn(`🎯 WINNING NUMBER: ${event.winningNumber}`);
 
-              // Trigger UI refresh
+              // Immediate cache invalidation for critical state changes
               queryClient.invalidateQueries({ queryKey: ['roulettes'] });
             }
           );
@@ -215,6 +229,12 @@ export function useRoulette() {
 
               // Parse logs for program events and data
               logs.logs.forEach((log: string, index: number) => {
+                // Check for automation and state transition messages
+                if (log.includes('Auto-locked betting') || log.includes('Auto-completed roulette') || log.includes('Game complete')) {
+                  console.log('🎯 [AUTOMATION EVENT]', log);
+                  // Immediate refresh for automation events - no delay
+                  queryClient.invalidateQueries({ queryKey: ['roulettes'] });
+                }
                 // Check for Anchor events in logs
                 if (log.includes('Program data:')) {
                   console.log('🎰 [WEBSOCKET EVENT] Program data detected:', {
@@ -252,11 +272,8 @@ export function useRoulette() {
                     '🎯 [WEBSOCKET EVENT] Winning number announcement detected:',
                     log
                   );
-                  // Trigger immediate UI refresh when winning number is announced
-                  setTimeout(() => {
-                    queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-                    queryClient.refetchQueries({ queryKey: ['roulettes'] });
-                  }, 1000);
+                  // Immediate refresh for winning number - no delay
+                  queryClient.invalidateQueries({ queryKey: ['roulettes'] });
                 }
 
                 if (
@@ -267,10 +284,8 @@ export function useRoulette() {
                     '🎰 [WEBSOCKET EVENT] Game state change detected:',
                     log
                   );
-                  // Trigger UI refresh for state changes
-                  setTimeout(() => {
-                    queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-                  }, 500);
+                  // Immediate refresh for state changes - no delay
+                  queryClient.invalidateQueries({ queryKey: ['roulettes'] });
                 }
               });
             },
@@ -297,7 +312,12 @@ export function useRoulette() {
           }
         );
       } catch (error) {
-        console.log('🎰 [EVENT SETUP] Setup failed:', error);
+        console.error('🎰 [EVENT SETUP] Setup failed:', error);
+        console.error('🎰 [EVENT SETUP] Error details:', {
+          message: (error as any)?.message,
+          stack: (error as any)?.stack,
+          name: (error as any)?.name
+        });
       }
     };
 
@@ -305,32 +325,35 @@ export function useRoulette() {
 
     // Cleanup function
     return () => {
-      console.log('🎰 [EVENT CLEANUP] Removing event listeners...');
+      console.log('🎰 [EVENT CLEANUP] Removing event listeners...', {
+        anchorListeners: anchorEventListeners.length,
+        wsSubscriptions: subscriptionIds.length
+      });
 
       // Remove Anchor event listeners
-      anchorEventListeners.forEach(listenerId => {
+      anchorEventListeners.forEach((listenerId, index) => {
         try {
-          // Note: Anchor doesn't provide a direct removeEventListener method
-          // Event listeners are automatically cleaned up when component unmounts
+          // Anchor event listeners are automatically cleaned up when the program instance changes
+          // No manual cleanup needed for Anchor event listeners
+          console.log(`🎰 [EVENT CLEANUP] Anchor listener ${index + 1}/${anchorEventListeners.length} will be auto-cleaned`);
         } catch (error) {
           console.log(
-            '🎰 [EVENT CLEANUP] Error removing anchor listener:',
+            `🎰 [EVENT CLEANUP] Error with anchor listener ${index + 1}:`,
             error
           );
         }
       });
 
       // Remove WebSocket subscriptions
-      subscriptionIds.forEach(subscriptionId => {
+      subscriptionIds.forEach((subscriptionId, index) => {
         try {
           connection.removeOnLogsListener(subscriptionId);
           console.log(
-            '🎰 [EVENT CLEANUP] Removed WebSocket subscription:',
-            subscriptionId
+            `🎰 [EVENT CLEANUP] Removed WebSocket subscription ${index + 1}/${subscriptionIds.length}: ${subscriptionId}`
           );
         } catch (error) {
           console.log(
-            '🎰 [EVENT CLEANUP] Error removing WebSocket subscription:',
+            `🎰 [EVENT CLEANUP] Error removing WebSocket subscription ${index + 1}:`,
             error
           );
         }
@@ -363,6 +386,7 @@ export function useRoulette() {
       }
 
       try {
+        console.log('🎰 [QUERY] Fetching roulette accounts...');
         const accounts = await program.getAllRouletteAccounts();
 
         // Filter for only active games (not completed, expired, or cancelled)
@@ -383,10 +407,25 @@ export function useRoulette() {
             'spinning',
             'awaitingRandomness',
           ];
-          const isActiveState = activeStates.includes(
-            stateKey?.toLowerCase() || ''
-          );
+
+          // Debug: Log only when there's a state change (reduced logging)
+          const isActiveState = activeStates.includes(stateKey?.toLowerCase() || '');
           const isNotExpired = endTime > now;
+          const isFiltered = !isActiveState || !isNotExpired;
+          
+          // Log filtered games more selectively - focus on recently expired ones
+          if (isFiltered) {
+            const recentlyExpired = endTime > (now - 300); // Expired within last 5 minutes
+            if (recentlyExpired || Math.random() < 0.05) { // Log recent expiries or 5% of others
+              console.log('🎯 [STATE CHANGE] Game filtered out:', {
+                id: item.publicKey.toString().slice(0, 8),
+                state: stateKey,
+                endTime: new Date(endTime * 1000).toLocaleString(),
+                reason: !isActiveState ? 'inactive_state' : 'expired',
+                secondsAgo: Math.floor(now - endTime)
+              });
+            }
+          }
 
           const isActive = isActiveState && isNotExpired;
 
@@ -400,11 +439,25 @@ export function useRoulette() {
           return isActive;
         });
 
-        // Log program event for game count
+        // Log program event for game count and summary
         if (activeAccounts.length > 0) {
           console.log(
             `🎰 [PROGRAM EVENT] Active Games Count: ${activeAccounts.length}`
           );
+          
+          // Log active games summary
+          activeAccounts.forEach((item, index) => {
+            const account = item.account as any;
+            const state = account.state;
+            const stateKey = typeof state === 'object' ? Object.keys(state)[0] : state;
+            const endTime = account.endTime?.toNumber() || 0;
+            
+            console.log(
+              `🎮 [ACTIVE GAME ${index + 1}] ${item.publicKey.toBase58().slice(0, 8)}... | State: ${stateKey.toUpperCase()} | Ends: ${new Date(endTime * 1000).toLocaleString()}`
+            );
+          });
+        } else {
+          console.log('🚫 [PROGRAM EVENT] No active games found - may need to create new game');
         }
 
         // Map accounts to include public key and convert BN values to numbers
@@ -465,11 +518,12 @@ export function useRoulette() {
       }
     },
     enabled: !!program && isInitialized !== false,
-    staleTime: 30000,
+    staleTime: 2000, // Keep data fresh for 2 seconds (reduced from 30s)
+    refetchInterval: 5000, // Refetch every 5 seconds
     retry: 1,
   });
 
-  // Polling fallback for active games
+  // Reduced polling fallback for active games - only when events fail
   useEffect(() => {
     if (!roulettes) return;
 
@@ -482,16 +536,13 @@ export function useRoulette() {
 
     if (!hasActiveGames) return;
 
-    console.log('🎰 [POLLING] Starting polling for active games...');
-    
-    // Poll every 5 seconds during active games
+    // Poll every 10 seconds during active games - reduced frequency since events handle most updates
     const pollingInterval = setInterval(() => {
-      console.log('🎰 [POLLING] Refreshing roulette data...');
+      // Only invalidate if no recent WebSocket activity
       queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-    }, 5000);
+    }, 10000);
 
     return () => {
-      console.log('🎰 [POLLING] Stopping polling for active games...');
       clearInterval(pollingInterval);
     };
   }, [roulettes, queryClient]);
@@ -723,6 +774,13 @@ export function useRoulette() {
     return program.getUserBets(publicKey);
   }, [program, publicKey]);
 
+  // Force refresh function for manual testing/debugging
+  const forceRefresh = useCallback(async () => {
+    console.log('🔄 [FORCE REFRESH] Manually refreshing roulette data...');
+    await queryClient.invalidateQueries({ queryKey: ['roulettes'] });
+    await queryClient.refetchQueries({ queryKey: ['roulettes'] });
+  }, [queryClient]);
+
   // Expire all current games (admin cleanup)
   const expireAllGames = useMutation({
     mutationFn: () => {
@@ -759,37 +817,26 @@ export function useRoulette() {
     },
   });
 
-  // Test function to simulate events for debugging
-  const testEventLogging = useCallback(() => {
-    console.log('🧪 [TEST] Simulating program events for debugging...');
+  // Process game lifecycle manually (fix stuck games)
+  const processGameLifecycle = useMutation({
+    mutationFn: ({ roulette }: { roulette: string }) => {
+      if (!program) throw new Error('Wallet not connected');
+      const roulettePubkey = new PublicKey(roulette);
+      return program.processGameLifecycle(roulettePubkey);
+    },
+    onSuccess: () => {
+      console.log('🎰 [PROGRAM EVENT] Game Lifecycle Processed | Action: ProcessGameLifecycle');
+      queryClient.invalidateQueries({ queryKey: ['roulettes'] });
+      toast.success('Game lifecycle processed successfully!');
+    },
+    onError: error => {
+      const errorMessage = handleProgramError(error);
+      toast.error('Game lifecycle processing failed', {
+        description: errorMessage,
+      });
+    },
+  });
 
-    // Simulate RouletteSpun event
-    console.log('🎰 [PROGRAM EVENT] Winning Number Generated |', {
-      slot: 12345,
-      rouletteId: 'SIMULATED_GAME_ID',
-      winningNumber: '17',
-      totalWinners: '3',
-      totalPayouts: '150000000',
-      houseEdgeCollected: '7500000',
-      treasuryFeeCollected: '2500000',
-      timestamp: new Date().toLocaleString(),
-    });
-
-    console.log('🎯 [WINNING NUMBER] 17 | Game: SIMULATE...');
-    console.warn('🎯 WINNING NUMBER: 17');
-
-    // Simulate BetPlaced event
-    console.log('🎰 [PROGRAM EVENT] Bet Placed |', {
-      slot: 12346,
-      rouletteId: 'SIMULATED_GAME_ID',
-      betId: '1',
-      bettor: 'TEST_BETTOR',
-      betType: 'Straight',
-      betAmount: '5000000',
-      totalBets: '1',
-      timestamp: new Date().toLocaleString(),
-    });
-  }, []);
 
   return {
     roulettes,
@@ -805,9 +852,11 @@ export function useRoulette() {
     claimWinnings: claimWinnings.mutateAsync,
     expireAllGames: expireAllGames.mutateAsync,
     processAutomation: processAutomation.mutateAsync,
+    processGameLifecycle: processGameLifecycle.mutateAsync,
     getRouletteAccount,
     getBetsForRoulette,
     getUserBets,
+    forceRefresh,
     isInitializing: initialize.isPending,
     isCreating: createRoulette.isPending,
     isCreatingNext: createNextGame.isPending,
@@ -817,5 +866,6 @@ export function useRoulette() {
     isClaimingWinnings: claimWinnings.isPending,
     isExpiringGames: expireAllGames.isPending,
     isProcessingAutomation: processAutomation.isPending,
+    isProcessingLifecycle: processGameLifecycle.isPending,
   };
 }
