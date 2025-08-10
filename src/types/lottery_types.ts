@@ -10,7 +10,7 @@ import { PublicKey } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 
 // Import the main generated type
-import type { DecentralizedLottery } from './decentralized_lottery';
+import type { Decentralized_lotteryProgram } from './decentralized_lottery';
 
 // Define the types manually since they may not be in the IDL
 export type LotteryState =

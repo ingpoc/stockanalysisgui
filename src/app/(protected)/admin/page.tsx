@@ -34,10 +34,11 @@ export default function AdminPage() {
     isLoading: rouletteLoading,
     error: rouletteError,
     isInitialized: rouletteInitialized,
-    initialize: initializeRoulette,
-    isInitializing: isInitializingRoulette,
-    createNextGame,
-    isCreatingNext,
+    // SECURITY: Removed unauthorized automation functions
+    // initialize: initializeRoulette,
+    // isInitializing: isInitializingRoulette,
+    // createNextGame,
+    // isCreatingNext,
   } = useRoulette();
 
   useEffect(() => {
@@ -54,21 +55,18 @@ export default function AdminPage() {
   // Check if user is admin
   const isAdmin = publicKey?.toBase58() === ADMIN_WALLET;
 
-  // Roulette admin handlers
+  // SECURITY: Roulette admin handlers removed
+  // These functions have been disabled to prevent unauthorized automation
   const handleInitializeRoulette = async () => {
-    try {
-      await initializeRoulette();
-      toast.success('Roulette program initialized successfully!');
-    } catch (error) {}
+    toast.error('Initialization disabled for security', {
+      description: 'Program initialization is now handled by backend services only.'
+    });
   };
 
   const handleCreateFirstGame = async () => {
-    try {
-      // Add randomness to avoid nonce collisions
-      const nonce = Date.now() + Math.floor(Math.random() * 1000);
-      await createNextGame(nonce);
-      toast.success('First roulette game created! Automation started.');
-    } catch (error) {}
+    toast.error('Game creation disabled for security', {
+      description: 'Automated game creation is now handled by backend services only.'
+    });
   };
 
   if (!isMounted) {
@@ -221,24 +219,22 @@ export default function AdminPage() {
               <div className='flex gap-3'>
                 <button
                   onClick={handleInitializeRoulette}
-                  disabled={isInitializingRoulette}
-                  className='px-4 py-2 text-xs text-gray-900 border border-gray-900 hover:bg-gray-900 hover:text-white transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
+                  disabled={true}
+                  className='px-4 py-2 text-xs text-gray-500 border border-gray-300 cursor-not-allowed transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
+                  title="Initialization moved to backend services for security"
                 >
-                  {isInitializingRoulette
-                    ? 'INITIALIZING...'
-                    : rouletteInitialized
-                      ? 'REINITIALIZE ROULETTE'
-                      : 'INITIALIZE ROULETTE'}
+                  INITIALIZATION DISABLED
                 </button>
 
                 <button
                   onClick={handleCreateFirstGame}
-                  disabled={isCreatingNext || !rouletteInitialized}
-                  className='px-4 py-2 text-xs text-white bg-green-600 border border-green-600 hover:bg-green-700 hover:border-green-700 transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
+                  disabled={true}
+                  className='px-4 py-2 text-xs text-gray-500 border border-gray-300 cursor-not-allowed transition-colors duration-200 uppercase tracking-wider disabled:opacity-50'
+                  title="Game creation moved to backend services for security"
                 >
-                  {isCreatingNext ? 'CREATING...' : 'CREATE FIRST GAME'}
+                  GAME CREATION DISABLED
                 </button>
-                {/* System runs automatically after initialization */}
+                {/* SECURITY: Functions moved to backend automation services */}
               </div>
             </div>
           </div>

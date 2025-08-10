@@ -3,7 +3,24 @@
  *
  * Static values that never change between environments.
  * Environment variables are accessed directly via process.env.
+ * SECURITY: Configuration validation included to prevent mismatches.
  */
+
+// Import configuration validator
+import { validateConfiguration, getNetworkDisplayName } from './config-validator';
+
+// SECURITY: Validate configuration on startup to prevent account-not-found errors
+const configValidation = validateConfiguration();
+if (!configValidation.isValid) {
+  console.error('❌ Configuration validation failed:');
+  configValidation.errors.forEach(error => console.error(`  - ${error}`));
+  if (typeof window !== 'undefined') {
+    // Show user-friendly error in browser
+    alert('Configuration Error: Please check console for details. The app may not function correctly.');
+  }
+} else {
+  console.log(`✅ Configuration valid for ${getNetworkDisplayName(process.env.NEXT_PUBLIC_SOLANA_NETWORK)}`);
+}
 
 // Environment Variables (from .env.local)
 export const SOLANA_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK!;

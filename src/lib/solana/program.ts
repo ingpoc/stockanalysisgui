@@ -15,6 +15,7 @@ import {
   createAssociatedTokenAccountInstruction,
   getAccount,
 } from '@solana/spl-token';
+import { USDC_MINT } from '@/lib/constants';
 import {
   LotteryType as ProgramLotteryType,
   LotteryState as ProgramLotteryState,
@@ -29,10 +30,9 @@ import {
 // Import the UI types for compatibility
 
 // Import the IDL
-import { DecentralizedLottery as ProgramIDL } from '@/types/decentralized_lottery';
-const IDL = require('./decentralized_lottery.json') as ProgramIDL & Idl;
+const IDL = require('./decentralized_lottery.json') as Idl;
 
-type ProgramType = Program<ProgramIDL>;
+type ProgramType = Program<Idl>;
 
 export class LotteryProgram {
   private program: ProgramType;
@@ -61,9 +61,7 @@ export class LotteryProgram {
     );
 
     // USDC mint address (devnet)
-    const usdcMint = new PublicKey(
-      'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'
-    );
+    const usdcMint = new PublicKey(USDC_MINT);
 
     // Treasury token account - for now use admin's USDC account
     const treasuryTokenAccount = await getAssociatedTokenAddress(
@@ -106,7 +104,7 @@ export class LotteryProgram {
 
     // Check if global config is initialized, if not, initialize it first
     try {
-      await this.program.account.globalConfig.fetch(globalConfig);
+      await (this.program.account as any).globalConfig.fetch(globalConfig);
     } catch (error) {
       // Global config doesn't exist, initialize it first
       await this.initialize();
@@ -137,9 +135,7 @@ export class LotteryProgram {
     );
 
     // USDC mint address (devnet)
-    const usdcMint = new PublicKey(
-      'Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'
-    );
+    const usdcMint = new PublicKey(USDC_MINT);
 
     // Get creator's USDC token account
     const creatorTokenAccount = await getAssociatedTokenAddress(
@@ -183,7 +179,7 @@ export class LotteryProgram {
     const lotteryPubkey = new PublicKey(lotteryAddress);
 
     // Get lottery account to determine next ticket ID and nonce
-    const lotteryAccount = (await this.program.account.lotteryAccount.fetch(
+    const lotteryAccount = (await (this.program.account as any).lotteryAccount.fetch(
       lotteryPubkey
     )) as any;
     const nextTicketId = parseInt(lotteryAccount.lastTicketId) + 1;
@@ -203,7 +199,7 @@ export class LotteryProgram {
     );
 
     // Get global config to fetch USDC mint
-    const globalConfigAccount = (await this.program.account.globalConfig.fetch(
+    const globalConfigAccount = (await (this.program.account as any).globalConfig.fetch(
       globalConfig
     )) as any;
     const usdcMint = new PublicKey(globalConfigAccount.usdcMint);
@@ -263,7 +259,7 @@ export class LotteryProgram {
     }
 
     // Get lottery account to check current state and draw time
-    const lotteryAccount = (await this.program.account.lotteryAccount.fetch(
+    const lotteryAccount = (await (this.program.account as any).lotteryAccount.fetch(
       lotteryPubkey
     )) as any;
     const currentTime = Math.floor(Date.now() / 1000);
@@ -312,7 +308,7 @@ export class LotteryProgram {
     let globalAdmin: PublicKey;
     try {
       const globalConfigAccount =
-        await this.program.account.globalConfig.fetch(globalConfig);
+        await (this.program.account as any).globalConfig.fetch(globalConfig);
       globalAdmin = (globalConfigAccount as any).admin;
     } catch (error) {
       throw new Error(
@@ -457,11 +453,11 @@ export class LotteryProgram {
 
   async getLotteries(): Promise<LotteryInfo[]> {
     // Get all lottery accounts
-    const lotteryAccounts = await this.program.account.lotteryAccount.all();
+    const lotteryAccounts = await (this.program.account as any).lotteryAccount.all();
 
     // Filter out lotteries that use the old PDA derivation pattern
     const validLotteries = await Promise.all(
-      lotteryAccounts.map(async account => {
+      lotteryAccounts.map(async (account: any) => {
         const data = account.account as any;
 
         // Check if this lottery PDA matches the current nonce-based derivation
@@ -534,7 +530,7 @@ export class LotteryProgram {
       }
 
       // If owned by our program, try to fetch and deserialize
-      await this.program.account.globalConfig.fetch(globalConfig);
+      await (this.program.account as any).globalConfig.fetch(globalConfig);
       return true;
     } catch (error) {
       return false;
@@ -660,11 +656,11 @@ export class LotteryProgram {
         this.program.programId
       );
       const globalConfigAccount =
-        (await this.program.account.globalConfig.fetch(globalConfig)) as any;
+        (await (this.program.account as any).globalConfig.fetch(globalConfig)) as any;
       return globalConfigAccount.usdcMint;
     } catch (error) {
       // Fallback to devnet USDC mint
-      return new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'); // Devnet USDC
+      return new PublicKey(USDC_MINT); // Use configured USDC mint
     }
   }
 
@@ -690,7 +686,7 @@ export class LotteryProgram {
       }
 
       // Get all ticket accounts owned by the user
-      const ticketAccounts = await this.program.account.ticketAccount.all([
+      const ticketAccounts = await (this.program.account as any).ticketAccount.all([
         {
           memcmp: {
             offset: 8 + 32, // Skip discriminator + lotteryId, offset to owner field
@@ -701,14 +697,14 @@ export class LotteryProgram {
 
       // Get lottery details for each ticket
       const userTickets = await Promise.all(
-        ticketAccounts.map(async ticketAccount => {
+        ticketAccounts.map(async (ticketAccount: any) => {
           try {
             const ticket = ticketAccount.account as any;
             const lotteryPubkey = ticket.lotteryId;
 
             // Fetch lottery details
             const lotteryAccount =
-              (await this.program.account.lotteryAccount.fetch(
+              (await (this.program.account as any).lotteryAccount.fetch(
                 lotteryPubkey
               )) as any;
 

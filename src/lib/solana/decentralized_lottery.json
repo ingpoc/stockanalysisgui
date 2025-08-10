@@ -1,5 +1,5 @@
 {
-  "address": "9SL8XkX3pvqZ2fjiLMhCFfQn7Gfmpd9ru8rtHFsAPVgq",
+  "address": "BH1qtDhU6PtB1jrUJPf8JoNt34ELuTvVTDktDLFyq2JV",
   "metadata": {
     "name": "decentralized_lottery",
     "version": "0.1.0",
@@ -9,7 +9,16 @@
   "instructions": [
     {
       "name": "buy_ticket",
-      "discriminator": [11, 24, 17, 193, 168, 116, 164, 169],
+      "discriminator": [
+        11,
+        24,
+        17,
+        193,
+        168,
+        116,
+        164,
+        169
+      ],
       "accounts": [
         {
           "name": "lottery_account",
@@ -18,7 +27,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [108, 111, 116, 116, 101, 114, 121]
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -44,8 +61,22 @@
               {
                 "kind": "const",
                 "value": [
-                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
-                  95, 118, 50
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -84,7 +115,16 @@
     },
     {
       "name": "claim_prize",
-      "discriminator": [157, 233, 139, 121, 246, 62, 234, 235],
+      "discriminator": [
+        157,
+        233,
+        139,
+        121,
+        246,
+        62,
+        234,
+        235
+      ],
       "accounts": [
         {
           "name": "lottery_account",
@@ -93,7 +133,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [108, 111, 116, 116, 101, 114, 121]
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -119,8 +167,22 @@
               {
                 "kind": "const",
                 "value": [
-                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
-                  95, 118, 50
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -156,7 +218,16 @@
     },
     {
       "name": "create_lottery",
-      "discriminator": [242, 165, 247, 119, 17, 203, 21, 42],
+      "discriminator": [
+        242,
+        165,
+        247,
+        119,
+        17,
+        203,
+        21,
+        42
+      ],
       "accounts": [
         {
           "name": "lottery_account",
@@ -165,7 +236,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [108, 111, 116, 116, 101, 114, 121]
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -185,8 +264,22 @@
               {
                 "kind": "const",
                 "value": [
-                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
-                  95, 118, 50
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -231,7 +324,16 @@
     },
     {
       "name": "initialize",
-      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
       "accounts": [
         {
           "name": "global_config",
@@ -241,8 +343,22 @@
               {
                 "kind": "const",
                 "value": [
-                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
-                  95, 118, 50
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -269,7 +385,16 @@
     },
     {
       "name": "select_winner",
-      "discriminator": [119, 66, 44, 236, 79, 158, 82, 51],
+      "discriminator": [
+        119,
+        66,
+        44,
+        236,
+        79,
+        158,
+        82,
+        51
+      ],
       "accounts": [
         {
           "name": "lottery_account",
@@ -278,7 +403,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [108, 111, 116, 116, 101, 114, 121]
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -302,7 +435,16 @@
     },
     {
       "name": "settle_randomness",
-      "discriminator": [209, 111, 84, 239, 14, 4, 26, 251],
+      "discriminator": [
+        209,
+        111,
+        84,
+        239,
+        14,
+        4,
+        26,
+        251
+      ],
       "accounts": [
         {
           "name": "lottery_account",
@@ -311,7 +453,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [108, 111, 116, 116, 101, 114, 121]
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -334,7 +484,16 @@
     },
     {
       "name": "transition_state",
-      "discriminator": [52, 205, 208, 34, 155, 130, 12, 18],
+      "discriminator": [
+        52,
+        205,
+        208,
+        34,
+        155,
+        130,
+        12,
+        18
+      ],
       "accounts": [
         {
           "name": "lottery_account",
@@ -343,7 +502,15 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [108, 111, 116, 116, 101, 114, 121]
+                "value": [
+                  108,
+                  111,
+                  116,
+                  116,
+                  101,
+                  114,
+                  121
+                ]
               },
               {
                 "kind": "account",
@@ -365,8 +532,22 @@
               {
                 "kind": "const",
                 "value": [
-                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
-                  95, 118, 50
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -395,7 +576,16 @@
     },
     {
       "name": "update_config",
-      "discriminator": [29, 158, 252, 191, 10, 83, 219, 99],
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
       "accounts": [
         {
           "name": "global_config",
@@ -405,8 +595,22 @@
               {
                 "kind": "const",
                 "value": [
-                  103, 108, 111, 98, 97, 108, 95, 99, 111, 110, 102, 105, 103,
-                  95, 118, 50
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103,
+                  95,
+                  118,
+                  50
                 ]
               }
             ]
@@ -430,69 +634,213 @@
   "accounts": [
     {
       "name": "GlobalConfig",
-      "discriminator": [149, 8, 156, 202, 160, 252, 176, 217]
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
     },
     {
       "name": "LotteryAccount",
-      "discriminator": [1, 165, 125, 59, 215, 12, 246, 7]
+      "discriminator": [
+        1,
+        165,
+        125,
+        59,
+        215,
+        12,
+        246,
+        7
+      ]
     },
     {
       "name": "TicketAccount",
-      "discriminator": [231, 93, 13, 18, 239, 66, 21, 45]
+      "discriminator": [
+        231,
+        93,
+        13,
+        18,
+        239,
+        66,
+        21,
+        45
+      ]
     }
   ],
   "events": [
     {
       "name": "DrawingStarted",
-      "discriminator": [105, 108, 34, 253, 27, 204, 35, 5]
+      "discriminator": [
+        105,
+        108,
+        34,
+        253,
+        27,
+        204,
+        35,
+        5
+      ]
     },
     {
       "name": "LotteryCreated",
-      "discriminator": [162, 18, 70, 148, 241, 124, 57, 74]
+      "discriminator": [
+        162,
+        18,
+        70,
+        148,
+        241,
+        124,
+        57,
+        74
+      ]
     },
     {
       "name": "LotteryStateChanged",
-      "discriminator": [116, 62, 184, 135, 124, 90, 153, 26]
+      "discriminator": [
+        116,
+        62,
+        184,
+        135,
+        124,
+        90,
+        153,
+        26
+      ]
     },
     {
       "name": "LotteryWinnerDetermined",
-      "discriminator": [110, 172, 60, 137, 146, 76, 59, 123]
+      "discriminator": [
+        110,
+        172,
+        60,
+        137,
+        146,
+        76,
+        59,
+        123
+      ]
     },
     {
       "name": "PrizeClaimed",
-      "discriminator": [213, 150, 192, 76, 199, 33, 212, 38]
+      "discriminator": [
+        213,
+        150,
+        192,
+        76,
+        199,
+        33,
+        212,
+        38
+      ]
     },
     {
       "name": "RandomnessConsumed",
-      "discriminator": [90, 36, 18, 118, 153, 234, 93, 144]
+      "discriminator": [
+        90,
+        36,
+        18,
+        118,
+        153,
+        234,
+        93,
+        144
+      ]
     },
     {
       "name": "RandomnessRequested",
-      "discriminator": [10, 64, 183, 29, 104, 63, 90, 149]
+      "discriminator": [
+        10,
+        64,
+        183,
+        29,
+        104,
+        63,
+        90,
+        149
+      ]
     },
     {
       "name": "RandomnessSettled",
-      "discriminator": [219, 235, 45, 239, 116, 19, 92, 74]
+      "discriminator": [
+        219,
+        235,
+        45,
+        239,
+        116,
+        19,
+        92,
+        74
+      ]
     },
     {
       "name": "TicketPurchased",
-      "discriminator": [108, 59, 246, 95, 84, 145, 13, 71]
+      "discriminator": [
+        108,
+        59,
+        246,
+        95,
+        84,
+        145,
+        13,
+        71
+      ]
     },
     {
       "name": "TicketRefunded",
-      "discriminator": [46, 173, 213, 43, 145, 205, 132, 218]
+      "discriminator": [
+        46,
+        173,
+        213,
+        43,
+        145,
+        205,
+        132,
+        218
+      ]
     },
     {
       "name": "TreasuryWithdrawal",
-      "discriminator": [244, 117, 175, 46, 187, 109, 20, 16]
+      "discriminator": [
+        244,
+        117,
+        175,
+        46,
+        187,
+        109,
+        20,
+        16
+      ]
     },
     {
       "name": "VrfClientInitialized",
-      "discriminator": [0, 118, 216, 155, 30, 123, 193, 166]
+      "discriminator": [
+        0,
+        118,
+        216,
+        155,
+        30,
+        123,
+        193,
+        166
+      ]
     },
     {
       "name": "WinnerSelected",
-      "discriminator": [245, 110, 152, 173, 193, 48, 133, 5]
+      "discriminator": [
+        245,
+        110,
+        152,
+        173,
+        193,
+        48,
+        133,
+        5
+      ]
     }
   ],
   "errors": [
@@ -930,7 +1278,10 @@
             "name": "vrf_randomness",
             "type": {
               "option": {
-                "array": ["u8", 32]
+                "array": [
+                  "u8",
+                  32
+                ]
               }
             }
           },
@@ -1268,7 +1619,10 @@
           {
             "name": "randomness",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {

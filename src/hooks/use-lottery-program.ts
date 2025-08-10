@@ -1,6 +1,11 @@
 import { useConnection, useAnchorWallet } from '@solana/wallet-adapter-react';
 import { useMemo } from 'react';
-import { LotteryProgram } from '@/lib/solana/program';
+import { Program, AnchorProvider } from '@coral-xyz/anchor';
+import { PublicKey } from '@solana/web3.js';
+import { LOTTERY_PROGRAM_ID } from '@/lib/constants';
+
+// Import the IDL
+import idl from '@/lib/solana/decentralized_lottery.json';
 
 export function useLotteryProgram() {
   const { connection } = useConnection();
@@ -8,8 +13,28 @@ export function useLotteryProgram() {
 
   return useMemo(() => {
     if (!wallet) {
-      throw new Error('Wallet not connected');
+      return null;
     }
-    return new LotteryProgram(connection, wallet);
+
+    try {
+      const provider = new AnchorProvider(
+        connection,
+        wallet,
+        { 
+          commitment: 'confirmed',
+          preflightCommitment: 'confirmed',
+        }
+      );
+
+      const program = new Program(
+        idl as any,
+        provider
+      );
+
+      return program;
+    } catch (error) {
+      console.error('Failed to initialize lottery program:', error);
+      return null;
+    }
   }, [connection, wallet]);
 }

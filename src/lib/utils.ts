@@ -1,236 +1,188 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+import { formatDistanceToNow as dateFnsFormatDistanceToNow } from 'date-fns'
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
+// Enhanced error handling for Solana program errors
 export function handleProgramError(error: any): string {
-  // Check for wallet errors
-  if (error.name === 'WalletSignTransactionError') {
-    if (error.message.includes('failed to sign transaction')) {
-      return 'Transaction signing failed. You may have rejected the transaction or your wallet is locked.';
+  if (error?.message) {
+    // Extract specific error codes from Anchor program errors
+    const anchorErrorMatch = error.message.match(/Error Number: (\d+)/);
+    if (anchorErrorMatch) {
+      const errorCode = parseInt(anchorErrorMatch[1]);
+      return getRouletteErrorMessage(errorCode);
     }
+
+    // Handle common Solana/Anchor errors
     if (error.message.includes('insufficient funds')) {
-      return 'Insufficient funds in your wallet to complete this transaction.';
+      return 'Insufficient USDC balance to place bet';
     }
-    return 'Wallet error: Unable to sign the transaction. Please check your wallet and try again.';
+    if (error.message.includes('Transaction was not confirmed')) {
+      return 'Transaction failed to confirm. Please try again.';
+    }
+    if (error.message.includes('Blockhash not found')) {
+      return 'Network congestion. Please retry transaction.';
+    }
+    if (error.message.includes('User rejected the request')) {
+      return 'Transaction cancelled by user';
+    }
+    
+    return error.message;
   }
+  
+  return 'An unexpected error occurred';
+}
 
-  // Check for specific error messages
-  if (error.message) {
-    // Check for transaction already processed error
-    if (error.message.includes('This transaction has already been processed')) {
-      return 'This transaction has already been processed. The operation may have completed successfully.';
+// Map roulette program error codes to user-friendly messages
+export function getRouletteErrorMessage(errorCode: number): string {
+  const errorMap: Record<number, string> = {
+    // Decentralized Roulette Program Errors (12000+)
+    12000: 'Invalid bet type',
+    12001: 'Bet amount below minimum',
+    12002: 'Bet amount exceeds maximum',
+    12003: 'Betting period has ended',
+    12004: 'Game is not in correct state',
+    12005: 'Invalid bet numbers for this bet type',
+    12006: 'Maximum number of players reached',
+    12007: 'Randomness not yet fulfilled',
+    12008: 'Winnings already claimed',
+    12009: 'Not a winning bet',
+    12010: 'Game has expired',
+    12011: 'Game is paused',
+    12012: 'Invalid authority',
+    12013: 'Invalid roulette type',
+    12014: 'Game duration too short',
+    12015: 'Game duration too long',
+    12016: 'Cannot transition to this state',
+    12017: 'VRF client not initialized',
+    12018: 'Invalid VRF account',
+    12019: 'Arithmetic overflow',
+    12020: 'Insufficient funds',
+    12021: 'Invalid token account',
+    12022: 'Too early to perform this action',
+    12023: 'Too late to perform this action',
+    12024: 'Invalid nonce',
+    12025: 'Cannot place duplicate bets',
+
+    // Common Anchor/Solana errors
+    100: 'Invalid instruction data',
+    101: 'Invalid account data',
+    102: 'Invalid account owner',
+    103: 'Account not initialized',
+    2003: 'Account does not have enough lamports',
+    3001: 'Insufficient funds for transaction',
+    3012: 'Transaction failed due to insufficient funds',
+  };
+
+  return errorMap[errorCode] || `Unknown error (Code: ${errorCode})`;
+}
+
+// Simplified event handling for better performance
+export function createSimplifiedEventHandler(
+  connection: any,
+  programId: string,
+  onEvent: (eventType: string, data: any) => void
+) {
+  let subscriptionId: number | null = null;
+
+  const subscribe = () => {
+    try {
+      subscriptionId = connection.onLogs(
+        programId,
+        (logs: any, context: any) => {
+          // Parse logs for key events with minimal processing
+          logs.logs.forEach((log: string) => {
+            // Detect key state transitions
+            if (log.includes('Roulette completed:') || log.includes('winning number:')) {
+              onEvent('gameCompleted', { signature: logs.signature, slot: context.slot });
+            } else if (log.includes('Bet placed:')) {
+              onEvent('betPlaced', { signature: logs.signature, slot: context.slot });
+            } else if (log.includes('Betting locked')) {
+              onEvent('bettingLocked', { signature: logs.signature, slot: context.slot });
+            }
+          });
+        },
+        'confirmed'
+      );
+    } catch (error) {
+      console.warn('Event subscription failed:', error);
     }
+  };
 
-    // Check for oracle account not provided error
-    if (error.message.includes("Account 'oracleAccount' not provided")) {
-      return 'Oracle account not provided. This is required for Drawing and Cancelled state transitions.';
-    }
-
-    // Check if it's an account allocation error (duplicate lottery)
-    if (error.message.includes('already in use')) {
-      return 'A lottery of this type already exists for this time period. Please wait for the current one to complete.';
-    }
-
-    // Check for seeds constraint violation
-    if (
-      error.message.includes('seeds constraint was violated') ||
-      error.message.includes('provided seeds do not result in a valid address')
-    ) {
-      return 'A lottery creation conflict occurred. Please wait a moment and try again. This can happen if multiple lotteries are created at the same time.';
-    }
-
-    // Check if it's a global config initialization error
-    if (error.message.includes('Global config account already initialized')) {
-      return 'The program is already initialized. You can proceed to create lotteries.';
-    }
-
-    // Check if it's an account not found error
-    if (error.message.includes('Account not found')) {
-      return 'Required account not found. Please check your wallet connection and try again.';
-    }
-
-    // Check for insufficient funds
-    if (error.message.includes('insufficient funds')) {
-      return 'Insufficient funds for this operation. Please check your balance.';
-    }
-
-    // Check for transaction simulation failures
-    if (error.message.includes('Transaction simulation failed')) {
-      return 'Transaction simulation failed. This could be due to insufficient funds or other program constraints.';
-    }
-  }
-
-  // Check if it's an Anchor error with specific lottery error codes
-  if (error.code) {
-    // Handle Anchor system error codes
-    if (error.code === 3012) {
-      if (error.message?.includes('creator_token_account')) {
-        return 'Your USDC token account is not initialized. Please make sure you have a USDC token account.';
+  const unsubscribe = () => {
+    if (subscriptionId) {
+      try {
+        connection.removeOnLogsListener(subscriptionId);
+      } catch (error) {
+        console.warn('Event unsubscription failed:', error);
       }
-      return 'Account not initialized. Please make sure the program is initialized first.';
+      subscriptionId = null;
     }
+  };
 
-    switch (error.code) {
-      case 6000:
-        return 'This lottery type is not supported';
-      case 6001:
-        return 'Invalid ticket price. Please enter a valid positive number (e.g., 1.0 USDC)';
-      case 6002:
-        return 'Invalid prize pool amount. Please enter a valid positive number between 0 and 1000 USDC';
-      case 6003:
-        return 'Invalid lottery draw time';
-      case 6004:
-        return 'Invalid ticket purchase amount';
-      case 6005:
-        return 'Ticket purchase limit has been reached';
-      case 6006:
-        return 'Lottery is not open for ticket purchases';
-      case 6007:
-        return 'Lottery is currently in drawing state';
-      case 6008:
-        return 'Lottery has been completed';
-      case 6009:
-        return 'Lottery has expired';
-      case 6010:
-        return 'Invalid lottery state for this operation';
-      case 6011:
-        return 'Invalid account ownership';
-      case 6012:
-        return 'Invalid input parameters';
-      case 6013:
-        return 'Calculation error occurred';
-      case 6018:
-        return 'Token transfer failed. Please check your balance';
-      case 6019:
-        return 'Invalid token account';
-      default:
-        return 'An unexpected error occurred';
-    }
-  }
-
-  // Check if it's a wallet error
-  if (error.message?.includes('wallet')) {
-    return 'Please connect your wallet to continue';
-  }
-
-  // Check if it's a transaction error
-  if (error.message?.includes('Transaction failed')) {
-    return 'Transaction failed. Please try again';
-  }
-
-  // Check if it's a simulation error
-  if (error.message?.includes('Simulation failed')) {
-    return 'Transaction simulation failed. Please check your inputs and try again later.';
-  }
-
-  // Check if it's a network error
-  if (
-    error.message?.includes('network') ||
-    error.message?.includes('connection')
-  ) {
-    return 'Network error. Please check your connection and try again';
-  }
-
-  return error.message || 'An unexpected error occurred';
+  return { subscribe, unsubscribe };
 }
 
-export function shortenAddress(address: string, chars = 4): string {
-  return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+// Optimized state management helper
+export function shouldRefreshState(eventType: string): boolean {
+  const criticalEvents = ['gameCompleted', 'betPlaced', 'bettingLocked'];
+  return criticalEvents.includes(eventType);
 }
 
-/**
- * Formats a USDC value to a human-readable USD value
- * @param value The value in USDC (already converted from smallest unit)
- * @param decimals The number of decimal places to show (default: 2)
- * @returns Formatted USD value as a string
- */
-export function formatUSDC(
-  value: number | undefined,
-  decimals: number = 2
-): string {
-  if (value === undefined || value === null || value === 0) {
-    return '$0.00';
-  }
-
-  // Value is already in USDC format (converted in getLotteries method)
-  return `$${value.toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  })}`;
+// Debounce function for reducing unnecessary API calls
+export function debounce<T extends (...args: any[]) => void>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout;
+  
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
 }
 
-/**
- * Format a number as currency (INR)
- */
-export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+// Smart polling strategy based on game state
+export function getOptimalPollingInterval(hasActiveGames: boolean, gameStates: string[]): number {
+  if (!hasActiveGames) return 30000; // 30 seconds for inactive
+  
+  const criticalStates = ['spinning', 'awaitingRandomness'];
+  const hasCriticalStates = gameStates.some(state => 
+    criticalStates.some(critical => state.toLowerCase().includes(critical))
+  );
+  
+  return hasCriticalStates ? 3000 : 8000; // 3s for critical, 8s for normal
 }
 
-/**
- * Format a number as percentage
- */
-export function formatPercentage(value: number): string {
+// Format USDC amounts with proper decimals
+export function formatUSDC(amount: number | string | undefined): string {
+  if (amount === undefined || amount === null) return '$0.00';
+  
+  const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numericAmount)) return '$0.00';
+  
+  // Convert from base units (6 decimals for USDC) to display units
+  const displayAmount = numericAmount / 1_000_000;
+  
   return new Intl.NumberFormat('en-US', {
-    style: 'percent',
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value / 100);
+    maximumFractionDigits: 6,
+  }).format(displayAmount);
 }
 
-/**
- * Format distance to now (time ago)
- */
-export function formatDistanceToNow(date: Date): string {
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInSeconds = Math.floor(diffInMs / 1000);
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInSeconds < 60) {
-    return 'just now';
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours}h ago`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays}d ago`;
-  } else {
-    return date.toLocaleDateString();
+// Format time distance from now
+export function formatDistanceToNow(date: Date | number | string): string {
+  if (!date) return 'Unknown';
+  
+  try {
+    const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+    return dateFnsFormatDistanceToNow(dateObj, { addSuffix: true });
+  } catch (error) {
+    return 'Invalid date';
   }
-}
-
-/**
- * Parse USDC input from UI to token amount
- * @param value String value from UI input
- * @returns Number in token amount (lamports for USDC)
- */
-export function parseUSDC(value: string): number {
-  const numValue = parseFloat(value);
-  if (isNaN(numValue)) return 0;
-  return Math.floor(numValue * 1_000_000); // Convert to 6 decimal places
-}
-
-/**
- * Format timestamp to readable date
- * @param timestamp Unix timestamp
- * @returns Formatted date string
- */
-export function formatTimestamp(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }

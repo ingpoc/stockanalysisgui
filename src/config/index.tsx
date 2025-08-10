@@ -20,6 +20,17 @@ require('@solana/wallet-adapter-react-ui/styles.css');
 const NETWORK = SOLANA_NETWORK as WalletAdapterNetwork;
 const RPC_ENDPOINT = SOLANA_RPC_URL || clusterApiUrl(NETWORK);
 
+function toWebSocketUrl(httpUrl: string): string {
+  try {
+    const url = new URL(httpUrl);
+    url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:';
+    return url.toString();
+  } catch (e) {
+    // Fallback: naive replace
+    return httpUrl.replace('https://', 'wss://').replace('http://', 'ws://');
+  }
+}
+
 export function WalletConnectionProvider({
   children,
 }: {
@@ -36,8 +47,20 @@ export function WalletConnectionProvider({
   );
 
   return (
-    <ConnectionProvider endpoint={RPC_ENDPOINT}>
-      <WalletProvider wallets={wallets} autoConnect={true}>
+    <ConnectionProvider 
+      endpoint={RPC_ENDPOINT}
+      config={{
+        commitment: 'confirmed',
+        wsEndpoint: toWebSocketUrl(RPC_ENDPOINT),
+      }}
+    >
+      <WalletProvider 
+        wallets={wallets} 
+        autoConnect={true}
+        onError={(error) => {
+          console.error('Wallet connection error:', error);
+        }}
+      >
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

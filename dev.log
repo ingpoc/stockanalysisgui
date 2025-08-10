@@ -1,0 +1,137 @@
+
+> crypto-lottery-dapp@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use, using available port 3001 instead.
+   ▲ Next.js 15.3.4
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.77:3001
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1377ms
+   Reload env: .env.local
+ ○ Compiling /roulette ...
+ ✓ Compiled /roulette in 10.6s (10200 modules)
+bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+ GET /roulette 200 in 11001ms
+ ✓ Compiled in 1277ms (4920 modules)
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 2s (9999 modules)
+bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+ GET /admin 200 in 2369ms
+ ✓ Compiled /favicon.ico in 258ms (4994 modules)
+ GET /favicon.ico 200 in 338ms
+ GET /favicon.ico 200 in 5ms
+ ✓ Compiled /dashboard in 457ms (10092 modules)
+ GET /dashboard 200 in 569ms
+bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+ GET /dashboard 200 in 277ms
+ GET /favicon.ico 200 in 16ms
+ GET /admin 200 in 65ms
+ GET /favicon.ico 200 in 9ms
+   Reload env: .env.local
+ ✓ Compiled in 1660ms (10076 modules)
+   Reload env: .env.local
+ ✓ Compiled in 439ms (10076 modules)
+   Reload env: .env.local
+ ✓ Compiled in 595ms (10076 modules)
+   Reload env: .env.local
+ ✓ Compiled in 427ms (10076 modules)
+ ✓ Compiled in 1818ms (10090 modules)
+ ✓ Compiled in 1308ms (10090 modules)
+ ✓ Compiled in 1623ms (10090 modules)
+ ✓ Compiled in 1557ms (10090 modules)
+ ✓ Compiled in 1277ms (10090 modules)
+ ✓ Compiled in 899ms (5073 modules)
+ ✓ Compiled in 2.7s (10090 modules)
+ ✓ Compiled in 588ms (10090 modules)
+ ✓ Compiled in 947ms (10090 modules)
+ ✓ Compiled in 584ms (10090 modules)
+ ✓ Compiled in 560ms (10090 modules)
+ ✓ Compiled in 898ms (10090 modules)
+ ✓ Compiled in 726ms (10090 modules)
+ ✓ Compiled in 737ms (10090 modules)
+ ✓ Compiled in 807ms (10090 modules)
+ ✓ Compiled in 355ms (5073 modules)
+ ✓ Compiled in 1861ms (10090 modules)
+ ✓ Compiled in 566ms (10090 modules)
+ ✓ Compiled in 3.5s (10090 modules)
+ ✓ Compiled in 1463ms (5073 modules)
+ ✓ Compiled in 724ms (5073 modules)
+ ✓ Compiled in 512ms (5073 modules)
+ ✓ Compiled in 414ms (5073 modules)
+ ✓ Compiled in 2.7s (10090 modules)
+ ✓ Compiled in 457ms (5073 modules)
+ ⚠ ./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'getRouletteStateDisplayName' is not exported from '@/types/roulette_types' (imported as 'getRouletteStateDisplayName').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'getRouletteStateDisplayName' is not exported from '@/types/roulette_types' (imported as 'getRouletteStateDisplayName').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+
+./src/app/(protected)/roulette/page.tsx
+Attempted import error: 'isRouletteStateEqual' is not exported from '@/types/roulette_types' (imported as 'isRouletteStateEqual').
+
+Import trace for requested module:
+./src/app/(protected)/roulette/page.tsx
+[?25h

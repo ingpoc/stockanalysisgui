@@ -14,7 +14,7 @@ import {
   createAssociatedTokenAccountInstruction,
   getAccount,
 } from '@solana/spl-token';
-import { DecentralizedRoulette as ProgramIDL } from '@/types/decentralized_roulette';
+// IDL will be loaded from JSON file
 import {
   RouletteType,
   BetType,
@@ -23,7 +23,6 @@ import {
   BetAccount,
 } from '@/types/generated/enhanced-types';
 import {
-  ROULETTE_PROGRAM_ID as PROGRAM_ID,
   USDC_MINT,
   ROULETTE_GLOBAL_CONFIG_SEED,
   ROULETTE_SEED,
@@ -32,14 +31,15 @@ import {
 } from '@/lib/constants';
 
 // Import the IDL
-const IDL = require('./decentralized_roulette.json') as ProgramIDL & Idl;
+const IDL = require('./decentralized_roulette.json') as Idl;
 
 // Types are imported from generated types
 
-type ProgramType = Program<ProgramIDL>;
+type ProgramType = Program<Idl>;
 
-// Program configuration
-export const ROULETTE_PROGRAM_ID = new PublicKey(PROGRAM_ID);
+// Program configuration: prefer IDL-bound programId from Program instance
+// Fallback to env constant only if needed at runtime
+let ROULETTE_PROGRAM_ID_FALLBACK: PublicKey | null = null;
 
 // USDC mint addresses
 export const USDC_MINT_ADDRESS = new PublicKey(USDC_MINT);
@@ -61,11 +61,22 @@ export class RouletteProgram {
   private _program: ProgramType | null = null;
   private connection: Connection;
   private wallet: AnchorWallet;
-  public readonly programId = ROULETTE_PROGRAM_ID;
+  public programId: PublicKey;
 
   constructor(connection: Connection, wallet: AnchorWallet) {
     this.connection = connection;
     this.wallet = wallet;
+    // Initialize with fallback; will be replaced after program loads
+    if (!ROULETTE_PROGRAM_ID_FALLBACK) {
+      try {
+        // Lazy import to avoid circulars
+        const envProgramId = (process as any)?.env?.NEXT_PUBLIC_ROULETTE_PROGRAM_ID;
+        if (envProgramId) {
+          ROULETTE_PROGRAM_ID_FALLBACK = new PublicKey(envProgramId);
+        }
+      } catch (_) {}
+    }
+    this.programId = ROULETTE_PROGRAM_ID_FALLBACK ?? new PublicKey('11111111111111111111111111111111');
   }
 
   private async initializeProgram(): Promise<ProgramType> {
@@ -82,6 +93,9 @@ export class RouletteProgram {
 
       // Create program using IDL (which contains the program ID)
       this._program = new Program(IDL, provider) as ProgramType;
+      // Update programId from the IDL-bound program
+      // @ts-ignore - anchor Program has programId
+      this.programId = (this._program as any).programId as PublicKey;
 
       return this._program;
     } catch (error) {

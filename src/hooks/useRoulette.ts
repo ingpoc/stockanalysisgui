@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RouletteProgram } from '@/lib/solana/roulette-program';
 import { RouletteType, BetType } from '@/types/enhanced-types';
@@ -11,7 +11,13 @@ import { useWallet } from './useWallet';
 import { PublicKey } from '@solana/web3.js';
 import type { AnchorWallet } from '@solana/wallet-adapter-react';
 import { toast } from 'sonner';
-import { handleProgramError } from '@/lib/utils';
+import { 
+  handleProgramError, 
+  createSimplifiedEventHandler, 
+  shouldRefreshState, 
+  debounce, 
+  getOptimalPollingInterval 
+} from '@/lib/utils';
 
 // Use RouletteDisplay from runtime types
 type RouletteWithMetadata = RouletteDisplay;
@@ -330,19 +336,25 @@ export function useRoulette() {
         wsSubscriptions: subscriptionIds.length
       });
 
-      // Remove Anchor event listeners
-      anchorEventListeners.forEach((listenerId, index) => {
+      // Remove Anchor event listeners explicitly
+      (async () => {
         try {
-          // Anchor event listeners are automatically cleaned up when the program instance changes
-          // No manual cleanup needed for Anchor event listeners
-          console.log(`🎰 [EVENT CLEANUP] Anchor listener ${index + 1}/${anchorEventListeners.length} will be auto-cleaned`);
-        } catch (error) {
-          console.log(
-            `🎰 [EVENT CLEANUP] Error with anchor listener ${index + 1}:`,
-            error
-          );
+          const programInstance = await (program as any)?.program;
+          if (programInstance) {
+            for (let i = 0; i < anchorEventListeners.length; i++) {
+              const listenerId = anchorEventListeners[i];
+              try {
+                await programInstance.removeEventListener(listenerId);
+                console.log(`🎰 [EVENT CLEANUP] Removed Anchor listener ${i + 1}/${anchorEventListeners.length}`);
+              } catch (err) {
+                console.log(`🎰 [EVENT CLEANUP] Error removing Anchor listener ${i + 1}:`, err);
+              }
+            }
+          }
+        } catch (err) {
+          console.log('🎰 [EVENT CLEANUP] Failed to get program instance for cleanup:', err);
         }
-      });
+      })();
 
       // Remove WebSocket subscriptions
       subscriptionIds.forEach((subscriptionId, index) => {
@@ -547,23 +559,9 @@ export function useRoulette() {
     };
   }, [roulettes, queryClient]);
 
-  // Initialize roulette program (admin only)
-  const initialize = useMutation({
-    mutationFn: () => {
-      if (!program) throw new Error('Wallet not connected');
-      return program.initialize();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-      toast.success('Roulette program initialized successfully!');
-    },
-    onError: error => {
-      const errorMessage = handleProgramError(error);
-      toast.error('Roulette initialization failed', {
-        description: errorMessage,
-      });
-    },
-  });
+  // Initialize roulette program - REMOVED FOR SECURITY
+  // Frontend should not have access to program initialization
+  // This function has been disabled to prevent unauthorized initialization
 
   // Create new roulette game
   const createRoulette = useMutation({
@@ -620,30 +618,9 @@ export function useRoulette() {
     },
   });
 
-  // Create next game (for automation)
-  const createNextGame = useMutation({
-    mutationFn: (nonce: number) => {
-      if (!program) throw new Error('Wallet not connected');
-      return program.createNextGame(nonce);
-    },
-    onSuccess: async () => {
-      // Log program event for automated game creation
-      console.log(
-        '🎰 [PROGRAM EVENT] Game Created Successfully | Type: Roulette | Source: CreateNextGame (Automation)'
-      );
-
-      // Force refetch with a small delay to ensure blockchain confirmation
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-        queryClient.refetchQueries({ queryKey: ['roulettes'] });
-      }, 1000);
-      toast.success('Next roulette game created successfully!');
-    },
-    onError: error => {
-      const errorMessage = handleProgramError(error);
-      toast.error('Next game creation failed', { description: errorMessage });
-    },
-  });
+  // Create next game - REMOVED FOR SECURITY
+  // Frontend should not have access to automated game creation
+  // This function has been disabled to prevent unauthorized automation
 
   // Place a bet
   const placeBet = useMutation({
@@ -799,43 +776,13 @@ export function useRoulette() {
     },
   });
 
-  // Process automation manually (for admin control)
-  const processAutomation = useMutation({
-    mutationFn: () => {
-      if (!program) throw new Error('Wallet not connected');
-      return program.processAutomation();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-      toast.success('Automation cycle processed successfully!');
-    },
-    onError: error => {
-      const errorMessage = handleProgramError(error);
-      toast.error('Automation processing failed', {
-        description: errorMessage,
-      });
-    },
-  });
+  // Process automation - REMOVED FOR SECURITY
+  // Frontend should not have access to automation processing
+  // This function has been disabled to prevent unauthorized automation
 
-  // Process game lifecycle manually (fix stuck games)
-  const processGameLifecycle = useMutation({
-    mutationFn: ({ roulette }: { roulette: string }) => {
-      if (!program) throw new Error('Wallet not connected');
-      const roulettePubkey = new PublicKey(roulette);
-      return program.processGameLifecycle(roulettePubkey);
-    },
-    onSuccess: () => {
-      console.log('🎰 [PROGRAM EVENT] Game Lifecycle Processed | Action: ProcessGameLifecycle');
-      queryClient.invalidateQueries({ queryKey: ['roulettes'] });
-      toast.success('Game lifecycle processed successfully!');
-    },
-    onError: error => {
-      const errorMessage = handleProgramError(error);
-      toast.error('Game lifecycle processing failed', {
-        description: errorMessage,
-      });
-    },
-  });
+  // Process game lifecycle - REMOVED FOR SECURITY
+  // Frontend should not have access to lifecycle management
+  // This function has been disabled to prevent unauthorized lifecycle operations
 
 
   return {
@@ -843,29 +790,25 @@ export function useRoulette() {
     isLoading,
     error,
     isInitialized,
-    initialize: initialize.mutateAsync,
+    // SECURITY: Removed unauthorized automation functions
+    // initialize, createNextGame, processAutomation, processGameLifecycle
     createRoulette: createRoulette.mutateAsync,
-    createNextGame: createNextGame.mutateAsync,
     placeBet: placeBet.mutateAsync,
     lockBetting: lockBetting.mutateAsync,
     spinRoulette: spinRoulette.mutateAsync,
     claimWinnings: claimWinnings.mutateAsync,
     expireAllGames: expireAllGames.mutateAsync,
-    processAutomation: processAutomation.mutateAsync,
-    processGameLifecycle: processGameLifecycle.mutateAsync,
     getRouletteAccount,
     getBetsForRoulette,
     getUserBets,
     forceRefresh,
-    isInitializing: initialize.isPending,
+    // SECURITY: Removed unauthorized automation status flags
+    // isInitializing, isCreatingNext, isProcessingAutomation, isProcessingLifecycle
     isCreating: createRoulette.isPending,
-    isCreatingNext: createNextGame.isPending,
     isPlacingBet: placeBet.isPending,
     isLockingBetting: lockBetting.isPending,
     isSpinning: spinRoulette.isPending,
     isClaimingWinnings: claimWinnings.isPending,
     isExpiringGames: expireAllGames.isPending,
-    isProcessingAutomation: processAutomation.isPending,
-    isProcessingLifecycle: processGameLifecycle.isPending,
   };
 }
